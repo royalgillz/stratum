@@ -46,10 +46,10 @@ test.describe('phone page', () => {
     await expect(page.getByRole('alert')).toContainText('xylophonez');
   });
 
-  test('Send OK without a family points the user to the Family tab', async ({ page }) => {
+  test('OK without a family points the user to the Family tab', async ({ page }) => {
     await page.getByRole('tab', { name: 'Report' }).click();
-    await page.getByRole('button', { name: 'Send OK to family' }).click();
-    await expect(page.getByRole('status')).toContainText('Family tab');
+    await page.getByRole('button', { name: 'I am OK' }).click();
+    await expect(page.getByRole('dialog')).toContainText('Family tab');
   });
 
   test('opens the microphone and reports a tracker state, never a fake reading', async ({ page }) => {

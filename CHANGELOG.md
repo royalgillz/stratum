@@ -38,6 +38,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- 2026-11-16, report grid (`src/phone/screens/report.ts`, new `src/phone/codebook.ts`): large buttons grouped OK, Need and Report here (12 codes: OK; medicine, clean water, food, medic visit, help moving someone; power cut, power back, water looks wrong, flooding or route blocked, fan stopped or air hot, people coughing or sick). A confirm dialog shows place, power state, "send to" (family or everyone nearby, where the packet design allows) and an optional people count; all send buttons are disabled while sound plays, and a result line reports sent or not sent. Without a family, OK explains how to join and public reports still send. Tests: `src/phone/codebook.test.ts`, `e2e/report.spec.ts` (66 runs on six viewports pass, 1 on retry); the OK test in `e2e/phone.spec.ts` now taps the new "I am OK" button.
 - Phone page split into tabs (Listen, Report, Family; Care and Ledger hidden until built). Shared services live in `src/phone/app.ts`; each screen is a module in `src/phone/screens/` that talks to the others only through app events. Tabs follow the WAI-ARIA pattern (arrow keys, `aria-selected`) and the address remembers the screen. Playwright now checks every tab on all six viewports.
 - Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
 - Playwright 1.65.1 added (approved by the human) with six viewport projects, `npm run e2e`, `e2e/phone.spec.ts` (layout, family, word errors, microphone path) and a CI `e2e` job. Locally 30/30 pass; 5 needed a retry because the Windows preview server stalls under load.
@@ -131,3 +132,8 @@ None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 an
    - connect Vercel to the repo for automatic deploys (CD);
    - make the CI check required on `main`.
 8. **`spikes/`**: the estimator now lives in `src/core/tracker`. Keep the spike pages deployed until the phone page replaces them at rung 1, then delete them.
+9. **Report grid code bytes** (open, agent call): OK is 0x00, REPORT 0x10 to 0x15, NEED 0x20 to 0x24, unique across all types so a reader looks a code up without its type, with gaps left for new codes. Once phones ship, these numbers must not change meaning.
+10. **Report grid power flag** (open, agent call): "Power cut here" always sends power off and "Power back" always sends power on; every other code sends what the "Power on here" box says.
+11. **Report grid people count** (open, agent call): only the five needs and "People coughing or sick" ask for a count; left empty, the value field is 0, meaning "not given".
+12. **Need without a family** (open, agent call): the design defaults NEED to family, but with no family the dialog preselects "everyone nearby" and says so, so a need such as medicine can still be sent publicly after the confirm step. Alternative: block needs until a family exists.
+13. **Inbox labels** (open): the Family screen inbox still shows the packet type (NEED, REPORT), not the codebook label. Looking labels up in `src/phone/codebook.ts` belongs to that screen's module.
