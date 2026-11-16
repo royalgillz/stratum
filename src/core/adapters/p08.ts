@@ -46,12 +46,13 @@ export function createP08(_policy: Policy, script: Script): Adapter {
           if (a) a.known = true;
         }
       }
-      // @spec ADAPT-FAMILY-010
-      if (separated) for (const a of away.values()) if (!a.known) unknownH += dt / 3600;
-      // @spec ADAPT-FAMILY-008
       for (const a of away.values()) {
+        // @spec ADAPT-FAMILY-010
+        if (separated && !a.known) unknownH += dt / 3600;
+        // @spec ADAPT-FAMILY-008
         for (; a.next < t + dt; a.next += BEACON_EVERY) {
-          const bytes = Uint8Array.from({ length: 25 }, () => Math.floor(rng() * 256));
+          const bytes = new Uint8Array(25);
+          for (let i = 0; i < 25; i++) bytes[i] = Math.floor(rng() * 256);
           bytes[0] = (VERSION << 4) | TYPES.OK;
           bytes[16] = MAX_HOPS;
           world.mesh.inbox.push({

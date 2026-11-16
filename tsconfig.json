@@ -15,5 +15,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "spikes", "e2e", "vite.config.ts", "playwright.config.ts"]
+  "include": ["src", "spikes", "e2e", "harness", "vite.config.ts", "playwright.config.ts"]
 }

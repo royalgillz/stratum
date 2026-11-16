@@ -11,17 +11,28 @@ export type RelayAction = { id: string; send: Uint8Array; atMs: number } | { can
 // Every value below is listed in docs/params.md.
 const SLOTS = 4, SLOT_MS = 3000;
 
-const identity = (b: Uint8Array) => Array.from(b, (v, i) => (i === 16 ? '00' : v.toString(16).padStart(2, '0'))).join('');
+// Built as one flat string from char codes: a relay hears often, and 25 concatenations cost four times as much.
+const DIGIT = Array.from('0123456789abcdef', (c) => c.charCodeAt(0));
+const codes: number[] = []; // reused: identity runs to completion before any other call
+const identity = (b: Uint8Array) => {
+  codes.length = 2 * b.length;
+  for (let i = 0; i < b.length; i++) {
+    const v = i === 16 ? 0 : b[i]!;
+    codes[2 * i] = DIGIT[v >> 4]!;
+    codes[2 * i + 1] = DIGIT[v & 15]!;
+  }
+  return String.fromCharCode.apply(null, codes);
+};
 
 // @spec RELAY-009
 export function createRelay(rng: Rng) {
   const heard = new Map<string, { n: number; atMs: number }>(); // insertion order = least recently heard first
 
-  // Counts one hearing; returns the identity's entry.
-  const count = (id: string) => {
-    const e = heard.get(id) ?? { n: 0, atMs: -Infinity };
+  // Counts one hearing of `id`, whose entry is `e` if it has one; returns the entry.
+  const count = (id: string, e = heard.get(id)) => {
+    if (e) heard.delete(id);
+    else e = { n: 0, atMs: -Infinity };
     e.n++;
-    heard.delete(id);
     heard.set(id, e);
     if (heard.size > SEEN_MAX) heard.delete(heard.keys().next().value!);
     return e;
@@ -34,9 +45,9 @@ export function createRelay(rng: Rng) {
     if (!verified && !(decoded.reject === 'unknown-tag' && (bytes[0] & 15) <= TYPES.CODEBOOK)) return null;
     if (bytes.length !== 25) throw new RangeError(`packet has ${bytes.length} bytes, not 25`);
 
-    const id = identity(bytes);
-    if (heard.has(id)) {
-      const e = count(id);
+    const id = identity(bytes), old = heard.get(id);
+    if (old) {
+      const e = count(id, old);
       if (e.atMs <= nowMs) return null;
       e.atMs = -Infinity;
       return { cancel: id };

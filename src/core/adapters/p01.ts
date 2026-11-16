@@ -19,7 +19,8 @@ export function createP01(policy: Policy, script: Script): Adapter {
     writes: ['grid'],
     step(w, dt) {
       // @spec ADAPT-POWER-002, ADAPT-POWER-003, ADAPT-POWER-011, ADAPT-POLICY-008
-      const full = w.sectors.map((s, i) => w.alloc.power[sectorId(i)] >= powerDemand(s.people) * (1 - 1e-9));
+      const pd = w.sectors.map((s) => powerDemand(s.people)), power = w.alloc.power; // read once: each world read costs a guard call in checked mode
+      const full = pd.map((d, i) => power[sectorId(i)] >= d * (1 - 1e-9));
       for (const [i, f] of full.entries()) {
         if (!prev?.[i] || f) continue;
         cuts++; // the allocation that cut it was made at t - dt, under the tier in `since`
@@ -27,8 +28,9 @@ export function createP01(policy: Policy, script: Script): Adapter {
       }
       prev = full;
       // @spec ADAPT-POWER-001
-      const cap = capacityAt(script.events, w.t, CAP_MARGIN * w.sectors.reduce((a, s) => a + powerDemand(s.people), 0));
-      const load = Object.values(w.alloc.power).reduce((a, b) => a + b, 0);
+      const cap = capacityAt(script.events, w.t, CAP_MARGIN * pd.reduce((a, d) => a + d, 0));
+      // Object.values in key order, without its per-key descriptor reads, which are slow through the checked-mode guard
+      const load = Reflect.ownKeys(power).reduce((a, k) => a + (typeof k === 'string' ? power[k]! : 0), 0);
       const { f, rocof } = swing(w.grid.f, cap, load, dt);
       const tier = tierOf(f, w.grid.tier);
       since = tier === 'GREEN' ? null : (since ?? w.t);

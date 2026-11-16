@@ -1,0 +1,216 @@
+// Cross-adapter tests for the factory and the conventions every adapter follows (docs/intent/adapters/policy).
+import { describe, expect, it } from 'vitest';
+import type { Adapter, Allocation, World } from '../contracts.ts';
+import { createKernel } from '../kernel/kernel.ts';
+import { rng } from '../rng.ts';
+import { sevenDay } from '../scenario/seven-day.ts';
+import type { Script } from '../scenario/types.ts';
+import { createWorld } from '../scenario/world.ts';
+import { coolingDemandMW, co2Step, CO2_REF } from '../world/airheat/airheat.ts';
+import { PUMP_KW } from '../world/tunnels/tunnels.ts';
+import { createAdapters } from './index.ts';
+import { gridServed, served } from './p03.ts';
+import { lifeFloor, powerDemand, sectorId, type Policy } from './shared.ts';
+
+const DAY = 86400;
+const SEED = 3;
+const IDS = Array.from({ length: 24 }, (_, s) => sectorId(s));
+const POLICIES: Policy[] = ['directorate', 'stratum'];
+const sum = (a: Allocation) => Object.values(a).reduce((x, y) => x + y, 0);
+const byId = (as: Adapter[], id: string) => as.find((a) => a.id === id)!;
+/** The seven-day script cut to its first day: separation, outbreak seed, network down. */
+const dayOne: Script = { ...sevenDay, days: 1, acts: sevenDay.acts.filter((a) => a.atH <= 24), events: sevenDay.events.filter((e) => e.atH <= 24) };
+
+function runFor(policy: Policy, script: Script, seconds: number, wrap = (a: Adapter) => a) {
+  const w = createWorld(SEED, script);
+  const k = createKernel(w, createAdapters(policy, script).map(wrap), { dt: 60, check: true });
+  k.run(seconds);
+  return { w, m: k.metrics() };
+}
+
+// The rung 3 table of adapters-design.md.
+const TABLE: Record<string, [string[], string[]]> = {
+  p01: [['grid', 'sectors', 'alloc'], ['grid']],
+  p02: [['grid', 'sectors', 'alloc'], ['alloc']],
+  p03: [['sectors', 'alloc'], ['sectors', 'alloc']],
+  p04: [['sectors'], ['sectors', 'ledger']],
+  p05: [['sectors', 'alloc', 'tunnels'], ['sectors', 'tunnels', 'alloc']],
+  p07: [['mesh', 'tunnels', 'households'], ['mesh']],
+  p08: [['mesh', 'households'], ['mesh']],
+  p09: [['sectors', 'alloc'], ['sectors', 'alloc', 'ledger']],
+};
+
+// "Who writes what": the sub-fields each adapter owns, and the ledger kinds it may append.
+const OWNS: Record<string, { grid?: true; alloc?: (keyof World['alloc'])[]; sector?: string[]; passable?: true }> = {
+  p01: { grid: true },
+  p02: { alloc: ['power', 'water', 'food'] },
+  p03: { alloc: ['cooling'], sector: ['temp', 'wetBulb', 'co2'] },
+  p04: { sector: ['water'] },
+  p05: { alloc: ['pumps'], sector: ['sumpLevel'], passable: true },
+  p07: {},
+  p08: {},
+  p09: { alloc: ['medicine'], sector: ['stock'] },
+};
+const KINDS: Record<string, RegExp> = { p04: /^water\./, p09: /^cases/ };
+
+/** The fields some adapter owns, less those `id` owns. (A full structuredClone per adapter step is too slow for seven days.) */
+const owned = (w: World, id: string) => {
+  const o = OWNS[id]!;
+  const omit = (x: object, ks: string[] = []) => Object.fromEntries(Object.entries(x).filter(([k]) => !ks.includes(k)));
+  return JSON.stringify([o.grid ? 0 : w.grid, omit(w.alloc, o.alloc), w.sectors.map((x) => omit(x, o.sector)), w.tunnels.edges.map((e) => (o.passable ? 0 : e.passable))]);
+};
+/** The fields no adapter owns: checked once around each whole step. */
+const unowned = (w: World) => JSON.stringify([Object.keys(w), w.seed, w.clock, w.households, w.surface, w.tunnels.nodes, w.tunnels.edges.map((e) => [e.a, e.b])]);
+const prefix = <T>(a: readonly T[], b: readonly T[]) => a.length <= b.length && a.every((x, i) => b[i] === x);
+const subsequence = <T>(a: readonly T[], b: readonly T[]) => { let i = 0; for (const x of b) if (x === a[i]) i++; return i === a.length; };
+
+/** Checks one adapter's step against the "Who writes what" table and the allocation conventions, on the raw world `w`. */
+let still = '';
+function audited(a: Adapter, w: World, policy: Policy, coolCap: number): Adapter {
+  return {
+    ...a,
+    step(view, dt, r) {
+      const before = owned(w, a.id);
+      if (a.id === 'p01') still = unowned(w);
+      const inbox = [...w.mesh.inbox], delivered = [...w.mesh.delivered];
+      const measured = [...w.ledger.measured], official = [...w.ledger.official];
+      a.step(view, dt, r);
+      const after = owned(w, a.id);
+      if (a.id === 'p09' && unowned(w) !== still) expect.fail(`a field no adapter owns changed at ${w.t}`);
+      if (after !== before) expect(JSON.parse(after), `${a.id} at ${w.t}`).toEqual(JSON.parse(before));
+      // shortcut: messages and ledger entries are compared by reference, so an edit inside one goes unseen; verifyChain catches ledger edits
+      const okInbox = a.id === 'p07' ? subsequence(w.mesh.inbox, inbox) : a.id === 'p08' ? prefix(inbox, w.mesh.inbox) : prefix(inbox, w.mesh.inbox) && w.mesh.inbox.length === inbox.length;
+      const okDelivered = prefix(delivered, w.mesh.delivered) && (a.id === 'p07' || w.mesh.delivered.length === delivered.length);
+      if (!okInbox || !okDelivered) expect.fail(`${a.id} changed the mesh outside its rows at ${w.t}`);
+      for (const [old, now] of [[measured, w.ledger.measured], [official, w.ledger.official]] as const) {
+        if (!prefix(old, now)) expect.fail(`${a.id} replaced a ledger entry at ${w.t}`);
+        for (const e of now.slice(old.length)) if (!KINDS[a.id]?.test(e.kind)) expect.fail(`${a.id} wrote ledger kind ${e.kind} at ${w.t}`);
+      }
+      for (const good of OWNS[a.id]!.alloc ?? []) if (Object.keys(w.alloc[good]).join() !== IDS.join()) expect.fail(`${a.id} wrote alloc.${good} with keys ${Object.keys(w.alloc[good])}`);
+      if (a.id === 'p03' || a.id === 'p05') {
+        const demand = (s: number) => (a.id === 'p03' ? coolingDemandMW(w.sectors[s]!.level, w.sectors[s]!.people) : PUMP_KW / 1000);
+        const pool = (a.id === 'p03' ? coolCap : 24 * (PUMP_KW / 1000)) * gridServed(w);
+        const powered = IDS.reduce((x, id, s) => x + (w.alloc.power[id]! > 0 ? demand(s) : 0), 0);
+        const want = policy === 'stratum' ? pool : Math.min(pool, powered);
+        const got = sum(a.id === 'p03' ? w.alloc.cooling : w.alloc.pumps);
+        if (Math.abs(got - want) > 1e-9) expect.fail(`${a.id} pool ${got} is not ${want} at ${w.t}`);
+      }
+    },
+  };
+}
+
+describe('createAdapters', () => {
+  // @spec ADAPT-POLICY-001
+  it('returns fresh p01 to p09 (no p06) for either policy and rejects any other policy', () => {
+    for (const p of POLICIES) {
+      const a = createAdapters(p, sevenDay), b = createAdapters(p, sevenDay);
+      expect(a.map((x) => x.id)).toEqual(['p01', 'p02', 'p03', 'p04', 'p05', 'p07', 'p08', 'p09']);
+      a.forEach((x, i) => expect(x).not.toBe(b[i]));
+    }
+    for (const bad of ['', 'Directorate', 'fair', undefined]) expect(() => createAdapters(bad as Policy, sevenDay)).toThrow(RangeError);
+  });
+
+  // @spec ADAPT-POLICY-002
+  it('declares the reads and writes of the rung 3 table', () => {
+    for (const p of POLICIES) {
+      for (const a of createAdapters(p, sevenDay)) {
+        expect([[...a.reads].sort(), [...a.writes].sort()], a.id).toEqual(TABLE[a.id]!.map((x) => [...x].sort()));
+      }
+    }
+  });
+
+  // @spec ADAPT-POLICY-001, ADAPT-POLICY-003
+  it('gives identical worlds and metrics from two sets, with another run between them, and draws only from the stream passed in', () => {
+    for (const p of POLICIES) {
+      const a = runFor(p, dayOne, DAY);
+      runFor(p === 'stratum' ? 'directorate' : 'stratum', dayOne, DAY);
+      const b = runFor(p, dayOne, DAY);
+      expect(b.w).toEqual(a.w);
+      expect(b.m).toEqual(a.m);
+      // Same world seed, other streams: the run changes, so the draws come from the stream, not from world.seed.
+      const other = runFor(p, dayOne, DAY, (x) => {
+        const r = rng(SEED + 1, x.id);
+        return { ...x, step: (v, dt) => x.step(v, dt, r) };
+      });
+      expect(other.w.mesh).not.toEqual(a.w.mesh);
+    }
+  }, 60_000);
+
+  // @spec ADAPT-POLICY-004
+  it('returns finite SIMULATED metrics that leave the world unchanged, 0 before any denominator exists', () => {
+    for (const p of POLICIES) {
+      const w = createWorld(SEED, dayOne);
+      const fresh = createAdapters(p, dayOne);
+      const copy = structuredClone(w);
+      for (const a of fresh) expect(a.metric(w), a.id).toMatchObject({ value: 0, label: 'SIMULATED' });
+      expect(w).toEqual(copy);
+      const k = createKernel(w, fresh);
+      k.run(DAY / 2);
+      const mid = structuredClone(w);
+      for (const a of fresh) {
+        const m = a.metric(w);
+        expect(Number.isFinite(m.value) && m.label === 'SIMULATED', a.id).toBe(true);
+      }
+      expect(w).toEqual(mid);
+    }
+  }, 30_000);
+
+  // @spec ADAPT-POLICY-006
+  it('clamps every served fraction to [0, 1], 1 with no demand, and ventilates from power over the life floor', () => {
+    expect([served(0.5, 1), served(2, 1), served(-1, 1), served(0, 0), served(1, 0)]).toEqual([0.5, 1, 0, 1, 1]);
+    const w = createWorld(SEED, dayOne);
+    const floor = lifeFloor(w.sectors[0]!.people);
+    const power = [0.5 * floor, 0, 2 * powerDemand(w.sectors[2]!.people), floor];
+    power.forEach((x, s) => (w.alloc.power[sectorId(s)] = x));
+    createKernel(w, [byId(createAdapters('directorate', dayOne), 'p03')]).step();
+    [0.5, 0, 1, 1].forEach((v, s) => expect(w.sectors[s]!.co2).toBeCloseTo(co2Step(CO2_REF, v, 60).co2, 9));
+  });
+
+  // @spec ADAPT-POLICY-008
+  it('builds world-dependent state on the first step: p01 from the initial alloc.power, tiers before 0 GREEN, p05 dry flags', () => {
+    // p01: a sector trimmed in the initial allocation is no cut; a trim at t = 120 has only 2 min of AMBER behind it, one at 900 has 15.
+    const script: Script = { ...dayOne, events: [{ type: 'shortfall', atH: 0, from: 0.049, to: 0.049, rampH: 0, holdH: 2, recoverH: 0 }] };
+    const trim: Adapter = {
+      id: 'p02', reads: [], writes: ['alloc'], metric: () => ({ name: 'stub', value: 0, unit: '', label: 'SIMULATED' }),
+      step: (v) => { if (v.t === 120 || v.t === 900) v.alloc.power[v.t === 120 ? 's00' : 's01'] = 0.99 * powerDemand(500); },
+    };
+    const w = createWorld(SEED, script);
+    w.alloc.power.s05 = 0.99 * powerDemand(500);
+    w.grid.tier = 'AMBER';
+    const k = createKernel(w, [byId(createAdapters('stratum', script), 'p01'), trim]);
+    k.step();
+    expect(w.grid.tier).not.toBe('GREEN');
+    k.run(1800);
+    expect(w.grid.tier).not.toBe('GREEN');
+    expect(k.metrics().p01!.value).toBe(0.5);
+
+    // p05: flags start as isFlooded(sumpLevel, false); a sump between RECOVER and full starts dry.
+    const v = createWorld(SEED, dayOne);
+    v.sectors[5]!.sumpLevel = 0.95;
+    v.sectors[23]!.sumpLevel = 1;
+    createKernel(v, [byId(createAdapters('directorate', dayOne), 'p05')]).step();
+    const open = (s: number) => v.tunnels.edges.filter((e) => e.a === s || e.b === s).map((e) => e.passable);
+    expect(open(5).every(Boolean)).toBe(true);
+    expect(open(23).some(Boolean)).toBe(false);
+
+    // p03: the cooling capacity comes from the first world it steps, not from a default.
+    const u = createWorld(SEED, dayOne);
+    u.sectors[0]!.people = 1000;
+    u.alloc.power.s00 = powerDemand(1000);
+    createKernel(u, [byId(createAdapters('stratum', dayOne), 'p03')]).step();
+    expect(sum(u.alloc.cooling)).toBeCloseTo(u.sectors.reduce((a, x) => a + coolingDemandMW(x.level, x.people), 0), 9);
+  });
+
+  // @spec ADAPT-POLICY-002, ADAPT-POLICY-005, ADAPT-POLICY-007
+  it('writes only its own sub-fields, keyed s00 to s23, with pools at capacity times grid served, through a checked seven-day run', () => {
+    for (const p of POLICIES) {
+      const w = createWorld(SEED, sevenDay);
+      const coolCap = w.sectors.reduce((a, x) => a + coolingDemandMW(x.level, x.people), 0);
+      const k = createKernel(w, createAdapters(p, sevenDay).map((a) => audited(a, w, p, coolCap)), { dt: 60, check: true });
+      k.run(sevenDay.days * DAY);
+      expect(w.t).toBe(sevenDay.days * DAY);
+      expect(w.ledger.measured.length + w.ledger.official.length).toBeGreaterThan(0);
+      expect(w.mesh.delivered.length).toBeGreaterThan(0);
+    }
+  }, 300_000);
+});

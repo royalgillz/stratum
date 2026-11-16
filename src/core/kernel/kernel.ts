@@ -24,7 +24,7 @@ export interface Kernel {
   metrics(): Partial<Record<AdapterId, Metric>>;
 }
 
-const MAX_STEPS_PER_ADVANCE = 600;
+export const MAX_STEPS_PER_ADVANCE = 600;
 const LABELS = ['LIVE', 'REPLAY', 'SIMULATED'];
 
 /** A view of the world that throws on any write outside `allowed` (top-level keys). */
@@ -37,8 +37,8 @@ function guard(world: World, allowed: ReadonlySet<string>, id: string): World {
     let p = cache.get(o);
     if (!p) {
       p = new Proxy(o, {
-        get(t, k, r) {
-          const v = Reflect.get(t, k, r);
+        get(t, k) {
+          const v = (t as Record<string | symbol, unknown>)[k]; // plain data: no getters, so no receiver needed, and much faster than Reflect.get
           return typeof v === 'object' && v !== null ? deep(v, top) : v;
         },
         set() {
@@ -56,8 +56,8 @@ function guard(world: World, allowed: ReadonlySet<string>, id: string): World {
     return p;
   };
   return new Proxy(world, {
-    get(t, k, r) {
-      const v = Reflect.get(t, k, r);
+    get(t, k) {
+      const v = t[k as keyof World];
       return typeof v === 'object' && v !== null && !allowed.has(k as string) ? deep(v, k) : v;
     },
     set(t, k, v) {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createDetector } from './detector.ts';
+import { rng } from '../rng.ts';
 
 // Constant baseline of 10: MAD 0, so scale is the 1% floor, 0.1; exceeding means |x - 10| >= 0.4.
 function run(values: number[], d = createDetector()) {
@@ -26,6 +27,23 @@ describe('detector', () => {
     [50, 50, 50].forEach((x, i) => d.push('cond', 'B', 100 + i, x)); // B has no baseline yet
     expect(d.events).toEqual([]);
     expect(d.baseline('cond', 'A')?.median).toBe(10);
+  });
+
+  // @spec WIT-001
+  it('matches a sorted copy of the last 48 readings as the window rolls, ties included', () => {
+    const u = rng(7, 'detector-test');
+    const d = createDetector();
+    const xs: number[] = [];
+    const upper = (v: number[]) => [...v].sort((a, b) => a - b)[v.length >> 1]!;
+    for (let i = 0; i < 300; i++) {
+      const x = Math.floor(u() * 10); // digits 0 to 9: |z| stays under 2, so every reading is admitted
+      d.push('k', 'w', i, x);
+      xs.push(x);
+      const w = xs.slice(-48), med = upper(w);
+      const scale = Math.max(1.4826 * upper(w.map((y) => Math.abs(y - med))), 0.01 * Math.abs(med), 1e-9);
+      expect(d.baseline('k', 'w')).toEqual({ median: med, scale, n: w.length });
+    }
+    expect(d.events).toEqual([]);
   });
 
   // @spec WIT-001

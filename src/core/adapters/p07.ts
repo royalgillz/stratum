@@ -17,6 +17,8 @@ type Relay = ReturnType<typeof createRelay>;
 export function createP07(policy: Policy, script: Script): Adapter {
   const down = (x: number) => script.events.some((e) => e.type === 'network-down' && x >= e.atH * 3600 && x < (e.atH + e.durH) * 3600);
   let relays: Relay[] | undefined;
+  // shortcut: household id -> sector, built once, assumes no adapter writes households (none does in rung 3); rebuild per step when one does
+  let homes: Map<string, number> | undefined;
   let held: MeshMessage[] = [];
   let taken = 0, onTime = 0;
 
@@ -31,7 +33,8 @@ export function createP07(policy: Policy, script: Script): Adapter {
 
   // The whole cascade of one message; returns when the destination first hears it, or null.
   // @spec ADAPT-FAMILY-003, ADAPT-FAMILY-004, ADAPT-FAMILY-005
-  function cascade(m: MeshMessage, origin: number, dest: number, edges: readonly TunnelEdge[], rng: Rng): number | null {
+  // `next[n]`: the far end of each passable edge at node n, in edge order (the order of the rng draws).
+  function cascade(m: MeshMessage, origin: number, dest: number, next: readonly number[][], rng: Rng): number | null {
     if (origin === dest) return m.at;
     relays![origin].own(m.bytes);
     let seq = 0, got: number | null = null;
@@ -40,9 +43,7 @@ export function createP07(policy: Policy, script: Script): Adapter {
       let i = 0;
       for (let j = 1; j < q.length; j++) if (q[j].T < q[i].T || (q[j].T === q[i].T && q[j].seq < q[i].seq)) i = j;
       const tx = q.splice(i, 1)[0];
-      for (const e of edges) {
-        if (!e.passable || (e.a !== tx.node && e.b !== tx.node)) continue;
-        const nb = e.a === tx.node ? e.b : e.a;
+      for (const nb of next[tx.node]!) {
         if (rng() >= P_HOP) continue;
         const T = tx.T + AIR;
         if (nb === dest && got === null) got = T;
@@ -64,11 +65,21 @@ export function createP07(policy: Policy, script: Script): Adapter {
     // @spec ADAPT-FAMILY-001, ADAPT-FAMILY-002
     step(world, dt, rng) {
       relays ??= Array.from({ length: world.tunnels.nodes }, () => createRelay(rng));
+      if (!homes) {
+        homes = new Map();
+        for (const x of world.households) if (!homes.has(x.id)) homes.set(x.id, x.sector); // the first match, as find gave
+      }
       const t = world.t;
+      let next: number[][] | undefined; // built once per step, on the first cascade: plain arrays, read without the kernel's guard
+      const adjacency = (edges: readonly TunnelEdge[]) => {
+        const n: number[][] = Array.from({ length: world.tunnels.nodes }, () => []);
+        for (const { a, b, passable } of edges) if (passable) n[a]!.push(b), a !== b && n[b]!.push(a);
+        return n;
+      };
       for (const m of world.mesh.inbox.splice(0)) {
         const h = m.heard;
-        const home = h && world.households.find((x) => x.id === h.keySet);
-        if (!h || !home) continue;
+        const home = h && homes.get(h.keySet);
+        if (!h || home === undefined) continue;
         if (h.label !== 'SIMULATED') { // LIVE or REPLAY: heard in the room, outside the metric
           world.mesh.delivered.push(m);
           continue;
@@ -77,7 +88,7 @@ export function createP07(policy: Policy, script: Script): Adapter {
         if (!down(m.at)) deliver(world, m, m.at);
         else {
           const origin = (h.payload.level - 1) * 4 + h.payload.sector;
-          const at = policy === 'stratum' ? cascade(m, origin, home.sector, world.tunnels.edges, rng) : null;
+          const at = policy === 'stratum' ? cascade(m, origin, home, (next ??= adjacency(world.tunnels.edges)), rng) : null;
           if (at === null) held.push(m);
           else deliver(world, m, at);
         }

@@ -1,0 +1,150 @@
+import { expect, test, type Page } from '@playwright/test';
+import { encode, TYPES } from '../src/core/packet/codec.ts';
+import { deriveKeys, type KeySet } from '../src/core/packet/keys.ts';
+import { expectSoundLayout } from './layout.ts';
+
+const worldT = async (page: Page) => Number(await page.locator('#clock').getAttribute('data-t'));
+const shownMetrics = (page: Page) => page.locator('#metrics td:nth-child(2)').allTextContents();
+
+/** A real-codec OK, made here in Node as a phone makes it, under the given six words. */
+async function okBytes(words: string, member: number) {
+  const keys = (await deriveKeys(words, 'family')) as KeySet;
+  const bytes = await encode(keys, {
+    type: TYPES.OK, minute: Math.floor(Date.now() / 60000), nonce: member * 1000, hops: 3,
+    payload: { member, code: 0, level: 5, sector: 1, flags: 1, value: 0 },
+  });
+  return [...bytes];
+}
+
+test.describe('District 7 page', () => {
+  test('reachable from the home page; the week plays and the switch shows the other rule at the same world time', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('link', { name: 'District 7' }).click();
+    await expect(page.getByRole('heading', { name: 'District 7', level: 1 })).toBeVisible();
+    await expect(page.locator('#act')).toContainText('The network is down · TIME-LAPSE x3600 · paused', { timeout: 15_000 });
+    await expect(page.locator('#clock')).toContainText('World time day 1, 00:00');
+    await expect(page.locator('#clock')).toContainText('SIMULATED');
+    await expect(page.locator('#map text')).not.toHaveCount(0);
+    await expect(page.locator('#map')).toHaveAttribute('aria-label', /SIMULATED/);
+    await expect(page.locator('#metrics tr')).toHaveCount(8);
+    for (const row of await page.locator('#metrics th').allTextContents()) expect(row).toContain('SIMULATED');
+    await expect(page.locator('#board')).toContainText('No OK heard from this family yet');
+    await expectSoundLayout(page);
+
+    await page.getByRole('button', { name: 'Play' }).click();
+    await expect(page.locator('#act')).toHaveText('The network is down · TIME-LAPSE x3600');
+    // One world hour per real second: by hour 8 the mesh and the bulletin have treated the separated families differently.
+    await expect.poll(() => worldT(page), { timeout: 20_000 }).toBeGreaterThan(8 * 3600);
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await expect(page.locator('#act')).toContainText('paused');
+    const t = await worldT(page), directorate = await shownMetrics(page);
+
+    await page.getByRole('button', { name: 'STRATUM rule' }).click();
+    await expect(page.getByRole('button', { name: 'STRATUM rule' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#shownHead')).toHaveText('STRATUM (shown)');
+    expect(await worldT(page)).toBe(t);
+    const stratum = await shownMetrics(page);
+    expect(stratum).not.toEqual(directorate);
+    expect(await page.locator('#metrics td:nth-child(3)').allTextContents()).toEqual(directorate); // the other rule, beside it
+    await expectSoundLayout(page);
+
+    await page.getByRole('button', { name: 'Sound: off' }).click();
+    await expect(page.getByRole('button', { name: 'Sound: on' })).toBeVisible();
+  });
+
+  test('the week plays end to end: level 6 goes dark, the sag shows on the clock and in the hum, and a restart replays', async ({ page }) => {
+    test.setTimeout(150_000);
+    await page.addInitScript(() => { // every hum target the emitter sets, in order: f, 2f, then the gain
+      const calls: number[] = [];
+      Object.assign(window, { humCalls: calls });
+      const set = AudioParam.prototype.setTargetAtTime;
+      AudioParam.prototype.setTargetAtTime = function (v, t, c) { calls.push(v); return set.call(this, v, t, c); };
+    });
+    const hum = (n: number) => page.evaluate((n) => (window as unknown as { humCalls: number[] }).humCalls.slice(-n), n);
+    await page.goto('/src/district/?speed=10', { waitUntil: 'domcontentloaded' }); // test knob: ten real seconds per second
+    const cells = page.locator('#map g'), clock = page.locator('#clock');
+    await expect(cells).toHaveCount(24, { timeout: 15_000 });
+    await expect(page.locator('#map rect.demo')).toHaveCount(1);
+    await expect(cells.nth(17).locator('rect.demo')).toHaveCount(1); // index (level - 1) * 4 + sector: level 5, B
+    await expect(cells.nth(17).locator('title')).toContainText('Level 5 sector B, demo family');
+    await expect(cells.nth(17)).toContainText('★');
+    const vp = page.viewportSize()!;
+    if (vp.width > 1000) { // two columns: the whole cross-section is on the first screen
+      const box = (await page.locator('#map').boundingBox())!;
+      expect(box.y + box.height).toBeLessThanOrEqual(vp.height);
+    }
+
+    await page.getByRole('button', { name: 'Sound: off' }).click();
+    await page.getByRole('button', { name: 'Play' }).click();
+    // Checked in the page every frame: at ?speed these states last about a second, shorter than a Playwright poll under load.
+    // The Directorate cuts the deepest level first: in the hour-30 shortfall level 6 C and D go dark.
+    await page.waitForFunction(() => [...document.querySelectorAll('#map g')].flatMap((g, i) => (g.classList.contains('dark') ? [i] : [])).join() === '22,23',
+      null, { polling: 'raf', timeout: 30_000 });
+    // The audio clock sags inside the REAL TIME act; pause there, from the page, before the act can end.
+    await page.waitForFunction(() => {
+      const hit = document.getElementById('act')!.textContent === 'The hum sags: under a minute of warning, too short to count · REAL TIME'
+        && /Hz, (AMBER|RED) /.test(document.getElementById('clock')!.textContent!);
+      if (hit) document.getElementById('play')!.click();
+      return hit;
+    }, null, { polling: 'raf', timeout: 30_000 });
+    const act = page.locator('#act');
+    await expect(act).toContainText('The hum sags: under a minute of warning, too short to count · REAL TIME · paused');
+    const f = Number(/grid ([\d.]+) Hz/.exec((await clock.textContent())!)![1]);
+    expect(f).toBeLessThan(399.95);
+    const [f1, f2, gain] = await hum(3);
+    expect(f1).toBeCloseTo(f, 2);
+    expect(f2).toBeCloseTo(2 * f, 2);
+    expect(gain).toBe(1);
+
+    await page.getByRole('button', { name: 'Play' }).click();
+    await expect(page.getByRole('button', { name: 'Week ended' })).toBeDisabled({ timeout: 120_000 });
+    await expect(clock).toContainText('World time day 8, '); // at ?speed the last tick may overshoot midnight: Run.tick does not clamp to the end
+    await page.getByRole('button', { name: 'Sound: on' }).click();
+    await expect.poll(async () => (await hum(1))[0]).toBe(0);
+
+    await page.getByLabel('Seed').fill('2');
+    await page.getByRole('button', { name: 'Restart' }).click();
+    await expect(page.getByRole('button', { name: 'Play' })).toBeEnabled();
+    await expect(clock).toContainText('World time day 1, 00:00');
+    await expect(clock).toContainText('seed 2');
+    await expectSoundLayout(page);
+  });
+
+  test('a real-codec OK under the demo words reaches the board as LIVE under both rules; another family is rejected', async ({ page }) => {
+    test.setTimeout(60_000);
+    // ?test exposes only the seam after the microphone and modem: CI has no real microphone.
+    await page.goto('/src/district/?test', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByLabel('Family words')).toHaveValue('abandon ability able about above absent');
+    await page.waitForFunction(() => 'districtTest' in window);
+    await page.getByRole('button', { name: 'Play' }).click();
+
+    const hear = (b: number[]) => page.evaluate((b) => (window as unknown as { districtTest: { hear(b: number[]): Promise<void> } }).districtTest.hear(b), b);
+    await hear(await okBytes('abandon ability able about above absent', 42));
+    await hear(await okBytes('zoo zone youth young yellow year', 43));
+    const log = page.locator('#heard');
+    await expect(log).toContainText('Verified OK from member 42 · LIVE');
+    await expect(log).toContainText('Rejected: not this family (or damaged) · LIVE');
+    await expect(log).not.toContainText(/[0-9a-f]{2} [0-9a-f]{2} [0-9a-f]{2}/); // never the bytes
+
+    const board = page.locator('#board');
+    await expect(board).toContainText('Member 42: I am OK, sent', { timeout: 10_000 });
+    await expect(board).toContainText('level 5, sector B · LIVE');
+    await expect(board).not.toContainText('Member 43');
+    await page.getByRole('button', { name: 'STRATUM rule' }).click();
+    await expect(board).toContainText('Member 42: I am OK, sent');
+    await expect(board).toContainText('LIVE');
+    await expectSoundLayout(page);
+  });
+
+  test('the gateway opens the microphone, and a wrong word says so', async ({ page }) => {
+    await page.goto('/src/district/', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Listen for phones' }).click();
+    await expect(page.locator('#listenStatus')).toHaveText(/^Listening\./, { timeout: 15_000 });
+    await page.getByLabel('Family words').fill('abandon ability able about above zzz');
+    await page.getByLabel('Family words').press('Enter');
+    await page.getByLabel('Family words').blur();
+    await expect(page.locator('#wordsErr')).toHaveText('"zzz" is not one of the family words.');
+    await expectSoundLayout(page);
+  });
+});

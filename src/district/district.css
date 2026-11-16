@@ -1,0 +1,40 @@
+/* District 7 page: judge.css supplies the tokens, themes and buttons; this adds the wide layout and the map. */
+@import './judge.css'; /* imported, not linked: a built page puts linked sheets after its own, which would undo these overrides */
+body { max-width: 110rem; }
+input { font: inherit; min-height: 44px; padding: 0 8px; color: var(--fg); background: var(--bg); border: 1px solid var(--muted); border-radius: 4px; }
+#seed { width: 5.5em; margin: 0 8px; }
+#words { display: block; width: 100%; max-width: 32rem; margin: 4px 0; }
+.seed { margin-right: 8px; }
+[aria-label=Run] { margin-right: 16px; }
+button[aria-pressed=true] { font-weight: 700; outline: 3px solid var(--accent); outline-offset: 1px; }
+button:disabled { opacity: 0.6; }
+.act { font-size: 1.15rem; font-weight: 600; margin: 12px 0 0; }
+.tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+#map { display: block; width: 100%; height: auto; max-height: min(62vh, calc(100vh - 340px)); /* all six levels above the fold on a 1366 x 768 laptop: the map starts about 300 px down, more with Linux fonts */ font: 13px system-ui, sans-serif; }
+#map text { fill: currentColor; }
+#map .axis { fill: var(--muted); font-weight: 700; }
+#map .marks { font-weight: 700; letter-spacing: 0.08em; }
+/* Lamp colours are the same in both themes: a lit sector looks lit either way. */
+#map .lit { color: #111; } #map .lit rect:first-of-type { fill: #f2c94c; }
+#map .dim { color: #fff; } #map .dim rect:first-of-type { fill: #7a6420; }
+#map .dark { color: #eee; } #map .dark rect:first-of-type { fill: #1c1c1c; }
+#map rect { stroke: var(--line); }
+/* A cut sector's fill is near the dark-theme page colour, so its outline carries the 3:1 contrast. */
+#map .dark rect:first-of-type:not(.demo) { stroke: #888; stroke-width: 2; }
+#map rect.demo { stroke: var(--accent); stroke-width: 4; }
+#map rect.sump { fill: #2f80ed; stroke: none; }
+
+.legend { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.key { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; border: 1px solid var(--line); }
+.key.lit { background: #f2c94c; } .key.dim { background: #7a6420; } .key.dark { background: #1c1c1c; border-color: #888; } .key.water { background: #2f80ed; }
+
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td { font-variant-numeric: tabular-nums; white-space: nowrap; }
+tbody th { font-weight: 400; }
+.list { padding-left: 1.2em; margin: 0; }
+.list li { margin: 4px 0; overflow-wrap: anywhere; }

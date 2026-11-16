@@ -4,7 +4,7 @@ import type { Adapter } from '../contracts.ts';
 import type { Script } from '../scenario/types.ts';
 import { allocate } from '../fairshare/fairshare.ts';
 import { CAP_MARGIN, F0, capacityAt } from '../world/grid/grid.ts';
-import { lifeFloor, powerDemand, sectorId, type Policy } from './shared.ts';
+import { bySector, lastOf, lifeFloor, powerDemand, sectorId, type Policy } from './shared.ts';
 
 // docs/params.md
 export const SHED_HZ = 1.0; // Hz below F0
@@ -25,17 +25,18 @@ export function createP02(policy: Policy, script: Script): Adapter {
   let shedding = false;
   let got: number[][] = []; // per sector: cumulative granted power, water, food (good-units x s)
   let want: number[][] = []; // per sector: cumulative demanded, same units
+  const memo = { power: lastOf<number[]>(), water: lastOf<number[]>(), food: lastOf<number[]>() }; // food and water rarely change
   return {
     id: 'p02',
     reads: ['grid', 'sectors', 'alloc'],
     writes: ['alloc'],
     step(w, dt) {
-      const ids = w.sectors.map((_, s) => sectorId(s));
-      const people = w.sectors.map((s) => s.people);
-      const fair = (supply: number, floor: number[], demand: number[]) => {
+      const people = w.sectors.map((s) => s.people); // one pass: each world read costs a guard call in checked mode
+      const ids = people.map((_, s) => sectorId(s));
+      const fair = (good: keyof typeof memo, supply: number, floor: number[], demand: number[]) => memo[good]([supply, ...floor, ...demand], () => {
         const shares = allocate(supply, ids.map((id, s) => ({ id, floor: floor[s], demand: demand[s], debt: 0 }))).shares;
         return ids.map((id) => shares[id]);
-      };
+      });
       const pd = people.map(powerDemand);
       const demandMW = sum(pd);
       const cap = capacityAt(script.events, w.t, CAP_MARGIN * demandMW);
@@ -57,28 +58,28 @@ export function createP02(policy: Policy, script: Script): Adapter {
         power = pd.map((d, s) => (on[s] ? d : 0));
       } else if (shedding) {
         // @spec ADAPT-POWER-007
-        power = fair(target, people.map(lifeFloor), pd);
+        power = fair('power', target, people.map(lifeFloor), pd);
       }
       // @spec ADAPT-POWER-008
       const wd = people.map((p) => p * WATER_DEMAND);
       const ws = RECYCLE_LPD * sum(people) * served(sum(power), demandMW);
       const water = policy === 'directorate'
         ? prop(ws, wd.map((d, s) => (power[s] > 0 ? d : 0)))
-        : fair(ws, people.map((p) => p * WATER_FLOOR), wd);
+        : fair('water', ws, people.map((p) => p * WATER_FLOOR), wd);
       // @spec ADAPT-POWER-009
       const fd = people.map((p) => p * FOOD_DEMAND);
       const fs = FOOD_SUPPLY * sum(people);
-      const food = policy === 'directorate' ? prop(fs, fd) : fair(fs, people.map((p) => p * FOOD_FLOOR), fd);
+      const food = policy === 'directorate' ? prop(fs, fd) : fair('food', fs, people.map((p) => p * FOOD_FLOOR), fd);
 
-      const rec = (xs: number[]) => Object.fromEntries(ids.map((id, s) => [id, xs[s]]));
-      w.alloc.power = rec(power);
-      w.alloc.water = rec(water);
-      w.alloc.food = rec(food);
+      w.alloc.power = bySector(power);
+      w.alloc.water = bySector(water);
+      w.alloc.food = bySector(food);
       // @spec ADAPT-POLICY-008
       if (!got.length) [got, want] = [ids.map(() => [0, 0, 0]), ids.map(() => [0, 0, 0])];
       for (const s of ids.keys()) {
-        [power[s], water[s], food[s]].forEach((g, k) => (got[s][k] += g * dt));
-        [pd[s], wd[s], fd[s]].forEach((d, k) => (want[s][k] += d * dt));
+        const g = got[s], d = want[s]; // plain adds: this runs for every sector on every step
+        g[0] += power[s] * dt, g[1] += water[s] * dt, g[2] += food[s] * dt;
+        d[0] += pd[s] * dt, d[1] += wd[s] * dt, d[2] += fd[s] * dt;
       }
     },
     // @spec ADAPT-POWER-010

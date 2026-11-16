@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STRATUM District 7</title>
+  <link rel="stylesheet" href="./district.css" />
+</head>
+<body>
+  <header>
+    <h1>District 7</h1>
+    <p class="muted">A <strong>SIMULATED</strong> week of District 7 (6 levels, 4 sectors each) under two rules, with the same supply. Real phones nearby can send OK by sound: those messages are <strong>LIVE</strong>.</p>
+  </header>
+
+  <div class="row">
+  <div class="row" role="group" aria-label="Run">
+    <button id="play" class="primary">Play</button>
+    <label class="row seed">Seed <input id="seed" type="number" min="1" step="1" value="1" inputmode="numeric" /></label>
+    <button id="restart">Restart</button>
+    <button id="sound">Sound: off</button>
+  </div>
+  <div class="row" role="group" aria-label="Rule shown">
+    <button id="show-directorate" aria-pressed="true">Directorate rule</button>
+    <button id="show-stratum" aria-pressed="false">STRATUM rule</button>
+  </div>
+  </div>
+
+  <p id="act" class="act" aria-live="polite"></p>
+  <p id="clock" class="small"></p>
+
+  <main class="layout">
+    <section aria-labelledby="mapTitle">
+      <h2 id="mapTitle">Cross-section <span class="tag">SIMULATED</span></h2>
+      <svg id="map" viewBox="0 0 412 432" preserveAspectRatio="xMinYMin meet" role="img"></svg>
+      <ul class="legend small">
+        <li><span class="key lit"></span> power on (% of demand served)</li>
+        <li><span class="key dim"></span> power trimmed</li>
+        <li><span class="key dark"></span> power cut</li>
+        <li><span class="key water"></span> sump fill, right edge</li>
+        <li><b>°</b> wet-bulb temperature, <b>H</b> above 27.5 °C</li>
+        <li><b>F</b> flooded, <b>W</b> unsafe tap water, <b>M</b> medicine sent for cases</li>
+        <li><b>★</b> outlined: the demo family, level 5 sector B</li>
+      </ul>
+    </section>
+
+    <div>
+      <section aria-labelledby="metricsTitle">
+        <h2 id="metricsTitle">Results so far <span class="tag">SIMULATED</span></h2>
+        <table>
+          <thead><tr><th scope="col">Problem</th><th scope="col" id="shownHead">Directorate</th><th scope="col" id="otherHead">STRATUM</th></tr></thead>
+          <tbody id="metrics"></tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="boardTitle">
+        <h2 id="boardTitle">Family board: the demo family</h2>
+        <ul id="board" class="list"></ul>
+      </section>
+
+      <section aria-labelledby="gatewayTitle">
+        <h2 id="gatewayTitle">Gateway: phones in this room</h2>
+        <label for="words">Family words</label>
+        <input id="words" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" value="abandon ability able about above absent" />
+        <p class="small muted">A phone joins this family by typing the same six words on its Family tab, then sends OK from its Report tab.</p>
+        <p id="wordsErr" class="small" role="alert"></p>
+        <button id="listen">Listen for phones</button>
+        <p id="listenStatus" class="small" role="status"></p>
+        <h3>Heard <span class="tag">LIVE</span></h3>
+        <ul id="heard" class="list small" role="log"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="/vendor/ggwave/ggwave.js"></script>
+  <script type="module" src="./district.ts"></script>
+</body>
+</html>

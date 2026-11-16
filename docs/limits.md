@@ -23,6 +23,9 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
   inside the band, so a phone shows RED.
 - The real-time act "The hum sags" shows the hum falling, but the cut follows under a minute later.
   That is too short to count as warned, and the metric counts it as unwarned.
+- No event in the seven-day script cuts level 5: only level 6 C and D go dark. So the demo family's sector
+  stays powered, the district page's hum never falls silent, and the demo beat "Level 5 goes dark on the
+  cross-section" does not happen on that page. The silent path is untested until a scripted cut reaches level 5.
 - Grid, heat, power and tunnel results draw no randomness: they vary with the script and the parameters,
   not with the seed. Their uncertainty comes from parameter sweeps, not from seed intervals.
 - Where the Directorate's figure follows from a stated rule (no warnings, a daily lab, a daily bulletin,

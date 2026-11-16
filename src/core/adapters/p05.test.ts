@@ -81,6 +81,17 @@ describe('p05 tunnels', () => {
     expect(w.alloc.pumps).toEqual(allocate(24 * D * 0.5, claimsFor(wet21)).shares);
   });
 
+  // @spec ADAPT-LIVABLE-007, ADAPT-LIVABLE-009
+  it('STRATUM: recomputes criticality and reach when a sector floods mid-run', () => {
+    const late = quietScript([{ type: 'flood', atH: 1 / 60, sector: 21, inflowM3h: 500, durH: 1 }]);
+    const { w, k } = run('stratum', 0.5, [], 2, (x) => (x.sectors[21].sumpLevel = 0.9999), late);
+    expect(w.sectors[21].sumpLevel).toBe(1); // dry at step 1, flooded during step 2
+    expect(w.alloc.pumps).toEqual(allocate(24 * D * 0.5, claimsFor(dry)).shares);
+    expect(k.metrics().p05!.value).toBeCloseTo(3 * PEOPLE * H, 9); // step 2 strands 21, 22 and 23
+    k.step();
+    expect(w.alloc.pumps).toEqual(allocate(24 * D * 0.5, claimsFor(wet21)).shares);
+  });
+
   // @spec ADAPT-LIVABLE-007
   it('STRATUM: recomputes criticality when people change', () => {
     const { w, k } = run('stratum', 0.5);

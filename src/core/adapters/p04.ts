@@ -12,6 +12,8 @@ const SAMPLE_AT = 6 * 3600; // s, the Directorate's daily grab sample at 06:00
 const DAY = 86400;
 const LEVELS = [1, 2, 3, 4, 5, 6];
 const CHANNELS = ['cond', 'toc', 'turb', 'biocide'] as const;
+const KINDS = CHANNELS.map((c) => `water.${c}`); // built once: the same strings every push make the detector's lookups cheap
+const WHERE = LEVELS.map((l) => `L${l}`);
 
 /** The first time `at + k × period` (k whole) at or after `t`. */
 const next = (t: number, at: number, period: number) => at + period * Math.ceil((t - at) / period);
@@ -57,8 +59,8 @@ export function createP04(policy: Policy, script: Script): Adapter {
       if (policy === 'stratum') {
         const hourly = next(t, 0, 3600) < t + dt;
         out.forEach((q, i) => {
-          const where = `L${i + 1}`;
-          for (const c of CHANNELS) s!.detector.push(`water.${c}`, where, t, q[c]);
+          const where = WHERE[i]!;
+          CHANNELS.forEach((c, k) => s!.detector.push(KINDS[k]!, where, t, q[c]));
           if (hourly) s!.witness.observe('water.toc', where, q.toc, `sensor:${where}`);
           const evs = s!.detector.events.filter((e) => e.where === where);
           const open = evs.filter((e) => e.tEnd === undefined);
@@ -71,7 +73,8 @@ export function createP04(policy: Policy, script: Script): Adapter {
       while (s.history.length > 1 && s.history[1]!.t <= t - MAX_DELAY) s.history.shift();
       const taps = [0, 1, 2, 3].map((j) => {
         let h: WaterQuality[] | undefined;
-        for (const e of s!.history) if (e.t <= t - tapDelay(j)) h = e.out;
+        const due = t - tapDelay(j);
+        for (const e of s!.history) if (e.t <= due) h = e.out;
         return h;
       });
       // @spec ADAPT-EVIDENCE-005
