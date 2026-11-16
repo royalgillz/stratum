@@ -46,6 +46,14 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 
 - Breath Count is a decision aid that follows published thresholds for children under five.
   It is not a medical device and gives no verdict for adults.
+- Breath Count asks only five of the chart's eleven danger signs (chest indrawing, unable to drink
+  or feed, vomits everything, convulsions, unusually sleepy or unconscious). It does not ask about
+  long cough, long diarrhoea, blood in stool, long fever, the MUAC strap or swollen feet, so a GREEN
+  card does not rule those out. The disclaimer says so.
+- Breath Count counts breaths only for a child with cough or difficult breathing, as the chart does.
+- A count with missed taps spread evenly through the minute still reads low. Only a gap over three
+  breath intervals is caught.
+- Medicine requests are not yet case reports for outbreak tracking (problem 9).
 - Sound cannot detect contaminated water. The detector reads sensor values and residents' reports.
 
 ## Results that go against us

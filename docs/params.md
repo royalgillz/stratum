@@ -23,13 +23,14 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Packet stale limit | 24 | h | packet | | true | Older packets are rejected |
 | Packet MAX_HOPS | 4 | hops | packet | | true | Hops byte is reported clamped to this |
 | Key words | 6 of 2048 | words | packet | | true | 66 bits. Word list and its licence still to choose |
-| Fast breathing, age 2 to 12 months | 50 | breaths/min | care/breath | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | WHO guidance for community health workers |
-| Fast breathing, age 12 months to 5 years | 40 | breaths/min | care/breath | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | An age of exactly 12 months takes 40 |
-| Breath count length | 60 | s | care/breath | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | Full minute; a shorter count gives no rate (no extrapolation) |
-| Breath Count youngest age | 2 | months | care/breath | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | The chart covers 2 months up to 5 years; younger infants are referred |
-| Breath Count oldest age (exclusive) | 60 | months | care/breath | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | Under five only (CLAUDE.md); no classification at 60 months or more |
+| Fast breathing, age 2 to 12 months | 50 | breaths/min | care/breath | https://iris.who.int/handle/10665/44398 | false | WHO/UNICEF chart booklet for the community health worker (ISBN 978 92 4 154804 5), "Sick but NO Danger Sign": "In a child age 2 months up to 12 months, 50 breaths or more per minute" |
+| Fast breathing, age 12 months to 5 years | 40 | breaths/min | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart: "In a child age 12 months up to 5 years, 40 breaths or more per minute". An age of exactly 12 months takes 40 |
+| Breath count length | 60 | s | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart, "Identify problems: ASK and LOOK": "If cough, count breaths in 1 minute". A shorter count gives no rate (no extrapolation) |
+| Breath Count youngest age | 2 | months | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart, title page: "child age 2 months up to 5 years"; younger infants are referred |
+| Breath Count oldest age (exclusive) | 60 | months | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart (up to 5 years) and CLAUDE.md (under five only); no classification at 60 months or more |
 | Breath tap debounce | 250 | ms | care/breath | | true | A tap closer than this to the last counted tap is a double tap; allows up to 240 per minute |
 | Breath plausible rate | 10 to 120 | breaths/min | care/breath | | true | Outside this band, without a danger sign, the card asks for a recount |
+| Breath missed-tap gap | 3 | median intervals | care/breath | | true | A longer gap (start, between taps, or to 60 s) in a full count asks for a recount |
 | Wet-bulb limit, working areas | 27.5 | deg C | air-heat | | false | From the earlier report. Add the source URL before use |
 | Total organic carbon limit | 3 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | ISS potable water |
 | Iodine biocide, biocidal range | 1 to 4 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | |

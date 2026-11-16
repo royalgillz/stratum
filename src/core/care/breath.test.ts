@@ -4,7 +4,7 @@ import { CARDS, DISCLAIMER, classify, needRequest, type BreathInput, type Danger
 const none: DangerSigns = { chestIndrawing: false, unableToDrink: false, vomitsEverything: false, convulsions: false, sleepyOrUnconscious: false };
 // n taps evenly spread over the first minute
 const taps = (n: number) => Array.from({ length: n }, (_, i) => i * Math.floor(60000 / Math.max(n, 1)));
-const input = (o: Partial<BreathInput> = {}): BreathInput => ({ ageMonths: 24, tapsMs: taps(30), elapsedMs: 60000, signs: none, label: 'LIVE', ...o });
+const input = (o: Partial<BreathInput> = {}): BreathInput => ({ ageMonths: 24, cough: true, tapsMs: taps(30), elapsedMs: 60000, signs: none, label: 'LIVE', ...o });
 
 describe('breath', () => {
   // @spec BREATH-001
@@ -63,12 +63,22 @@ describe('breath', () => {
     }
     const short = classify(input({ signs: { ...none, chestIndrawing: true }, tapsMs: [0], elapsedMs: 5000 }));
     expect([short.classification, short.rate]).toEqual(['RED', null]);
+    expect(classify(input({ cough: false, signs: { ...none, convulsions: true } })).classification).toBe('RED');
+    // only the five fields count, and only when exactly true (the phone may pass its whole form)
+    const form = { ...none, notes: 'cough' } as DangerSigns;
+    expect(classify(input({ signs: form })).classification).toBe('GREEN');
+    const stringly = { ...none, convulsions: 'false' } as unknown as DangerSigns;
+    expect(classify(input({ signs: stringly })).classification).toBe('GREEN');
   });
 
   // @spec BREATH-008
   it('BREATH-008 asks for a recount when stopped before 60 s', () => {
     const r = classify(input({ tapsMs: taps(60).filter((t) => t < 30000), elapsedMs: 30000 }));
     expect([r.classification, r.rate, r.card]).toEqual(['RECOUNT', null, CARDS.recountShort]);
+    // the chart counts breaths only when there is cough or difficult breathing
+    const noCough = classify(input({ ageMonths: 24, cough: false, tapsMs: taps(44) }));
+    expect([noCough.classification, noCough.rate, noCough.card]).toEqual(['NOT_ASSESSED', 44, CARDS.notAssessed]);
+    expect(classify(input({ cough: false, tapsMs: [0], elapsedMs: 5000 })).rate).toBeNull();
   });
 
   // @spec BREATH-009
@@ -77,6 +87,14 @@ describe('breath', () => {
       const r = classify(input({ tapsMs: taps(n) }));
       expect([r.classification, r.rate, r.card], String(n)).toEqual(['RECOUNT', n, CARDS.recountImplausible]);
     }
+    // 25 taps in the first 25 s, then the caregiver stops tapping while the timer runs on
+    const abandoned = classify(input({ ageMonths: 6, tapsMs: Array.from({ length: 25 }, (_, i) => i * 1000) }));
+    expect([abandoned.classification, abandoned.rate, abandoned.card]).toEqual(['RECOUNT', 25, CARDS.recountGap]);
+    // a missed stretch in the middle: 44 per minute with 8 s untapped
+    const gap = taps(44).filter((t) => t < 20000 || t > 28000);
+    expect(classify(input({ tapsMs: gap })).card).toBe(CARDS.recountGap);
+    // a late start, then steady taps
+    expect(classify(input({ tapsMs: taps(60).filter((t) => t >= 10000) })).card).toBe(CARDS.recountGap);
   });
 
   // @spec BREATH-010
@@ -92,10 +110,11 @@ describe('breath', () => {
 
   // @spec BREATH-011
   it('BREATH-011 always carries the disclaimer, label and one digit-free card', () => {
+    expect(DISCLAIMER).toMatch(/breathing and five danger signs only/);
     const cards = Object.values(CARDS);
     for (const c of cards) expect(c).not.toMatch(/\d/);
     const cases = [input({ ageMonths: 80 }), input({ ageMonths: 1 }), input({ signs: { ...none, convulsions: true } }),
-      input({ elapsedMs: 100, tapsMs: [] }), input({ tapsMs: taps(5) }), input({ tapsMs: taps(45) }), input({ label: 'SIMULATED' })];
+      input({ elapsedMs: 100, tapsMs: [] }), input({ tapsMs: taps(5) }), input({ tapsMs: taps(45) }), input({ label: 'SIMULATED' }), input({ cough: false })];
     for (const i of cases) {
       const r = classify(i);
       expect(r.disclaimer).toBe(DISCLAIMER);
@@ -111,6 +130,6 @@ describe('breath', () => {
     expect(needRequest(classify(input({ signs: { ...none, convulsions: true } })))).toEqual({ code: 0x10, value: 30 });
     expect(needRequest(classify(input({ signs: { ...none, convulsions: true }, elapsedMs: 1000, tapsMs: [] })))).toEqual({ code: 0x10, value: 0 });
     expect(needRequest(classify(input({ tapsMs: taps(45) })))).toEqual({ code: 0x11, value: 45 });
-    for (const i of [input(), input({ ageMonths: 1 }), input({ ageMonths: 61 }), input({ elapsedMs: 0, tapsMs: [] })]) expect(needRequest(classify(i))).toBeNull();
+    for (const i of [input(), input({ ageMonths: 1 }), input({ ageMonths: 61 }), input({ elapsedMs: 0, tapsMs: [] }), input({ cough: false, tapsMs: taps(45) })]) expect(needRequest(classify(i))).toBeNull();
   });
 });

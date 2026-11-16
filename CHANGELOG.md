@@ -38,6 +38,13 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- 2026-11-16: Breath Count review fixes by an agent (`src/core/care/breath.ts`, `docs/intent/breath/`), BREATH-007 to BREATH-011 reworded, still 12 specs:
+  - danger signs: only the five named fields count, and only the value `true` (a wider form object gave a false RED);
+  - new `cough` input (cough or difficult breathing): without it the result is `NOT_ASSESSED` and no request, as the chart counts breaths only if cough;
+  - a full count with a gap over 3 median intervals (missed taps) gives RECOUNT with a new card, instead of a false GREEN;
+  - the disclaimer and `docs/limits.md` say that only breathing and five of the chart's eleven danger signs are checked;
+  - source corrected: the old link (NBK143752) is chapter 4 of WHO's 2008 *Manual for the health care of children in humanitarian emergencies*, not the community chart. Params, design and plan now cite the WHO/UNICEF chart booklet, https://iris.who.int/handle/10665/44398 ;
+  - problem 9 claim dropped from the design, specs and `docs/coverage.md` until a case-report format exists. New parameter: missed-tap gap (assumption).
 - 2026-11-16: Breath Count classifier built by an agent (`src/core/care/breath.ts`, design and specs in `docs/intent/breath/`): BREATH-001 to BREATH-012 implemented and marked [x], 12 tests. Full 60 s count only (no extrapolation), 250 ms tap debounce, recount outside 10 to 120 per minute, under 2 months referred, no classification at 60 months or more, NEED codes 0x10 (RED) and 0x11 (AMBER). Six Breath Count rows in `docs/params.md`; problems 9 and 10 in `docs/coverage.md`. No change to `contracts.ts` or the packet codec. Judgement calls are open questions below.
 - Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
 - Playwright 1.65.1 added (approved by the human) with six viewport projects, `npm run e2e`, `e2e/phone.spec.ts` (layout, family, word errors, microphone path) and a CI `e2e` job. Locally 30/30 pass; 5 needed a retry because the Windows preview server stalls under load.
@@ -113,15 +120,21 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ### Open (2026-11-16)
 
-1. **breath**: infants under 2 months get `REFER_YOUNG` ("too young for this aid"), not a classification. The WHO young-infant threshold of 60 per minute was not used because the source page could not be read to cite it (it sits behind a browser check). This holds even with a danger sign, and no medicine request is offered. Add the 60 threshold once you can cite the young-infant chart?
+1. **breath**: infants under 2 months get `REFER_YOUNG` ("too young for this aid"), not a classification. The cited chart booklet covers 2 months up to 5 years only, so it holds no young-infant threshold. The WHO 2008 humanitarian emergencies manual (chapter 4, NBK143752, the link cited before the review fix) may hold the 60 per minute threshold but was not read (it sits behind a browser check). This holds even with a danger sign, and no medicine request is offered. Add the 60 threshold once you can cite the young-infant chart?
 2. **breath**: a count stopped before 60 s gives no rate and a RECOUNT card (no extrapolation). A danger sign still gives RED at once, with rate null and request value 0.
 3. **breath**: a tap less than 250 ms after the last counted tap is dropped as a double tap and reported in `ignoredTaps`. Taps at 60 s or later are left out silently.
 4. **breath**: without a danger sign, a full-count rate under 10 or over 120 gives RECOUNT ("if you get the same count, take the child to a health worker"). Over 120 could instead give AMBER, the safer colour. Which?
 5. **breath**: at 60 months or more the result has no classification, even with a danger sign; the card only says the aid is for children under five. Should that card also say to see a health worker when a danger sign is ticked?
 6. **breath**: NEED payload codes 0x10 (RED, urgent referral and medicine) and 0x11 (AMBER, fast breathing, medicine), with 0x10 to 0x1F reserved for care. `value` is the rate, or 0 with no full count. The age is not sent, so problem 9 cannot split cases by age yet.
-7. **breath**: card texts are plain language written by an agent, hold no digits (the phone shows the rate beside its label), and have not been reviewed by a clinician. The disclaimer is fixed text in `breath.ts`. Please read them.
+7. **breath**: card texts (now including the missed-taps and not-assessed cards, and the longer disclaimer) are plain language written by an agent, hold no digits (the phone shows the rate beside its label), and have not been reviewed by a clinician. The disclaimer is fixed text in `breath.ts`. Please read them.
 8. **breath**: bad input (negative or non-finite age or elapsed time, taps out of order, negative or after the elapsed time) throws `RangeError` rather than returning a card, treating it as a phone bug.
 9. **breath**: the module lives in `src/core/care/` as instructed, while `CLAUDE.md` lists care under `src/core/world/`. The HLD component table has no Breath Count row yet; it was not edited because the HLD is human-approved. `contracts.ts` is unchanged.
+10. **breath** (review fix): the danger-sign check reads only the five named fields and counts only the value `true`. A string such as "yes" from a form is therefore not a sign; the phone must pass booleans.
+11. **breath** (review fix): a full count with a gap over 3 times the median tap interval (from 0 to the first tap, between taps, or from the last tap to 60 s) gives RECOUNT with the missed-taps card. The factor 3 is an assumption. Irregular breathing with a long pause also gives a recount, which is the safe failure; evenly spread missed taps are not caught (stated in `docs/limits.md`).
+12. **breath** (review fix): new required `cough` input (cough or difficult breathing), as the chart counts breaths only if cough. Without it, and with no danger sign, the result is `NOT_ASSESSED` (rate still reported) and no medicine request. The phone page must add this question.
+13. **breath** (review fix): only five of the chart's eleven danger signs are asked. The disclaimer and `docs/limits.md` now say so. Add the other six (cough 21 days or more, diarrhoea 14 days or more, blood in stool, fever 7 days or more, red on MUAC strap, swelling of both feet)?
+14. **breath** (review fix): problem 9 is no longer claimed (design, specs, `docs/coverage.md` row 9). Before medicine requests can be case reports, decide which key set care NEEDs use (a family key hides them from an outbreak aggregator; the public key lets anyone read and forge them and broadcasts a sick child's level and sector) and how one child's recounts and re-sends (each with a new nonce) are merged so they are not counted twice.
+15. **breath** (review fix): `contracts.ts` is still unchanged; `BreathInput`, `BreathClass` and `CARDS` live in `breath.ts`, and their changes (new `cough` field, `NOT_ASSESSED`, two new cards) break no other caller since nothing imports the module yet.
 
 ### Confirmed
 
