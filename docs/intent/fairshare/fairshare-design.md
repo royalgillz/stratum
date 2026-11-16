@@ -44,11 +44,11 @@ Both entry points throw `RangeError` (a bug in the caller, not a shortage) when 
 | Ties (equal claims) | Equal shares; divisible rule uses no randomness; id order fixes iteration |
 | `Σf = 0` and `S > 0` | Plain water-filling on demand |
 
-Numbers: shares are real; `Σshares + surplus = S` within 1e-9 × max(1, S), and the last claim in id order absorbs rounding so it never exceeds `S` or a claim's demand.
+Numbers: shares are real numbers computed directly from `λ` (or from `f × S / Σf`), each clamped into `[f, d]`; no claim is adjusted to absorb rounding. `Σshares + surplus = S` holds within 1e-9 × max(1, S). `λ` is null when `S ≥ Σd`, when there is a breach and when there are no claims. "Id order" means ascending UTF-16 code-unit order of the id strings. In the lottery, a claim with demand 0 is never drawn (it gets 0 and is not a winner), and the pick is the first claim in id order whose running weight total exceeds `rng() × total weight`.
 
 ## Interface
 
-- `allocate(supply, claims): AllocationResult` where the result is `{ shares: Allocation, surplus, lambda: number | null, breach: { shortfall, ids } | null, adjusted: string[] }`. `lambda` is null when there is a breach, a surplus or no claims.
+- `allocate(supply, claims): AllocationResult` where the result is `{ shares: Allocation, surplus, lambda: number | null, breach: { shortfall, ids } | null, adjusted: string[] }`. `lambda` is null when `S ≥ Σd`, on a breach, or with no claims.
 - `fairShare: FairShare = (supply, claims) => allocate(supply, claims).shares`, matching `contracts.ts` so adapters can write `World.alloc` directly.
 - `rotate(units, claims, rng): RotationResult` with `{ shares: Allocation, winners: string[], unitsLeft, breach }`; shares are `demand` for winners and 0 otherwise.
 - `nextDebt(claims, shares): Record<string, number>` returns each claim's new debt for the caller to store.
@@ -76,4 +76,4 @@ Numbers: shares are real; `Σshares + surplus = S` within 1e-9 × max(1, S), and
 ## References
 
 - `docs/plan.md` "The formulas the engines use" and "The honest claim for problem 2"
-- Leximin and water-filling: Bertsekas and Gallager, *Data Networks* (max-min fairness), as cited in the earlier reports and not re-checked today
+- Max-min fairness and water-filling: D. Bertsekas and R. Gallager, *Data Networks*, 2nd ed., Prentice Hall, 1992, section 6.5
