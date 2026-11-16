@@ -32,21 +32,24 @@ export function createRelay(rng: Rng) {
     if (!Number.isFinite(nowMs)) throw new RangeError(`nowMs ${nowMs} is not finite`);
     const verified = !('reject' in decoded);
     if (!verified && !(decoded.reject === 'unknown-tag' && (bytes[0] & 15) <= TYPES.CODEBOOK)) return null;
+    if (bytes.length !== 25) throw new RangeError(`packet has ${bytes.length} bytes, not 25`);
 
     const id = identity(bytes);
-    const e = count(id);
-    if (e.n > 1) {
+    if (heard.has(id)) {
+      const e = count(id);
       if (e.atMs <= nowMs) return null;
       e.atMs = -Infinity;
       return { cancel: id };
     }
     const hops = Math.min(bytes[16], MAX_HOPS);
-    if (hops === 0) return null;
-    if (verified && decoded.type === TYPES.GRID_ALERT && tracker.state !== 'NO_HUM' &&
-      !(tracker.state === 'LIVE' && (tracker.tier === 'AMBER' || tracker.tier === 'RED'))) return null;
+    const silent = hops === 0 || (verified && decoded.type === TYPES.GRID_ALERT && tracker.state !== 'NO_HUM' &&
+      !(tracker.state === 'LIVE' && (tracker.tier === 'AMBER' || tracker.tier === 'RED')));
 
-    const r = rng();
+    // Draw and check before counting, so a throw changes no state.
+    const r = silent ? 0 : rng();
     if (!(r >= 0 && r < 1)) throw new RangeError(`rng() returned ${r}, outside [0, 1)`);
+    const e = count(id);
+    if (silent) return null;
     const send = bytes.slice();
     send[16] = hops - 1;
     e.atMs = nowMs + Math.floor(r * SLOTS) * SLOT_MS;
