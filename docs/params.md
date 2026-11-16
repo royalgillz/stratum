@@ -40,3 +40,7 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Lettuce energy cost under lamps | 10 to 20 | kWh/kg | light-food | https://hannahritchie.substack.com/p/vertical-farming | false | |
 
 Mapping suits, domes and outposts onto respirator protection factors is an assumption. Label it in the UI.
+| Kernel world time step | 60 | s | kernel | | true | Fixed; 43,200 steps for 30 simulated days |
+| Kernel time-lapse scale | 3600 | world s per real s | kernel | | true | One simulated hour per real second, from docs/plan.md |
+| Kernel steps per advance, cap | 600 | steps | kernel | | true | Excess owed time is dropped so a stalled tab cannot freeze on resume |
+| Kernel overhead budget | 10 | % of T5 budget | kernel | | true | 1 s of the 10 s in spike T5 (docs/spikes.md) |
