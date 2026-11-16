@@ -8,6 +8,6 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: [...configDefaults.exclude, '.claude/**'], // agent worktrees hold their own copies of the tests
+    exclude: [...configDefaults.exclude, '.claude/**', 'e2e/**'], // worktrees hold copies; e2e/ belongs to Playwright
   },
 });
