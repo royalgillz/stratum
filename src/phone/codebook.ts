@@ -1,5 +1,6 @@
 // The phone's message set: what each codebook byte means. The codec only carries the byte
 // (packet design: codebook values belong to the phone, not the codec). Outside LID scope.
+import { TYPES, type Payload } from '../core/packet/codec.ts';
 
 export type KeyChoice = 'family' | 'public';
 
@@ -29,3 +30,17 @@ export const CODEBOOK: readonly Readonly<Entry>[] = Object.freeze(([
   { code: 0x14, type: 'REPORT', label: 'Fan stopped or air hot', icon: '🌡️', keys: REPORT },
   { code: 0x15, type: 'REPORT', label: 'People coughing or sick', icon: '🤒', keys: REPORT, count: true },
 ] satisfies Entry[]).map((e) => Object.freeze(e)));
+
+export interface Choice { member: number; level: number; sector: number; power: boolean; count: string; to: KeyChoice }
+
+/** What goes on air for an entry: the key set and the packet fields. A key set the entry does not allow falls back to its default. */
+export function message(e: Entry, c: Choice): { keys: KeyChoice; type: number; payload: Payload } {
+  return {
+    keys: e.keys.includes(c.to) ? c.to : e.keys[0],
+    type: TYPES[e.type],
+    payload: {
+      member: c.member, code: e.code, level: c.level, sector: c.sector,
+      flags: (e.power ?? c.power) ? 1 : 0, value: e.count ? Number(c.count) || 0 : 0, // 0 = count not given
+    },
+  };
+}

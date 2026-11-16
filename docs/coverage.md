@@ -10,17 +10,17 @@ Never write "solves".
 | # | Problem | Target tier | Mechanism file | Spec IDs | Metric and value | On screen | Label |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Warn before power or air cuts | Live (power), Modelled (air) | src/core/tracker/tracker.ts | TRACK-001 to TRACK-012 | T1 at 30 cm: ramp error 0.6 mHz typical, 4 mHz worst after smoothing; step seen in 2.7 s | Phone page not built yet | LIVE (spike) |
-| 2 | Share power, water, food fairly | Modelled, real requests | | | | | |
+| 2 | Share power, water, food fairly | Modelled, real requests | | | | src/phone/codebook.ts, src/phone/screens/report.ts (sends real reports; no analysis yet) | |
 | 3 | Keep lower levels livable | Modelled | | | | | |
-| 4 | Catch bad water before people drink it | Modelled, real data, real reports | | | | | |
-| 5 | Keep tunnels safe to live in and move through | Modelled, real reports | | | | | |
+| 4 | Catch bad water before people drink it | Modelled, real data, real reports | | | | src/phone/codebook.ts, src/phone/screens/report.ts (sends real reports; no analysis yet) | |
+| 5 | Keep tunnels safe to live in and move through | Modelled, real reports | | | | src/phone/codebook.ts, src/phone/screens/report.ts (sends real reports; no analysis yet) | |
 | 6 | Find, make or share space | Modelled | | | | | |
 | 7 | Organize without the network | Live | src/core/packet/codec.ts, keys.ts | PKT-001 to PKT-012 | T2: 20/20 at 1 m and 3 m; T3: 20/20 with hum playing | Phone page not built yet | LIVE (spike) |
 | 8 | Reconnect families | Live | src/core/packet/codec.ts, keys.ts | PKT-001 to PKT-012 (OK beacons, family keys) | Codec only; family board not built yet | Not yet | |
-| 9 | Track the real outbreak, route supplies | Modelled, real reports | | | | | |
+| 9 | Track the real outbreak, route supplies | Modelled, real reports | | | | src/phone/codebook.ts, src/phone/screens/report.ts (sends real reports; no analysis yet) | |
 | 10 | Basic care for people who cannot reach a clinic | Live (aid and request), Modelled (delivery) | | | | | |
 | 11 | Track and treat life without sunlight | Modelled | | | | | |
-| 12 | Grow and share neighbourhood food | Modelled, real requests | | | | | |
+| 12 | Grow and share neighbourhood food | Modelled, real requests | | | | src/phone/codebook.ts, src/phone/screens/report.ts (sends real reports; no analysis yet) | |
 | 13 | Prove whether the surface is safe, tell everyone | Modelled, real digest packet | | | | | |
 | 14 | Which option works, who goes first | Modelled | | | | | |
 | 15 | Plan the mass return | Modelled | | | | | |

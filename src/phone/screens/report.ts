@@ -1,7 +1,7 @@
-import { encode, TYPES } from '../../core/packet/codec.ts';
+import { encode } from '../../core/packet/codec.ts';
 import { publicKeys } from '../../core/packet/keys.ts';
 import { $, app, store } from '../app.ts';
-import { CODEBOOK, type Entry, type KeyChoice } from '../codebook.ts';
+import { CODEBOOK, message, type Entry, type KeyChoice } from '../codebook.ts';
 
 const GROUPS = [['OK', 'OK'], ['NEED', 'Need'], ['REPORT', 'Report here']] as const;
 const TO: Record<KeyChoice, string> = { family: 'your family', public: 'everyone nearby' };
@@ -46,8 +46,11 @@ export function mountReport(root: HTMLElement) {
   const grid = $<HTMLFieldSetElement>('#grid', root), sent = $('#sent', root), dlg = $<HTMLDialogElement>('#confirm', root);
   const power = $<HTMLInputElement>('#power', root), count = $<HTMLInputElement>('#count', root);
   const radio = (k: KeyChoice) => $<HTMLInputElement>(`input[value=${k}]`, dlg);
+  const go = $<HTMLButtonElement>('#go', dlg);
   const powerOn = (e: Entry) => e.power ?? power.checked;
   let entry: Entry | undefined;
+  let unlock: ReturnType<typeof app.audio> | undefined;
+  go.onclick = () => { unlock = app.audio(); }; // start sound inside the tap: iOS Safari allows it only there
 
   grid.onclick = (ev) => {
     const b = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-code]');
@@ -61,10 +64,9 @@ export function mountReport(root: HTMLElement) {
     $('#to', dlg).hidden = e.keys.length < 2;
     $('#confirm-title', dlg).textContent = `${e.icon} ${e.label}`;
     $('#where', dlg).textContent = `Level ${level.value}, sector ${String.fromCharCode(65 + Number(sector.value))}, power ${powerOn(e) ? 'on' : 'off'}.`;
-    $('#nofamily', dlg).textContent = app.family ? '' : k
+    $('#nofamily', dlg).textContent = app.family ? (e.keys.length < 2 ? 'Goes to your family only.' : '') : k
       ? 'You have no family yet, so this goes to everyone nearby. To send to your family only, create or join a family on the Family tab.'
       : 'This message goes to your family only, and you have no family yet. Create a family, or join one with its six words, on the Family tab.';
-    const go = $<HTMLButtonElement>('#go', dlg);
     go.hidden = go.disabled = !k; // disabled too, so Enter cannot submit a family-only message
     $('#countRow', dlg).hidden = !e.count;
     count.value = '';
@@ -77,30 +79,28 @@ export function mountReport(root: HTMLElement) {
   };
 
   async function send(e: Entry, to: KeyChoice) {
-    const what = `"${e.label}" to ${TO[to]}`;
+    const m = message(e, { member: app.member, level: Number(level.value), sector: Number(sector.value), power: power.checked, count: count.value, to });
+    const what = `"${e.label}" to ${TO[m.keys]}`;
     grid.disabled = true; // one message on air at a time
     sent.className = '';
     try {
-      const keys = to === 'public' ? await publicKeys() : app.family;
+      const keys = m.keys === 'public' ? await publicKeys() : app.family;
       if (!keys) throw new Error('you left the family. Join it again on the Family tab.');
-      const bytes = await encode(keys, {
-        type: TYPES[e.type],
-        minute: Math.floor(Date.now() / 60000),
-        nonce: app.nonce(),
-        hops: 3,
-        payload: {
-          member: app.member, code: e.code, level: Number(level.value), sector: Number(sector.value),
-          flags: powerOn(e) ? 1 : 0, value: e.count ? Number(count.value) : 0,
-        },
-      });
+      const bytes = await encode(keys, { type: m.type, minute: Math.floor(Date.now() / 60000), nonce: app.nonce(), hops: 3, payload: m.payload });
       sent.textContent = `⏳ Sending ${what}… keep the phone still.`;
+      // A blocked audio context never resumes: give up instead of saying "Sending" forever.
+      const ok = await Promise.race([(unlock ?? app.audio()).then(() => true), new Promise((r) => setTimeout(r, 5000, false))]);
+      if (!ok) throw new Error('sound is blocked. Tap Send again.');
       await app.send(bytes);
+      if (e.power !== undefined) power.checked = e.power; // the box shows what this phone last reported
       sent.textContent = `✔ Sent ${what} at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
     } catch (err) {
       sent.className = 'err';
       sent.textContent = `✖ Not sent: ${(err as Error).message}`;
     } finally {
       grid.disabled = false;
+      // Disabling the grid dropped keyboard focus to the page; put it back on the button used.
+      if (document.activeElement === document.body) $<HTMLButtonElement>(`[data-code="${e.code}"]`, grid).focus();
     }
   }
 }

@@ -20,6 +20,7 @@ test.describe('report grid', () => {
     await expect(dlg).toContainText('power off');
     await expect(dlg.getByLabel('Everyone nearby')).toBeChecked();
     await expect(dlg.getByLabel('Family only')).toBeDisabled(); // no family yet
+    await expect(dlg.getByLabel('How many people?')).toBeHidden();
     await expectSoundLayout(page);
     await dlg.getByRole('button', { name: 'Cancel' }).click();
     await expect(dlg).toBeHidden();
@@ -31,6 +32,7 @@ test.describe('report grid', () => {
     const dlg = page.getByRole('dialog');
     await expect(dlg).toContainText('Family tab');
     await expect(dlg.getByRole('button', { name: 'Send now' })).toBeHidden();
+    await expect(dlg.getByLabel('How many people?')).toBeHidden();
     await expectSoundLayout(page);
     await dlg.getByRole('button', { name: 'Cancel' }).click();
 
@@ -55,5 +57,33 @@ test.describe('report grid', () => {
     await expectSoundLayout(page);
     await dlg.getByRole('button', { name: 'Send now' }).click();
     await expect(page.getByRole('status')).toContainText('Sent "Medicine" to your family', { timeout: 15_000 });
+
+    await page.getByRole('button', { name: 'I am OK' }).click();
+    await expect(dlg).toContainText('Goes to your family only.');
+    await expect(dlg.getByLabel('How many people?')).toBeHidden();
+    await expectSoundLayout(page);
+    await dlg.getByRole('button', { name: 'Cancel' }).click();
+  });
+
+  test('after a power cut is sent, the power box shows off and focus returns to the grid', async ({ page }) => {
+    const box = page.getByLabel('Power on here');
+    await expect(box).toBeChecked();
+    await page.getByRole('button', { name: 'Power cut here' }).focus();
+    await page.keyboard.press('Enter');
+    await page.getByRole('dialog').getByRole('button', { name: 'Send now' }).click();
+    await expect(page.getByRole('status')).toContainText('Sent "Power cut here"', { timeout: 15_000 });
+    await expect(box).not.toBeChecked();
+    await expect(page.getByRole('button', { name: 'Power cut here' })).toBeFocused();
+    await expectSoundLayout(page);
+  });
+
+  test('when the browser blocks sound, the send fails clearly and the grid comes back', async ({ page }) => {
+    await page.addInitScript(() => { AudioContext.prototype.resume = () => new Promise(() => {}); });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Water looks wrong' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Send now' }).click();
+    await expect(page.getByRole('status')).toContainText('Not sent: sound is blocked', { timeout: 15_000 });
+    await expect(page.getByRole('button', { name: 'Medicine' })).toBeEnabled();
+    await expectSoundLayout(page);
   });
 });
