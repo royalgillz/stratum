@@ -2,6 +2,24 @@
 
 Every decision and change, dated, newest first. **Decided by** says who made the call: the human, or an agent (to be confirmed by the human).
 
+## 2026-11-16
+
+### Decisions
+- Decided by the human, the GitHub repo:
+  - the repo is public;
+  - `docs/audit.md` stays local only (git-ignored);
+  - Vercel deploys from the repo, and CI is a required check on `main`.
+- Decided by the human: start the fairshare, witness and kernel builders in parallel. Each brings its design and specs back for one combined review before writing code.
+- Decided by the human: keep the DANGER exit as it is. Ten seconds of normal readings clears both DANGER and WARNING.
+- Confirmed by the human: every agent call in the 2026-11-15 open questions, namely:
+  - the eight Phase 4 resolutions;
+  - even-count medians take the upper middle value;
+  - the 8 kHz decimation in the phone's audio path;
+  - `spikes/` is deleted once the rung 1 phone test passes.
+
+### Changes
+- Git history rewritten before the first push, to remove `docs/audit.md` from every commit; commit hashes changed. A bundle of the old history is kept outside the repo.
+
 ## 2026-11-15
 
 ### Decisions
@@ -57,7 +75,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ## Open questions for the human
 
-Judgement calls made while the human was away. Confirm or reverse each.
+None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record.
 
 1. **Phase 4 resolutions**, now in the specs and designs:
    - the tracker label may also be SIMULATED (district loopback);

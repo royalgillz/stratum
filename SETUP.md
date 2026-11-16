@@ -50,7 +50,7 @@ Then paste **Prompt 2** from `docs/prompts.md`.
 | `CLAUDE.md` | Rules every agent follows |
 | `docs/handoff.md` | Compact brief: concept, contracts, packet, ladder |
 | `docs/plan.md` | Full build plan |
-| `docs/audit.md` | Why the plan looks this way. For you, not for agents |
+| `docs/audit.md` | Why the plan looks this way. For you, not for agents. Local only: git-ignored, not in the repo |
 | `docs/problem-statement.md` | The track text |
 | `docs/prompts.md` | The prompts to paste, in order |
 | `docs/spikes.md` | Spike test results and decisions |
