@@ -29,6 +29,12 @@ async function heard(over: Partial<EncodeInput> = {}, keys = A, member = true) {
 }
 const hear = (r: ReturnType<typeof createRelay>, h: { bytes: Uint8Array; decoded: Decoded | Reject }, now = T, tracker: TrackerView = NO_HUM) =>
   r.hear(h.bytes, h.decoded, tracker, now);
+// A foreign type 0 packet with its own identity for each i (0 to 65,535).
+const fill = (i: number) => {
+  const b = new Uint8Array(25);
+  b[0] = 0x30; b[16] = 1; b[3] = i >> 8; b[4] = i & 255; b[5] = 0xee;
+  return { bytes: b, decoded: { reject: 'unknown-tag' as const } };
+};
 
 describe('relay', () => {
   // @spec RELAY-001
@@ -43,11 +49,11 @@ describe('relay', () => {
     expect(hear(r, await heard({ type: 9, nonce: 3 }, A, false))).toBeNull(); // undefined type
     expect(hear(r, await heard({ nonce: 4, minute: MIN - 2 * 24 * 60 }))).toBeNull(); // stale
 
+    // The same bytes, first rejected (say for clock skew), then verified: the reject was not counted.
     const good = await heard({ nonce: 5 });
-    const bad = { bytes: good.bytes.slice(), decoded: { reject: 'mac' as const } };
-    bad.bytes[12] ^= 1;
-    expect(hear(r, bad)).toBeNull();
-    expect(hear(r, good)).not.toBeNull(); // the rejected copy was not counted
+    expect(hear(r, { bytes: good.bytes, decoded: { reject: 'mac' } })).toBeNull();
+    expect(hear(r, { bytes: good.bytes, decoded: { reject: 'future' } })).toBeNull();
+    expect(hear(r, good)).not.toBeNull();
   });
 
   // @spec RELAY-002
@@ -69,11 +75,6 @@ describe('relay', () => {
     expect(hear(r, { bytes: copy, decoded: h.decoded }, T + 1000)).toEqual({ cancel: first.id });
 
     // A fresh relay: h, then 4,095 other identities fill it to exactly 4,096.
-    const fill = (i: number) => {
-      const b = new Uint8Array(25);
-      b[0] = 0x30; b[16] = 1; b[3] = i >> 8; b[4] = i & 255; b[5] = 0xee;
-      return { bytes: b, decoded: { reject: 'unknown-tag' as const } };
-    };
     const lru = createRelay(stub());
     expect(hear(lru, h)).not.toBeNull();
     for (let i = 0; i < 4095; i++) hear(lru, fill(i));
@@ -124,6 +125,7 @@ describe('relay', () => {
     hear(r, await heard({ nonce: 3 }));
     hear(r, await heard({ nonce: 40, hops: 0 }));
     hear(r, await heard({ nonce: 50, type: TYPES.GRID_ALERT }, PUB), T, { state: 'LIVE', tier: 'GREEN' });
+    hear(r, await heard({ type: 9, nonce: 60 }, A, false)); // not forwardable
     expect(rand.calls).toBe(6);
   });
 
@@ -160,6 +162,9 @@ describe('relay', () => {
     for (const tracker of [{ state: 'LIVE', tier: 'GREEN' }, { state: 'CALIBRATING' }] as TrackerView[]) {
       expect(hear(r, await heard({ nonce: nonce++ }), T, tracker)).not.toBeNull(); // verified OK
       expect(hear(r, await heard({ type: 0, nonce: nonce++ }, A, false), T, tracker)).not.toBeNull(); // foreign type 0
+      for (const type of [TYPES.HOLD_WATER, TYPES.ROUTE, TYPES.LEDGER_HEAD]) { // other verified public types
+        expect(hear(r, await heard({ type, nonce: nonce++ }, PUB), T, tracker)).not.toBeNull();
+      }
     }
   });
 
@@ -172,6 +177,7 @@ describe('relay', () => {
     echo[16] = 2;
     expect(hear(r, { bytes: echo, decoded: h.decoded })).toBeNull();
     expect(() => r.own(new Uint8Array(24))).toThrow(RangeError);
+    expect(() => r.own(new Uint8Array(26))).toThrow(RangeError);
   });
 
   // @spec RELAY-009
@@ -193,6 +199,7 @@ describe('relay', () => {
     // A throw changes no count: the same packet is then heard for the first time.
     const r = createRelay(stub(1, 0.5));
     expect(() => hear(r, h)).toThrow(RangeError);
+    expect(() => hear(r, h, NaN)).toThrow(RangeError);
     expect(hear(r, h)).toMatchObject({ atMs: T + 6000 });
 
     // A forwardable result paired with bytes that are not 25 long.
@@ -205,6 +212,14 @@ describe('relay', () => {
       expect(() => hear(short, { bytes: b, decoded: h.decoded })).toThrow(RangeError);
     }
     expect(hear(short, { bytes: h.bytes.subarray(0, 24), decoded: { reject: 'length' } })).toBeNull();
-    expect(hear(short, h)).not.toBeNull(); // the throws counted nothing
+
+    // A length throw inserts nothing: h plus 4,095 others still fit in 4,096, so h is not evicted.
+    const lru = createRelay(stub());
+    expect(hear(lru, h)).not.toBeNull();
+    const long = new Uint8Array(26);
+    long.set(h.bytes);
+    expect(() => hear(lru, { bytes: long, decoded: foreign })).toThrow(RangeError);
+    for (let i = 0; i < 4095; i++) hear(lru, fill(i));
+    expect(hear(lru, h, T + 60_000)).toBeNull(); // still counted
   });
 });
