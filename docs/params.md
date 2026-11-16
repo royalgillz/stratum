@@ -35,7 +35,7 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Breath tap debounce | 250 | ms | care/breath | | true | A tap closer than this to the last counted tap is a double tap; allows up to 240 per minute |
 | Breath plausible rate | 10 to 120 | breaths/min | care/breath | | true | Outside this band, without a danger sign, the card asks for a recount |
 | Breath missed-tap gap | 3 | median intervals | care/breath | | true | A longer gap (start, between taps, or to 60 s) in a full count asks for a recount |
-| Wet-bulb limit, working areas | 27.5 | deg C | air-heat, adapters | | true | South African deep-mine thermal-stress practice, from the earlier report (docs/plan.md). Source URL to add; treated as an assumption until then |
+| Wet-bulb limit, working areas (WB_LIMIT) | 27.5 | deg C | air-heat, adapters | | true | South African deep-mine thermal-stress practice, from the earlier report (docs/plan.md). Source URL to add; treated as an assumption until then |
 | Total organic carbon limit | 3 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | ISS potable water |
 | Iodine biocide, biocidal range | 1 to 4 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | |
 | Carbon monoxide, immediately dangerous | 1200 | ppm | surface-return | https://www.cdc.gov/niosh/idlh/intridl4.html | false | NIOSH IDLH |
@@ -107,7 +107,7 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Fresh air per person (Q) | 10 | L/s | air-heat | | true | Order of ventilation design guides |
 | Leakage with fans off (LEAK) | 5 | % of Q | air-heat | | true | |
 | Air volume per person (VOL_L) | 30000 | L | air-heat | | true | 30 m3; 50 min time constant with fans on |
-| CO2 limit | 5000 | ppm | air-heat | https://www.osha.gov/chemicaldata/183 | false | OSHA permissible exposure limit, an 8 h time-weighted average, not an instant threshold |
+| CO2 limit (CO2_LIMIT) | 5000 | ppm | air-heat | https://www.osha.gov/chemicaldata/183 | false | OSHA permissible exposure limit, an 8 h time-weighted average, not an instant threshold |
 | Ventilated CO2 reference (CO2_REF) | about 940 | ppm | air-heat, epidemic | | true | Derived in code as C_OUT + 1e6 x G / Q, not set; follows any change to G or Q |
 | Ventilation cap on transmission (BETA_CAP) | 5 | x beta at CO2_REF | epidemic | | true | Beta scales with the rebreathed fraction, applied to all transmission, up to this cap. Rudnick and Milton cover ordinary indoor CO2; fans off would give about 20 x without it |
 | Exhaled-breath CO2 (C_EXHALED) | 38000 | ppm | epidemic | https://doi.org/10.1034/j.1600-0668.2003.00189.x | false | Rudnick and Milton 2003, rebreathed fraction |

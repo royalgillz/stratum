@@ -30,7 +30,7 @@ Each quantity relaxes towards a target set by depth, cooling and ventilation. Th
 
 ## Interface
 
-`uncooledTemp(level)`, `coolingDemandMW(level, people)`, `tempStep(T, level, coolFrac, dt)`, `wetBulb(T, rh)`, `co2Step(c, ventFrac, dt) → { co2, tau }`, `timeToLimit(x, target, tau, limit)`, `dryBulbLimit()`, `CO2_REF`.
+`uncooledTemp(level)`, `coolingDemandMW(level, people)`, `tempStep(T, level, coolFrac, dt)`, `wetBulb(T, rh)`, `co2Step(c, ventFrac, dt) → { co2, tau }`, `timeToLimit(x, target, tau, limit)`, `dryBulbLimit()`, `CO2_REF`, and every constant above by its name in `docs/params.md` (`RH`, `WB_LIMIT`, `C_OUT`, `CO2_LIMIT` and the rest), so adapters and the epidemic model never restate one.
 
 ## Decisions & Alternatives
 
