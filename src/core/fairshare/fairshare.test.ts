@@ -121,6 +121,31 @@ describe('fairshare', () => {
     expect(fit.winners).toEqual(['a', 'c']);
     expect(fit.shares).toEqual({ a: 2, b: 0, c: 1, z: 0 });
     expect(fit.unitsLeft).toBe(0);
+    // floors first: floors are paid, then remaining demand (d - f) is won whole
+    const fl = rotate(6, [c('a', 1, 3), c('b', 1, 3), c('c', 2, 2)], () => 0);
+    expect(fl.shares).toEqual({ a: 3, b: 1, c: 2 });
+    expect(fl.winners).toEqual(['a']);
+    expect(fl.unitsLeft).toBe(0);
+  });
+
+  it('FAIR-009 never pays a claim below its floor when units cover all floors', () => {
+    for (let seed = 0; seed < 300; seed++) {
+      const r = rng(seed, 'fairshare-floors');
+      const cs = Array.from({ length: 1 + Math.floor(r() * 9) }, (_, i) => {
+        const f = Math.floor(r() * 4);
+        return c(`k${i}`, f, f + Math.floor(r() * 5), Math.floor(r() * 6));
+      });
+      const sf = cs.reduce((a, k) => a + k.floor, 0);
+      const units = sf + Math.floor(r() * 20);
+      const out = rotate(units, cs, rng(seed, 'fairshare'));
+      expect(out.breach).toBeNull();
+      expect(out.unitsLeft).toBeGreaterThanOrEqual(0);
+      for (const k of cs) {
+        expect(out.shares[k.id]).toBeGreaterThanOrEqual(k.floor);
+        expect(out.shares[k.id]).toBeLessThanOrEqual(k.demand);
+      }
+      expect(sum(out.shares) + out.unitsLeft).toBe(units);
+    }
   });
 
   // @spec FAIR-010
@@ -146,6 +171,12 @@ describe('fairshare', () => {
     expect(r.breach?.shortfall).toBe(1);
     expect(r.winners).toEqual(['a', 'b']);
     expect(r.breach?.ids).toEqual(['c']);
+    // whole floors only: demand above floor is not paid, and the floor-0 claim gets 0
+    expect(r.shares).toEqual({ a: 1, b: 1, c: 0, d: 0 });
+    // a floor too big for the units left is skipped, a smaller later one still fits
+    const sk = rotate(3, [c('a', 2, 2), c('b', 2, 2), c('c', 1, 1)], () => 0);
+    expect(sk.shares).toEqual({ a: 2, b: 0, c: 1 });
+    expect(sk.breach).toEqual({ shortfall: 2, ids: ['b'] });
     const none = rotate(3, [c('a', 1, 1), c('b', 1, 1)], () => 0);
     expect(none.breach).toBeNull();
   });

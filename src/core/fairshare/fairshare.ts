@@ -30,7 +30,7 @@ function validate(supply: number, claims: Claim[], whole: boolean): Claim[] {
   const seen = new Set<string>();
   for (const k of claims) {
     if (bad(k.floor) || bad(k.demand) || bad(k.debt)) throw new RangeError(`invalid claim ${k.id}`);
-    if (whole && !Number.isInteger(k.demand)) throw new RangeError(`non-integer demand ${k.id}`);
+    if (whole && !(Number.isInteger(k.demand) && Number.isInteger(k.floor))) throw new RangeError(`non-integer claim ${k.id}`);
     if (seen.has(k.id)) throw new RangeError(`duplicate id ${k.id}`);
     seen.add(k.id);
   }
@@ -79,27 +79,30 @@ export const fairShare: FairShare = (supply, claims) => allocate(supply, claims)
 
 // @spec FAIR-009, FAIR-010, FAIR-011
 export function rotate(units: number, claims: Claim[], draw: Rng): RotationResult {
-  const sorted = validate(units, claims, true);
-  const shares: Allocation = Object.fromEntries(sorted.map((k) => [k.id, 0]));
+  const sorted = validate(units, claims, true).map((k) => ({ ...k, demand: Math.max(k.demand, k.floor) }));
+  const sf = total(sorted.map((k) => k.floor));
+  const covered = units >= sf;
+  // Covered: floors are paid up front and the lottery hands out remaining demand.
+  // Breach: the lottery decides whose whole floor is paid.
+  const ask = (k: (typeof sorted)[number]) => (covered ? k.demand - k.floor : k.floor);
+  const shares: Allocation = Object.fromEntries(sorted.map((k) => [k.id, covered ? k.floor : 0]));
   const winners: string[] = [];
-  let left = units;
-  let pool = sorted.filter((k) => k.demand > 0);
+  let left = covered ? units - sf : units;
+  let pool = sorted.filter((k) => ask(k) > 0);
   for (;;) {
-    const fit = pool.filter((k) => k.demand <= left);
+    const fit = pool.filter((k) => ask(k) <= left);
     if (!fit.length) break;
     const r = draw() * total(fit.map((k) => 1 + k.debt));
     let run = 0;
     const pick = fit.find((k) => (run += 1 + k.debt) > r) ?? fit[fit.length - 1];
     winners.push(pick.id);
-    shares[pick.id] = pick.demand;
-    left -= pick.demand;
+    shares[pick.id] = covered ? pick.demand : pick.floor;
+    left -= ask(pick);
     pool = pool.filter((k) => k !== pick);
   }
-  const sf = total(sorted.map((k) => k.floor));
-  const breach =
-    sf > units
-      ? { shortfall: sf - units, ids: sorted.filter((k) => k.floor > 0 && shares[k.id] === 0).map((k) => k.id) }
-      : null;
+  const breach = covered
+    ? null
+    : { shortfall: sf - units, ids: sorted.filter((k) => k.floor > 0 && shares[k.id] === 0).map((k) => k.id) };
   return { shares, winners, unitsLeft: left, breach };
 }
 

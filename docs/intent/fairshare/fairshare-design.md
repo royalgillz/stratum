@@ -24,15 +24,18 @@ Debt does not change divisible shares: water-filling already equalises, so equal
 
 ## Debt rotation (indivisible goods)
 
-Lamp-hours, bunks, trial slots and return slots come in whole units that cannot be split, so the rule above cannot serve everyone. A claim is then all or nothing: it asks for `demand` whole units (a family's size, kept together) and receives all of them or none.
+Lamp-hours, bunks, trial slots and return slots come in whole units that cannot be split, so the rule above cannot serve everyone. Floors still come first, and no claim is ever split: floors and demands are whole units (a family's size, kept together).
 
-The **debt-weighted lottery** draws winners one at a time from the claims whose `demand` still fits in the units left. Each remaining claim's weight is `1 + debt`; one `rng()` draw picks the winner. It repeats until nothing fits. The base weight of 1 keeps a claim with no debt in the draw; debt raises its odds, so a claim passed over often is more likely next round. Claims are visited in id order so the same seed gives the same winners whatever order the caller lists them in. The only randomness is the `Rng` the caller passes in, taken from `rng(seed, 'fairshare')` in `rng.ts`.
+- **Units ≥ Σf.** Every claim gets its floor. The lottery then runs over the remaining units, where each claim asks for its remaining demand `d − f` whole or nothing; a winner's share is its full demand. Claims with `d − f = 0` are not drawn.
+- **Units < Σf (breach).** Floors cannot all be met, so the lottery decides whose floor is paid: it draws claims with a floor above 0 whose whole floor fits in the units left; a winner's share is its floor and every other claim gets 0. Unserved floor claims are listed in `breach.ids`, with `shortfall = Σf − units`. No floor is part-paid.
 
-After each round `nextDebt` updates the memory: a claim served in full resets to 0; otherwise its debt grows by `demand − granted`. If the units cannot cover every floor, the lottery result carries the same `breach` statement (`shortfall` in units, ids of unserved claims whose floor is above 0).
+The **debt-weighted lottery** draws winners one at a time from the claims whose ask (as above) still fits in the units left. Each remaining claim's weight is `1 + debt`; one `rng()` draw picks the winner. It repeats until nothing fits. The base weight of 1 keeps a claim with no debt in the draw; debt raises its odds, so a claim passed over often is more likely next round. Claims are visited in id order so the same seed gives the same winners whatever order the caller lists them in. The only randomness is the `Rng` the caller passes in, taken from `rng(seed, 'fairshare')` in `rng.ts`.
+
+After each round `nextDebt` updates the memory: a claim served in full resets to 0; otherwise its debt grows by `demand − granted`. A claim whose floor is paid but whose demand is not has `granted < demand` and so gains debt.
 
 ## Input validation and edge cases
 
-Both entry points throw `RangeError` (a bug in the caller, not a shortage) when supply is negative or not finite, a claim's `floor`, `demand` or `debt` is negative or not finite, ids are duplicated, or, for the lottery, supply or demand is not a whole number.
+Both entry points throw `RangeError` (a bug in the caller, not a shortage) when supply is negative or not finite, a claim's `floor`, `demand` or `debt` is negative or not finite, ids are duplicated, or, for the lottery, supply, a floor or a demand is not a whole number. The lottery treats a demand below its floor as equal to the floor.
 
 | Case | Result |
 | --- | --- |
@@ -44,13 +47,13 @@ Both entry points throw `RangeError` (a bug in the caller, not a shortage) when 
 | Ties (equal claims) | Equal shares; divisible rule uses no randomness; id order fixes iteration |
 | `Σf = 0` and `S > 0` | Plain water-filling on demand |
 
-Numbers: shares are real numbers computed directly from `λ` (or from `f × S / Σf`), each clamped into `[f, d]`; no claim is adjusted to absorb rounding. `Σshares + surplus = S` holds within 1e-9 × max(1, S). `λ` is null when `S ≥ Σd`, when there is a breach and when there are no claims. "Id order" means ascending UTF-16 code-unit order of the id strings. In the lottery, a claim with demand 0 is never drawn (it gets 0 and is not a winner), and the pick is the first claim in id order whose running weight total exceeds `rng() × total weight`.
+Numbers: shares are real numbers computed directly from `λ` (or from `f × S / Σf`), each clamped into `[f, d]`; no claim is adjusted to absorb rounding. `Σshares + surplus = S` holds within 1e-9 × max(1, S). `λ` is null when `S ≥ Σd`, when there is a breach and when there are no claims. "Id order" means ascending UTF-16 code-unit order of the id strings. In the lottery, a claim with nothing to ask for (remaining demand 0) is never drawn, and the pick is the first claim in id order whose running weight total exceeds `rng() × total weight`.
 
 ## Interface
 
 - `allocate(supply, claims): AllocationResult` where the result is `{ shares: Allocation, surplus, lambda: number | null, breach: { shortfall, ids } | null, adjusted: string[] }`. `lambda` is null when `S ≥ Σd`, on a breach, or with no claims.
 - `fairShare: FairShare = (supply, claims) => allocate(supply, claims).shares`, matching `contracts.ts` so adapters can write `World.alloc` directly.
-- `rotate(units, claims, rng): RotationResult` with `{ shares: Allocation, winners: string[], unitsLeft, breach }`; shares are `demand` for winners and 0 otherwise.
+- `rotate(units, claims, rng): RotationResult` with `{ shares: Allocation, winners: string[], unitsLeft, breach }`; `winners` lists lottery winners in draw order, and `unitsLeft` is what no claim could use.
 - `nextDebt(claims, shares): Record<string, number>` returns each claim's new debt for the caller to store.
 
 ## Decisions & Alternatives
