@@ -4,7 +4,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   build: {
     rolldownOptions: {
-      input: ['index.html', 'spikes/emitter.html', 'spikes/listener.html', 'spikes/packets.html'],
+      input: ['index.html', 'src/phone/index.html', 'spikes/emitter.html', 'spikes/listener.html', 'spikes/packets.html'],
     },
   },
 });

@@ -23,6 +23,13 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 - Decided by the human: deadline is Fri Nov 20, 11:00 PM (organizers). AI tools allowed without limit.
 
 ### Changes
+- **Rung 1 phone page** at https://stratum-nine-swart.vercel.app/src/phone/ (`src/phone`, `src/audio`, outside LID scope). Not yet tried on a real phone.
+  - **Family:** create one (six words from secure random bytes) or join one by typing the words.
+  - **Listen:** tier with an icon and text, deviation labelled LIVE, NO HUM, and calibration progress.
+  - **Report:** sends an OK to the family with level, sector and power state.
+  - **Inbox:** shows each message's own send time and duplicate counts.
+  - **Audio:** one microphone stream feeds both the tracker and the packet decoder. Tracker readings are ignored while the phone transmits. The tracker runs on an 8 kHz decimated copy of the audio (agent decision, open question 5).
+  - **Tests:** `src/audio/audio.test.ts` passes a real OK packet through ggwave in 128-sample microphone blocks, and checks that decimated 48 kHz hum still drives the tracker to RED.
 - **Tracker implemented** (`src/core/tracker/tonebank.ts`, `tracker.ts`): TRACK-001 to TRACK-012 all `[x]`, with 12 tests on synthetic hum.
   - About 67 ms per reading at 48 kHz on the laptop.
   - Found during testing: a tone just outside the band leaked in at the in-band edge with 80 dB signal-to-noise, which would have caused a false RED. Fix: the coarse bank now searches a 2 Hz guard zone beyond each edge, and a peak there means NO HUM. TRACK-004 and the design are updated to match.
