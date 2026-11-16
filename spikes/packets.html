@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spike: packets</title>
+</head>
+<body style="font-family: system-ui, sans-serif; margin: 1rem">
+  <h1>Packets (T2, T3)</h1>
+  <p id="checks">Loading ggwave...</p>
+  <h2>Send (phone)</h2>
+  <button id="send20">Send 20 packets</button>
+  <button id="send1">Send 1</button>
+  <p id="sent"></p>
+  <h2>Receive (laptop)</h2>
+  <button id="listen">Start listening</button>
+  <button id="reset">Reset count</button>
+  <p id="got" style="font-size: 2.2rem; font-variant-numeric: tabular-nums">-</p>
+  <p id="seqs" style="font-variant-numeric: tabular-nums"></p>
+  <p id="settings" style="font-size: 0.8rem; color: #666"></p>
+  <script src="/vendor/ggwave/ggwave.js"></script>
+  <script type="module" src="./packets.ts"></script>
+</body>
+</html>

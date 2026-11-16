@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spike: emitter</title>
+</head>
+<body style="font-family: system-ui, sans-serif; margin: 1rem">
+  <h1>Emitter (T1)</h1>
+  <p>Grid hum: 400 Hz + 800 Hz (stronger). The offset applies to the 400 Hz grid frequency.</p>
+  <button id="start">Start hum</button>
+  <button id="stop">Stop</button>
+  <p><input id="offset" type="range" min="-1" max="1" step="0.001" value="0" style="width: 100%" /></p>
+  <button id="zero">Offset 0</button>
+  <button id="step">Step +0.1 Hz</button>
+  <button id="ramp">Ramp -0.1 Hz over 60 s</button>
+  <button id="export">Export log</button>
+  <p id="now" style="font-size: 2.2rem; font-variant-numeric: tabular-nums">-</p>
+  <script type="module" src="./emitter.ts"></script>
+</body>
+</html>
