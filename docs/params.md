@@ -130,6 +130,7 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Slow shortfall in sevenDay | hour 30: loss 4% to 8% over 4 h, hold 6 h, recover 2 h | loss fraction of nominal | scenario | | true | 1% per hour: warned |
 | Contamination timing in sevenDay | hour 52, level 5, 30 min ramp, 12 h | - | scenario | | true | |
 | Fast shortfall in sevenDay | hour 60: loss 4.75% to 5.45% over 75 s, hold 2 h, recover 1 h | loss fraction of nominal | scenario | | true | Shed lands on the next 60 s step |
+| Real-time acts in sevenDay | hour 60 for 90 s; hour 83.99 for 120 s | - | scenario | | true | Covers the fast shed and the trip at 60 s steps. Captions are in scenario-design.md |
 | Plant trip in sevenDay | hour 84: 5.8% lost for 3 h | loss fraction of nominal | scenario | | true | About 1.1% of load unserved, -2.2 Hz: inside the tracker band |
 | Late shortfall in sevenDay | hour 100: loss 5% to 10% over 1 h, hold 12 h, recover 2 h | loss fraction of nominal | scenario | | true | Starts above the AMBER point |
 | Basic reproduction number (R0) | 2.5 | - | epidemic | | true | At the ventilated CO2 reference |
