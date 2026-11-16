@@ -3,7 +3,7 @@ import { publicKeys } from '../../core/packet/keys.ts';
 import { $, app, store } from '../app.ts';
 import { CODEBOOK, message, type Entry, type KeyChoice } from '../codebook.ts';
 
-const GROUPS = [['OK', 'OK'], ['NEED', 'Need'], ['REPORT', 'Report here']] as const;
+const GROUPS = [['OK', 'OK'], ['NEED', 'Need'], ['REPORT', 'Problems here']] as const;
 const TO: Record<KeyChoice, string> = { family: 'your family', public: 'everyone nearby' };
 
 export function mountReport(root: HTMLElement) {
@@ -31,15 +31,18 @@ export function mountReport(root: HTMLElement) {
         <p id="nofamily"></p>
         <label id="countRow">How many people? (optional) <input type="number" id="count" min="1" max="65535" step="1" inputmode="numeric" /></label>
         <p class="muted">Sending plays about 3 s of sound and cannot be called back.</p>
-        <div class="row"><button value="send" id="go">Send now</button><button value="cancel" formnovalidate>Cancel</button></div>
+        <div class="row"><button value="send" id="go">Send now</button><button value="family" id="goFamily" formnovalidate>Go to Family tab</button><button value="cancel" formnovalidate>Cancel</button></div>
       </form>
     </dialog>`;
 
   const level = $<HTMLSelectElement>('#level', root), sector = $<HTMLSelectElement>('#sector', root);
+  // No default place: a guessed level would go on air as a false location.
+  level.append(new Option('Choose', ''));
+  sector.append(new Option('Choose', ''));
   for (let l = 1; l <= 6; l++) level.append(new Option(String(l), String(l)));
   for (let s = 0; s < 4; s++) sector.append(new Option(String.fromCharCode(65 + s), String(s)));
-  level.value = store.get('stratum.level') ?? '5';
-  sector.value = store.get('stratum.sector') ?? '0';
+  level.value = store.get('stratum.level') ?? '';
+  sector.value = store.get('stratum.sector') ?? '';
   level.onchange = () => store.set('stratum.level', level.value);
   sector.onchange = () => store.set('stratum.sector', sector.value);
 
@@ -63,11 +66,16 @@ export function mountReport(root: HTMLElement) {
     if (k) radio(k).checked = true;
     $('#to', dlg).hidden = e.keys.length < 2;
     $('#confirm-title', dlg).textContent = `${e.icon} ${e.label}`;
-    $('#where', dlg).textContent = `Level ${level.value}, sector ${String.fromCharCode(65 + Number(sector.value))}, power ${powerOn(e) ? 'on' : 'off'}.`;
+    const placed = level.value !== '' && sector.value !== '';
+    // Power is a field of OK and REPORT only; a need does not carry it.
+    $('#where', dlg).textContent = placed
+      ? `Level ${level.value}, sector ${String.fromCharCode(65 + Number(sector.value))}${e.type === 'NEED' ? '' : `, power ${powerOn(e) ? 'on' : 'off'}`}.`
+      : 'Choose your level and sector first (Cancel, then pick them at the top).';
     $('#nofamily', dlg).textContent = app.family ? (e.keys.length < 2 ? 'Goes to your family only.' : '') : k
       ? 'You have no family yet, so this goes to everyone nearby. To send to your family only, create or join a family on the Family tab.'
       : 'This message goes to your family only, and you have no family yet. Create a family, or join one with its six words, on the Family tab.';
-    go.hidden = go.disabled = !k; // disabled too, so Enter cannot submit a family-only message
+    go.hidden = go.disabled = !k || !placed; // disabled too, so Enter cannot submit it
+    $('#goFamily', dlg).hidden = Boolean(k);
     $('#countRow', dlg).hidden = !e.count;
     count.value = '';
     dlg.returnValue = '';
@@ -75,6 +83,7 @@ export function mountReport(root: HTMLElement) {
   };
 
   dlg.onclose = () => {
+    if (dlg.returnValue === 'family') location.hash = '#family'; // phone.ts switches tabs on hashchange
     if (dlg.returnValue === 'send' && entry) void send(entry, $<HTMLInputElement>('input[name=to]:checked', dlg).value as KeyChoice);
   };
 

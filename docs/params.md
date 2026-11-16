@@ -79,7 +79,7 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Parameter | Value | Unit | Module | Source URL | Assumption | Note |
 | --- | --- | --- | --- | --- | --- | --- |
 | Levels, sectors per level | 6, 4 | - | world | | true | From docs/plan.md |
-| People per sector (PEOPLE) | 500 | people | world | | true | 12,000 in District 7 |
+| People per sector (PEOPLE) | 500 | people | scenario | | true | 12,000 in District 7 |
 | Tracked households per sector (HH_PER_SECTOR) | 10 | households | scenario | | true | A sample of families for the board, not every household |
 | Household members | 2 to 6 | people | scenario | | true | Uniform, drawn from the `world` stream |
 | Demo household | id `family`, level 5 sector 1, 4 members | - | scenario | | true | Sector 1 within level 5, so sector index 17. Id matches the key set id the phone and judge pages use |
@@ -147,7 +147,7 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Food floor (FOOD_FLOOR) | 2100 | kcal/person/day | adapters | https://spherestandards.org/handbook/ | false | Sphere planning figure |
 | Food demand (FOOD_DEMAND) | 2500 | kcal/person/day | adapters | | true | |
 | Food deliveries (FOOD_SUPPLY) | 2300 | kcal/person/day | adapters | | true | |
-| Worst-off share | 10 | % of people | adapters | | true | Definition of the worst decile |
+| Worst-off share (WORST) | 10 | % of people | adapters | | true | Definition of the worst decile |
 | Sleeping area (SLEEP_M2) | 2.0 | m2 per person | scenario | | true | Placeholder until the rung 4 space model; below the Sphere 3.5 |
 | Mesh hop success (P_HOP) | 0.9 | probability | adapters | | true | One hop crosses from one sector to the next, which assumes phones at every sector boundary. Spike T2 had 20 of 20 at 3 m in a quiet room, not a sector-to-sector hop |
 | Mesh air time per hop (AIR) | 3 | s | adapters | | true | Top of the 2 to 3 s packet length |

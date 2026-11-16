@@ -5,8 +5,9 @@ const DISCLAIMER = /Decision aid, not a medical device/;
 
 async function choose(page: Page, years: string, months = '0', cough = 'Yes') {
   await page.getByLabel('Years').selectOption(years);
+  if (years === '5') return; // months and the questions do not apply
   await page.getByLabel('Months').selectOption(months);
-  if (years !== '5') await page.getByRole('radio', { name: cough }).check();
+  await page.getByRole('radio', { name: cough }).check();
 }
 
 test.describe('Care tab: Breath Count', () => {
@@ -31,13 +32,29 @@ test.describe('Care tab: Breath Count', () => {
     await choose(page, '5');
     await expect(page.locator('#result')).toContainText('This aid is for children under five only.');
     await expect(page.getByRole('button', { name: 'Start 60-second count' })).toBeHidden();
+    await expect(page.getByLabel('Months')).toBeHidden(); // changes nothing at five or older
     await expect(page.getByRole('note')).toBeVisible();
     await expectSoundLayout(page);
+  });
+
+  test('before question 2 is answered, a greyed Start says why; months are optional from 1 year', async ({ page }) => {
+    await page.getByLabel('Years').selectOption('2');
+    await expect(page.getByLabel('Months').locator('option').first()).toHaveText('Optional');
+    const start = page.getByRole('button', { name: 'Start 60-second count' });
+    await expect(start).toBeDisabled();
+    await expect(start).toHaveAccessibleDescription(/Answer question 2 first/);
+    await expect(page.locator('#startWhy')).toBeVisible();
+    await expectSoundLayout(page);
+    await page.getByRole('radio', { name: 'Yes' }).check();
+    await expect(page.locator('#startWhy')).toBeHidden();
+    await expect(start).toBeEnabled();
   });
 
   test('the tap target is at least 120 px tall, with countdown, tap count and Stop', async ({ page }) => {
     await choose(page, '2');
     await page.getByRole('button', { name: 'Start 60-second count' }).click();
+    await expect(page.getByRole('button', { name: 'Start 60-second count' })).toBeHidden(); // no second control above the tap target
+    await expect(page.locator('.count')).toContainText('· LIVE');
     const tap = page.getByRole('button', { name: 'Tap once per breath' });
     expect((await tap.boundingBox())!.height).toBeGreaterThanOrEqual(120);
     await tap.click();
@@ -67,6 +84,8 @@ test.describe('Care tab: Breath Count', () => {
       await expect(result).toContainText(outcome);
       await expect(result).toContainText(`Rate: ${breaths} breaths per minute`);
       await expect(result).toContainText(' · LIVE');
+      await expect(result).not.toContainText('Decision aid'); // the disclaimer above says it once
+      await expect(page.getByRole('button', { name: 'Count again' })).toBeVisible();
       await expect(result).toBeFocused();
       await expect(page.getByRole('button', { name: 'Request medicine' })).toBeVisible({ visible: outcome === 'AMBER' });
       await expect(page.getByRole('note')).toBeVisible();
@@ -78,7 +97,10 @@ test.describe('Care tab: Breath Count', () => {
     await page.getByLabel('Years').selectOption('0');
     await expect(page.locator('#result')).toBeHidden();
     await page.getByLabel('Months').selectOption('1');
-    await expect(page.locator('#result')).toContainText('REFER');
+    await expect(page.locator('#result')).toContainText('REFER: see a health worker');
+    // An urgent instruction: red like a danger card, not grey like a neutral one.
+    const [border, head] = await page.locator('#result').evaluate((e) => [getComputedStyle(e).borderTopColor, getComputedStyle(e.querySelector('.head')!).color]);
+    expect(border).toBe(head); // both var(--red); a neutral card has a grey border and plain text
     await expect(page.getByRole('button', { name: 'Start 60-second count' })).toBeHidden();
     await page.getByLabel('Months').selectOption('6');
     await expect(page.locator('#result')).toBeHidden();
@@ -90,9 +112,9 @@ test.describe('Care tab: Breath Count', () => {
     await page.getByLabel('Convulsions (fits)').check();
     const result = page.locator('#result');
     await expect(result).toContainText('RED');
-    await expect(result).toContainText('Rate: none');
+    await expect(result).toContainText('Rate: no full minute counted yet (fast is');
     await expect(page.getByRole('button', { name: 'Request medicine' })).toBeVisible();
-    await expect(page.locator('#careWhere')).toHaveText('Sends for level 5, sector A (change on the Report tab).');
+    await expect(page.locator('#careWhere')).toHaveText('Choose your level and sector on the Report tab first.'); // no guessed place
     const box = async (name: string) => (await page.getByLabel(name).boundingBox())!;
     expect((await box('Chest indrawing (the lower chest pulls in when the child breathes in)')).width).toBe((await box('Vomits everything')).width);
     await expectSoundLayout(page);
@@ -105,8 +127,19 @@ test.describe('Care tab: Breath Count', () => {
     const result = page.locator('#result');
     await expect(result).toContainText('NOT ASSESSED');
     await expect(result).not.toContainText('Rate');
-    await expect(page.getByRole('button', { name: 'Start 60-second count' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Start 60-second count' })).toBeHidden(); // no count step for no cough
     await expectSoundLayout(page);
+  });
+
+  test('a request with no family is marked as not sent and offers the Family tab', async ({ page }) => {
+    await page.getByLabel('Years').selectOption('2');
+    await page.getByLabel('Convulsions (fits)').check();
+    await page.getByRole('button', { name: 'Request medicine' }).click();
+    await expect(page.locator('#careSent')).toHaveClass('err');
+    await expect(page.locator('#careSent')).toContainText('Join a family first');
+    await expectSoundLayout(page);
+    await page.getByRole('button', { name: 'Go to Family tab' }).click();
+    await expect(page.getByRole('tab', { name: 'Family' })).toHaveAttribute('aria-selected', 'true');
   });
 });
 
@@ -114,12 +147,16 @@ test('a send that cannot play says it was not sent', async ({ page }) => {
   await page.addInitScript(() => {
     (window as { AudioContext: unknown }).AudioContext = class { constructor() { throw new Error('audio blocked'); } };
   });
-  await page.goto('/src/phone/#family', { waitUntil: 'domcontentloaded' });
+  await page.goto('/src/phone/#report', { waitUntil: 'domcontentloaded' });
+  await page.locator('#level').selectOption('2');
+  await page.locator('#sector').selectOption('C');
+  await page.getByRole('tab', { name: 'Family' }).click();
   await page.getByRole('button', { name: 'Create a family' }).click();
   await expect(page.getByRole('button', { name: 'Leave family' })).toBeVisible();
   await page.getByRole('tab', { name: 'Care' }).click();
   await page.getByLabel('Years').selectOption('2');
   await page.getByLabel('Convulsions (fits)').check();
+  await expect(page.locator('#careWhere')).toHaveText('Sends for level 2, sector C (change on the Report tab).');
   await page.getByRole('button', { name: 'Request medicine' }).click();
   await expect(page.locator('#careSent')).toHaveText(/^Not sent: sound could not play/);
   await expect(page.getByRole('button', { name: 'Request medicine' })).toBeEnabled();

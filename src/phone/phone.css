@@ -29,6 +29,7 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 
 /* Listen */
 #tier { font-size: 2.2rem; font-weight: 700; margin: 8px 0 0; overflow-wrap: anywhere; }
+#tier.idle { font-size: 1.2rem; font-weight: 600; } /* only a real tier gets the large type */
 #tier.GREEN { color: var(--green); } #tier.AMBER { color: var(--amber); } #tier.RED { color: var(--red); }
 #dev { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
 
@@ -38,7 +39,8 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 /* Family board */
 .board li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; }
 .board li > div { flex: 1 1 14rem; min-width: 0; }
-.board .stale { font-weight: 700; }
+.board .stale { font-weight: 700; color: var(--amber); }
+.board .alert { font-weight: 700; } .board .alert.RED { color: var(--red); } .board .alert.AMBER { color: var(--amber); }
 /* Report grid */
 #grid { border: 0; padding: 0; margin: 0; min-width: 0; }
 #grid h3 { font-size: 1rem; margin: 16px 0 6px; }
@@ -46,7 +48,12 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 .grid button { margin: 0; min-height: 64px; padding: 8px; display: flex; align-items: center; gap: 8px; text-align: left; overflow-wrap: anywhere; }
 .grid button span { font-size: 1.5rem; }
 #confirm { width: min(28rem, calc(100vw - 32px)); color: var(--fg); background: var(--bg); border: 1px solid var(--line); }
+#confirm::backdrop { background: rgb(0 0 0 / 0.6); } /* the default is invisible on the dark background */
 #confirm h3 { margin-top: 0; }
+#confirm label:has(input:disabled) { color: var(--muted); }
+#go { background: var(--accent); color: var(--bg); border: 0; }
+/* The send status stays on screen while it has text: the grid can push it below the fold. */
+#sent:not(:empty) { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding: 8px 0; margin: 0; font-weight: 600; }
 #confirm fieldset { border: 1px solid var(--line); margin: 8px 0; }
 #confirm label { flex-wrap: wrap; }
 #confirm input[type=radio] { width: 24px; }
@@ -58,6 +65,7 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 .ledger thead th:first-child { width: 3.5rem; }
 .ledger td { white-space: pre-line; font-size: 0.9rem; }
 .ledger td strong { font-size: 1.1rem; }
+summary { padding: 12px 0; cursor: pointer; } /* a 44 px tap row */
 .ledger .now { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 /* Care (Breath Count) */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -69,4 +77,5 @@ h3 { font-size: 1rem; margin: 16px 0 4px; }
 .tap { display: block; width: 100%; min-height: 160px; margin: 8px 0; font-size: 1.4rem; font-weight: 700; touch-action: manipulation; }
 .result { border: 2px solid var(--line); border-left-width: 8px; padding: 4px 12px; margin: 12px 0; overflow-wrap: anywhere; }
 .result .head { font-size: 1.3rem; font-weight: 700; margin: 8px 0; }
-.result.GREEN { border-color: var(--green); } .result.AMBER { border-color: var(--amber); } .result.RED { border-color: var(--red); }
+.result.GREEN { border-color: var(--green); } .result.AMBER { border-color: var(--amber); } .result.RED, .result.REFER_YOUNG { border-color: var(--red); }
+.result.RED .head, .result.REFER_YOUNG .head { color: var(--red); }

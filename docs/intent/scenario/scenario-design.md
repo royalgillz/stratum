@@ -59,7 +59,7 @@ A time-lapse act follows each real-time act. The 30-day run is this script with 
 
 `createWorld(seed, script)` builds District 7 at hour 0: `t` 0, the seed, the first act's clock, the grid at 400 Hz and GREEN with `gapMW` the capacity margin, 24 sectors of 500 people settled at their cooled temperature and ventilated CO2, baseline water, sumps at `SUMP_START`, medicine stock `MED_START`, `sleepM2` at `SLEEP_M2`, the tunnel graph from `districtTunnels()`, every sector at full power in `alloc.power` (keys `s00` to `s23`), empty ledger and mesh, and `surface` with no readings and band `unknown`.
 
-Households: for sector `s` from 0 to 23 and `n` from 0 to `HH_PER_SECTOR − 1`, the household `h<s>-<n>` (no zero padding, so `h5-0`), in sector `s`, with `2 + floor(u × 5)` members from one draw of `rng(seed, 'world')`, and shift `n mod 3`. Then the demo household: its id, `level`, `Household.sector = (level − 1) × 4 + demo.sector` (17 for the default), its members and shift 0. The `world` stream is used only here, so it never shifts an adapter's draws.
+Households: for sector `s` from 0 to 23 and `n` from 0 to `HH_PER_SECTOR − 1`, the household `h<s>-<n>` (no zero padding, so `h5-0`), in sector `s` at level `floor(s / 4) + 1`, with `2 + floor(u × 5)` members from one draw of `rng(seed, 'world')`, and shift `n mod 3`. Then the demo household: its id, `level`, `Household.sector = (level − 1) × 4 + demo.sector` (17 for the default), its members and shift 0. The `world` stream is used only here, so it never shifts an adapter's draws.
 
 ## Runs
 

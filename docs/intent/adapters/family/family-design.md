@@ -28,7 +28,7 @@ The kernel runs `p07` before `p08`. So `p07` processes the inbox left by earlier
 Each step, `p07` takes every message from `mesh.inbox`:
 
 - without `heard`, or with no household of that id: dropped, not counted;
-- label LIVE: delivered at once, unchanged (heard at the gateway, in the room), under both policies;
+- label LIVE or REPLAY: delivered at once, unchanged (heard at the gateway, in the room, or replayed from a recording), under both policies, and outside the metric;
 - network up at `at`: delivered at once;
 - network down at `at`, *Directorate:* held for the bulletin;
 - network down at `at`, *STRATUM:* the hop simulation below; a message it does not deliver is held for the bulletin.
@@ -55,7 +55,7 @@ Delivered messages are appended to `mesh.delivered`, which is append-only and ne
 
 *What sets this number.* The bulletin reaches every member at the first 06:00 after their beacon under both policies, so the gap comes from the members the mesh reaches sooner.
 
-**Board.** `familyBoard(world)` returns, per household and member, the latest delivered OK (by `at`) with its minute, level, sector and label, in one pass over `mesh.delivered`, outside the step loop. The district page draws it; a real phone's OK shows there as LIVE.
+**Board.** `familyBoard(world)` returns, per household and member, the latest delivered OK (by `at`; on equal `at`, the later-delivered one) with its minute, level, sector and label, in one pass over `mesh.delivered`, outside the step loop. The district page draws it; a real phone's OK shows there as LIVE.
 
 ## Decisions & Alternatives
 

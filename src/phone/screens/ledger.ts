@@ -44,14 +44,15 @@ export function ledgerView(clock: () => number = Date.now) {
 
 export function mountLedger(root: HTMLElement) {
   root.innerHTML = `
-    <h2>Shed Ledger</h2>
-    <p class="muted">Each number estimates the chance a level is cut in the next stress event at that tier. It
+    <h2>Odds of a power cut</h2>
+    <p class="muted">Chance each level loses power the next time the grid is under strain, from what neighbours reported.</p>
+    <div id="ledger"></div>
+    <details><summary>How this is worked out</summary><p class="muted">Each number estimates the chance a level is cut in the next stress event at that tier. It
       starts from an even guess and moves toward what neighbours reported, so a few events never give 0% or 100%.
       A level counts as cut in an event when 3 different phones report it without power during the event or the
       10 minutes after. It cannot say who sent a report: anyone can send public reports, and one person can pose
       as three. A level already dark before the event counts too. A level with fewer than 3 phones reporting has
-      no data yet. The event happening now counts once it is over.</p>
-    <div id="ledger"></div>
+      no data yet. The event happening now counts once it is over.</p></details>
     <p class="muted">Kept in this page's memory only: the ledger resets when the page reloads.</p>`;
 
   const view = ledgerView();
@@ -62,7 +63,8 @@ export function mountLedger(root: HTMLElement) {
     const html = app.listening
       ? view.html(app.lastReading?.tier)
       : `<p id="ledger-empty">Not listening. Start listening on the Listen tab: this phone then records the
-          stress events it hears and the power reports neighbours send.</p>`;
+          stress events it hears and the power reports neighbours send.</p>
+        <button onclick="location.hash = 'listen'">Go to Listen</button>`;
     if (html !== shown) out.innerHTML = shown = html;
   }
 

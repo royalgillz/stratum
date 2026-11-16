@@ -17,7 +17,7 @@ prefix: ADAPT-EVIDENCE
 
 **Alerts.**
 - *Directorate (under both policies):* at 06:00 each day (`t mod 86400 = 21600`), take one grab sample of each level's outlet. Its result is published 24 h later as the official figure. A published unsafe result puts the level on official hold; a later published safe result lifts it.
-- *STRATUM:* p04 makes its own `createDetector()` on its first step and pushes each level's four channels every step as `push('water.<channel>', 'L<level>', t, value)`, with channels cond, toc, turb and biocide. The detector writes nothing to the ledger. When an event opens on any channel of a level, a detector hold applies to that level from `tDetect + NOTIFY` until every event on that level has closed, plus the longest tap delay, so water already in the pipes is not drunk. Residents still hear official notices, so a level is on hold when the detector hold or the official hold applies.
+- *STRATUM:* p04 makes its own `createDetector()` on its first step and pushes each level's four channels every step as `push('water.<channel>', 'L<level>', t, value)`, with channels cond, toc, turb and biocide. The detector writes nothing to the ledger. When an event opens on any channel of a level, a detector hold applies to that level from `tDetect + NOTIFY` until every event on that level has closed, plus the longest tap delay, so water already in the pipes is not drunk. Residents still hear official notices, so a level is on hold when the detector hold or the official hold applies. Detection takes a few minutes and the shortest pipe takes 60, so while `NOTIFY` stays under about 55 min the exact hold start does not change the metric.
 
 **Ledger.** Each published grab result is observed as `('water.toc', 'L<level>', sample organic carbon, 'official')` at publication, under both policies. Every whole hour under STRATUM, `observe('water.toc', 'L<level>', outlet organic carbon, 'sensor:L<level>')`. The Directorate's figure is not false; it is a day late, and the gap shows by how much.
 
@@ -35,7 +35,7 @@ prefix: ADAPT-EVIDENCE
 
 **Medicine.** At 00:00 of day `d` (`d = t / 86400`), the case window is days `d − CASE_WINDOW` to `d − 1` inclusive. `MED_SUPPLY` courses plus any held over are handed out:
 - *Directorate:* in proportion to each sector's clinic-list cases (`n1`) in the window. With no clinic cases in the window, nothing is sent and the courses are held over.
-- *STRATUM:* the district estimate `N = chapman(n1, n2, m).n` from the window's district totals; each sector's demand is `N × n2_s / n2_district`, its share of the residents' list, which has equal capture everywhere (the union `n1 + n2 − m` when `n2_district` is 0, and 0 for all when that is empty too); `allocate(courses, claims).shares` with floor 0; the surplus is held over.
+- *STRATUM:* the district estimate `N = chapman(n1, n2, m).n` from the window's district totals; each sector's demand is `N × n2_s / n2_district`, its share of the residents' list, which has equal capture everywhere (the clinic list `n1` when `n2_district` is 0, which is the union `n1 + n2 − m` because then `m` is 0 too, and 0 for all when that is empty too); `allocate(courses, claims).shares` with floor 0; the surplus is held over.
 
 The day's shares are written to `alloc.medicine` and added to each sector's `stock`.
 
@@ -46,6 +46,10 @@ The day's shares are written to `alloc.medicine` and added to each sector's `sto
 **Metric:** "case-count relative error", unit `ratio`: `|figure − true| / max(1, true)` at the current step, where `figure` is `n1_cum` under the Directorate and the cumulative Chapman estimate under STRATUM.
 
 *What sets this number.* The clinic capture (0.6 at level 1 to 0.2 at level 6) sets the Directorate's error. The seven-day outbreak is small, so the harness takes p09's result from the 30-day run.
+
+## Interface
+
+`createP04(policy, script)` and `createP09(policy, script)` return an `Adapter` with fresh private state. `handOut(policy, courses, n1[], n2[], m[]) → { shares, held }` is p09's medicine rule as a pure function of the case-window counts per sector. Constants `NOTIFY`, `MED_SUPPLY` and `CASE_WINDOW` are in `docs/params.md`.
 
 ## Decisions & Alternatives
 

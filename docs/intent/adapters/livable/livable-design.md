@@ -20,7 +20,7 @@ prefix: ADAPT-LIVABLE
 
 **Metric:** "person-hours above 27.5 C wet-bulb", unit `person-h`, summed over steps and sectors where the main area's wet-bulb is above 27.5 °C: people times `dt / 3600` under the Directorate, and people times `(1 − refugePaid / demand)` times `dt / 3600` under STRATUM. A refuge only excuses people while its floor is paid, and the cooling that pays it never also cools the main area.
 
-*What sets this number.* The fixed 70% humidity: at constant moisture the uncooled deep levels stay below 27.5 °C wet-bulb and the metric is 0 under both policies (`docs/limits.md`).
+*What sets this number.* The fixed 70% humidity. At constant moisture instead, the uncooled deep levels would stay below 27.5 °C wet-bulb and the metric would be 0 under both policies (`docs/limits.md`).
 
 ## p05: pumps, sumps and tunnels
 
@@ -28,6 +28,8 @@ prefix: ADAPT-LIVABLE
 
 - *Directorate:* split in proportion to demand among sectors with power above 0, each capped at its demand.
 - *STRATUM:* `allocate(pool, claims).shares` with demand the sector's pump power and a floor equal to that demand for **critical** sectors and 0 for the rest. A sector is critical when `strandedIfLost(world.tunnels.edges, flooded, people, HUB)` is above 0: its flooding would cut off people who reach the hub now, or its drying would reconnect them. Criticality uses the flooded flags held at the start of the step, before this step's sump update. Pump power goes first where its loss would cut off others.
+
+**Power and the plants.** Cooling and pumps are separate plants, not grid load (`docs/params.md`), so STRATUM claims cover every sector whatever its `alloc.power`. The Directorate gates on power because its shedding cuts a sector whole, plant feeds included. STRATUM's power allocation pays every occupied sector its life floor first, so a STRATUM run has no cut sector for the gate to act on.
 
 **Step.** For each sector: `pumpFrac` is the served fraction of `alloc.pumps[sectorId(s)]` over its pump demand, new `sumpLevel` by `sumpStep` with the flood inflow of the script's flood events, flooded state by `isFlooded`, then every tunnel edge passable when neither end is flooded.
 
