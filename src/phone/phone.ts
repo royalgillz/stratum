@@ -113,7 +113,7 @@ $('listen').onclick = async () => {
       : '';
   } catch (e) {
     btn.disabled = false;
-    $('tier').textContent = '—';
+    $('tier').textContent = 'Not listening';
     $('dev').textContent = `Could not open the microphone: ${(e as Error).message}`;
   }
 };

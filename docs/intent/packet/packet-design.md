@@ -37,7 +37,7 @@ The payload is 6 bytes: member (1), status or codebook code (1), level 1–6 in 
 | OK | 0 | family only |
 | NEED, REPORT, CODEBOOK | 1, 2, 3 | family or public, the sender's choice |
 | GRID_ALERT, HOLD_WATER, ROUTE, LEDGER_HEAD | 4, 5, 6, 7 | public only |
-| 8–15 | — | undefined, rejected |
+| 8–15 | none | undefined, rejected |
 
 ## Keys
 
