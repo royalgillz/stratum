@@ -1,6 +1,7 @@
 // What the district worker posts to the page: one policy's run, reduced to what the screen draws.
 // Pure: no browser APIs, so it is unit-tested in Node. Outside LID scope (reads core, writes nothing).
 import type { AdapterId, MeshMessage, Metric, Tier } from '../core/contracts.ts';
+import { FOOD_SUPPLY } from '../core/adapters/p02.ts';
 import { served } from '../core/adapters/p03.ts';
 import { familyBoard, type BoardEntry } from '../core/adapters/p08.ts';
 import { powerDemand, sectorId } from '../core/adapters/shared.ts';
@@ -10,6 +11,7 @@ import { WB_LIMIT } from '../core/world/airheat/airheat.ts';
 import { CAP_MARGIN, capacityAt, swing, tierOf } from '../core/world/grid/grid.ts';
 import { RECOVER } from '../core/world/tunnels/tunnels.ts';
 import { unsafe } from '../core/world/water/water.ts';
+import { noEvent } from './problems.ts';
 
 export interface Cell {
   served: number; // power served over demand, 0..1
@@ -19,6 +21,7 @@ export interface Cell {
   flooded: boolean;
   unsafe: boolean; // the sector's tap water is unsafe (contamination)
   medicine: boolean; // medicine sent here today: cases are on the list the policy acts on
+  food: number; // days of the standard ration in the sector's store
 }
 
 export interface View {
@@ -28,10 +31,15 @@ export interface View {
   cells: Cell[]; // 24, index s = (level - 1) * 4 + sector
   metrics: Partial<Record<AdapterId, Metric>>;
   board: Record<number, BoardEntry>; // the demo household's family board, by member
+  surface: string; // the exposure band the policy states for the surface ('unknown' before any reading)
+  none: Partial<Record<AdapterId, string>>; // metrics whose event has not happened: why, in place of a placeholder 0
 }
+
+export type ScriptName = 'seven-day' | 'stress-week';
 
 export interface Snapshot {
   seed: number;
+  script: ScriptName;
   playing: boolean;
   done: boolean;
   act: Act;
@@ -41,7 +49,7 @@ export interface Snapshot {
 export type ToWorker =
   | { type: 'play' }
   | { type: 'pause' }
-  | { type: 'restart'; seed: number }
+  | { type: 'restart'; seed: number; script?: ScriptName } // no script: keep the one running
   | { type: 'speed'; n: number } // test knob: real seconds count n times over
   | { type: 'inject'; message: MeshMessage };
 
@@ -67,7 +75,7 @@ export function audioClock(run: Run, prev: AudioClock | null, realDt: number): A
 
 export function view(run: Run, demoId: string, clock: AudioClock | null = null): View {
   const w = run.kernel.world;
-  const edges = w.tunnels.edges;
+  const edges = w.tunnels.edges, metrics = run.kernel.metrics();
   return {
     t: w.t,
     f: clock?.f ?? w.grid.f,
@@ -81,8 +89,14 @@ export function view(run: Run, demoId: string, clock: AudioClock | null = null):
       flooded: x.sumpLevel >= 1 || (x.sumpLevel >= RECOVER && edges.every((e) => (e.a !== s && e.b !== s) || !e.passable)),
       unsafe: unsafe(x.water),
       medicine: (w.alloc.medicine[sectorId(s)] ?? 0) > 0,
+      food: x.people > 0 ? x.foodKcal / (FOOD_SUPPLY * x.people) : 0,
     })),
-    metrics: run.kernel.metrics(),
+    metrics,
+    none: Object.fromEntries((Object.keys(metrics) as AdapterId[]).flatMap((id) => {
+      const why = noEvent(id, run.script.events, w.t);
+      return why ? [[id, why]] : [];
+    })),
     board: familyBoard(w)[demoId] ?? {},
+    surface: w.surface.band,
   };
 }

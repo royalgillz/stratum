@@ -2,6 +2,7 @@
 import type { AdapterId, Label } from '../src/core/contracts.ts';
 import type { Policy } from '../src/core/adapters/shared.ts';
 import type { Series } from '../src/core/scenario/run.ts';
+import type { Beside } from './beside.ts';
 
 export interface Summary {
   name: string;
@@ -9,6 +10,8 @@ export interface Summary {
   label: Label;
   final: { mean: number; lo: number; hi: number; values: number[] };
   hourly: { t: number[]; mean: number[] };
+  // Figures the designs report beside the metric (harness/beside.ts), final value per seed; absent for most adapters.
+  beside?: Record<string, { name: string; unit: string; mean: number; lo: number; hi: number; values: number[] }>;
 }
 
 export interface Evidence {
@@ -45,13 +48,21 @@ export function interval(xs: number[]): { mean: number; lo: number; hi: number }
 }
 
 // runs: one series map per seed, all from the same script and policy, so every seed has the same ids and sample times.
-export function summarise(runs: Partial<Record<AdapterId, Series>>[]): Partial<Record<AdapterId, Summary>> {
+// extras: the beside figures of each run, in the same order, with the same keys on every seed.
+export function summarise(runs: Partial<Record<AdapterId, Series>>[], extras: Beside[] = []): Partial<Record<AdapterId, Summary>> {
   const out: Partial<Record<AdapterId, Summary>> = {};
   for (const id of Object.keys(runs[0] ?? {}).sort() as AdapterId[]) {
     const all = runs.map((r) => r[id]!);
     const { name, unit, label, t } = all[0]!;
     const values = all.map((s) => s.value[s.value.length - 1]!);
-    out[id] = { name, unit, label, final: { ...interval(values), values }, hourly: { t, mean: t.map((_, i) => mean(all.map((s) => s.value[i]!))) } };
+    const sum: Summary = (out[id] = { name, unit, label, final: { ...interval(values), values }, hourly: { t, mean: t.map((_, i) => mean(all.map((s) => s.value[i]!))) } });
+    const keys = extras[0]?.[id];
+    if (keys) {
+      sum.beside = Object.fromEntries(Object.entries(keys).map(([k, { name, unit }]) => {
+        const vs = extras.map((e) => e[id]![k]!.value);
+        return [k, { name, unit, ...interval(vs), values: vs }];
+      }));
+    }
   }
   return out;
 }

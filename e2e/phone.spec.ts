@@ -104,7 +104,7 @@ test('home page says what STRATUM does, District 7 and judge mode first, spikes 
   await expect(page.getByText('hears the grid weaken before a power cut')).toBeVisible();
   await expect(page.getByText('Rung 0')).toHaveCount(0);
   const links = page.locator('a:visible');
-  await expect(links).toHaveText(['District 7', 'Judge mode', 'Phone page']);
+  await expect(links).toHaveText(['District 7', 'Coverage matrix', 'Judge mode', 'Phone page']);
   for (const a of await links.all()) expect((await a.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await expect(page.getByRole('link', { name: 'Emitter' })).toBeHidden();
   await page.getByText('Developer spikes').click();

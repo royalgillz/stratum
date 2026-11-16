@@ -1,10 +1,10 @@
 import { configDefaults, defineConfig } from 'vitest/config';
 
-// Multi-page: the hello page, the phone page, the District 7 page, judge mode and the throwaway spike pages.
+// Multi-page: the hello page, the phone page, the District 7 page, its coverage matrix, judge mode and the throwaway spike pages.
 export default defineConfig({
   build: {
     rolldownOptions: {
-      input: ['index.html', 'src/phone/index.html', 'src/district/index.html', 'src/district/judge.html', 'spikes/emitter.html', 'spikes/listener.html', 'spikes/packets.html'],
+      input: ['index.html', 'src/phone/index.html', 'src/district/index.html', 'src/district/judge.html', 'src/district/coverage.html', 'spikes/emitter.html', 'spikes/listener.html', 'spikes/packets.html'],
     },
   },
   test: {

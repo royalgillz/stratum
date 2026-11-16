@@ -5,6 +5,8 @@ import { deriveKeys, publicKeys, type KeySet } from '../core/packet/keys.ts';
 import { createRun } from '../core/scenario/run.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { toMessage } from './gateway.ts';
+import { badges, noEvent, PROBLEMS, show, winner } from './problems.ts';
+import { stressWeek } from '../core/scenario/stress-week.ts';
 import { audioClock, view, type AudioClock } from './snapshot.ts';
 
 const WORDS = 'abandon ability able about above absent';
@@ -51,6 +53,8 @@ describe('snapshot view', () => {
     expect(v.cells.every((c) => c.served === 1 && !c.flooded && !c.unsafe)).toBe(true); // nothing has gone wrong by hour 3
     expect(Object.keys(v.metrics)).toEqual(Array.from({ length: 15 }, (_, i) => `p${String(i + 1).padStart(2, '0')}`));
     expect(Object.values(v.metrics).every((m) => m.label === 'SIMULATED')).toBe(true);
+    expect(v.cells.every((c) => c.food === 3)).toBe(true); // every store full: 3 days of the standard ration
+    expect(v.surface).toBe('unknown'); // no surface reading before the campaign
     expect(v.board).toEqual({}); // the demo family is never separated, so only a real phone reaches its board
 
     run.inject({ at: 0, bytes: new Uint8Array(25), heard: { type: TYPES.OK, keySet: 'family', minute: 29_000_000, payload, label: 'LIVE' } });
@@ -112,4 +116,28 @@ describe('audio clock', () => {
       else expect(Math.min(...served)).toBeGreaterThan(0.3); // above the life floor
     }
   }, 30_000); // two runs to hour 75: over the 5 s default under a loaded suite
+});
+
+describe('problems: shown values and who did better', () => {
+  it('prints shares as percentages, nothing proven in words, and reads each metric by its direction', () => {
+    expect(show(0.25, 'share')).toBe('25%');
+    expect(show(22941.7, 'person-h')).toBe('22,900 person\u2011h');
+    expect(show(100000, 'APF')).toBe('none proven');
+    expect(show(10000, 'APF')).toBe('APF 10,000');
+    expect(winner('higher', 0, 0.25)).toBe('STRATUM');
+    expect(winner('lower', 0, 500)).toBe('Directorate');
+    expect(winner('lower', 3, 3)).toBe('tie');
+    expect(PROBLEMS.map((p) => p.id)).toEqual(Array.from({ length: 15 }, (_, i) => `p${String(i + 1).padStart(2, '0')}`));
+    expect(PROBLEMS.every((p) => badges(p.tier).length > 0)).toBe(true);
+  });
+
+  it('names the missing event instead of a placeholder zero', () => {
+    expect(noEvent('p08', sevenDay.events, 0)).toBe('no separations yet');
+    expect(noEvent('p08', sevenDay.events, 2 * 3600)).toBeNull();
+    expect(noEvent('p08', stressWeek.events, 7 * 86400)).toBe('no separations in this script');
+    expect(noEvent('p13', sevenDay.events, 119 * 3600)).toBe('no surface readings yet');
+    expect(noEvent('p15', sevenDay.events, 0)).toBe('no plan yet');
+    expect(noEvent('p15', sevenDay.events, 60)).toBeNull();
+    expect(noEvent('p03', stressWeek.events, 0)).toBeNull();
+  });
 });

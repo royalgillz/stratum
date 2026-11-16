@@ -36,4 +36,12 @@ describe('harness summary', () => {
     expect(out.p01!.hourly).toEqual({ t: [0, 3600], mean: [1, 3] });
     expect(out.p01!.label).toBe('SIMULATED');
   });
+
+  it('summarises beside figures per key across seeds, and adds none without them', () => {
+    const s = { p15: { name: 'wait', unit: 'days', label: 'SIMULATED' as const, t: [0], value: [3] } };
+    const f = (value: number) => ({ p15: { level1: { name: 'level 1 mean wait', unit: 'days', value } } });
+    const out = summarise([s, s], [f(1), f(3)]);
+    expect(out.p15!.beside).toEqual({ level1: { name: 'level 1 mean wait', unit: 'days', mean: 2, lo: expect.any(Number), hi: expect.any(Number), values: [1, 3] } });
+    expect(summarise([s, s]).p15!.beside).toBeUndefined();
+  });
 });

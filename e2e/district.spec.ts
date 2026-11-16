@@ -100,6 +100,7 @@ test.describe('District 7 page', () => {
     await page.getByRole('button', { name: 'Play' }).click();
     await expect(page.getByRole('button', { name: 'Week ended' })).toBeDisabled({ timeout: 120_000 });
     await expect(clock).toContainText('World time day 8, '); // at ?speed the last tick may overshoot midnight: Run.tick does not clamp to the end
+    await expectSoundLayout(page); // the week's longest figures
     await page.getByRole('button', { name: 'Sound: on' }).click();
     await expect.poll(async () => (await hum(1))[0]).toBe(0);
 
@@ -110,6 +111,52 @@ test.describe('District 7 page', () => {
     await expect(clock).toContainText('seed 2');
     await expectSoundLayout(page);
   });
+
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`${scheme}: fifteen metrics by problem with direction, tier and label; the script switch restarts on the stress week`, async ({ page }) => {
+      test.setTimeout(90_000);
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto('/src/district/?speed=10', { waitUntil: 'domcontentloaded' });
+      const rows = page.locator('#metrics tr');
+      await expect(rows).toHaveCount(15, { timeout: 15_000 });
+      const heads = await page.locator('#metrics th').allTextContents();
+      heads.forEach((h, i) => {
+        expect(h).toMatch(new RegExp(`^${i + 1}\\. `)); // grouped by problem number, 1 to 15
+        expect(h).toMatch(/(higher|lower) is better/);
+        expect(h).toMatch(/(Live|Modelled|Thin|Roadmap)/);
+        expect(h).toContain('SIMULATED');
+      });
+      for (const r of await rows.all()) await expect(r.locator('.badge').first()).toBeVisible();
+      await expect(page.locator('#metrics td')).toHaveCount(30); // both policies side by side
+      await expect(page.locator('#metrics td', { hasText: 'not yet run' })).toHaveCount(0);
+      await expect(page.locator('#map .surface')).toHaveText('Surface: no reading yet');
+      await expect(page.locator('#metrics tr').nth(7).locator('td')).toHaveText(['no separations yet', 'no separations yet']); // no placeholder 0 h
+      await expect(page.locator('#map rect.food-track')).toHaveCount(24);
+      await expect(page.getByText('food store, bottom edge', { exact: false })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'coverage matrix' })).toHaveAttribute('href', './coverage.html');
+
+      const seven = page.getByRole('button', { name: 'Seven-day week' }), stress = page.getByRole('button', { name: 'Stress week' });
+      await expect(seven).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('#scriptNote')).toContainText('Seven-day week');
+      await page.getByRole('button', { name: 'Play' }).click();
+      await expect.poll(() => worldT(page), { timeout: 20_000 }).toBeGreaterThan(3600);
+      await stress.click();
+      await expect(stress).toHaveAttribute('aria-pressed', 'true');
+      await expect(seven).toHaveAttribute('aria-pressed', 'false');
+      await expect(page.locator('#scriptNote')).toContainText('Stress week: built so STRATUM also loses.');
+      await expect(page.locator('#act')).toContainText('A week below the floor');
+      // Played to the end: the longest figures of the week must still fit every screen.
+      await expect(page.getByRole('button', { name: 'Week ended' })).toBeDisabled({ timeout: 40_000 });
+      await expect(page.locator('#metrics tr').nth(7).locator('td')).toHaveText(['no separations in this script', 'no separations in this script']);
+      await expectSoundLayout(page);
+      await page.getByRole('button', { name: 'STRATUM rule' }).click();
+      await expect(page.locator('#map .surface')).toContainText("(crews' quorum)");
+      await expectSoundLayout(page);
+      await seven.click();
+      await expect(seven).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.locator('#act')).toContainText(/The network is down|The hum sags/);
+    });
+  }
 
   test('a real-codec OK under the demo words reaches the board as LIVE under both rules; another family is rejected', async ({ page }) => {
     test.setTimeout(60_000);
