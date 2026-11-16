@@ -37,6 +37,7 @@ describe('epidemic', () => {
     const dt = 86400; // a long step makes the draws sensitive to lambda
     const r0 = rebreathed(CO2_REF);
     expect(rebreathed(1180)).toBeCloseTo((1180 - C_OUT) / C_EXHALED, 15);
+    expect(CO2_REF).toBe(940); // C_OUT + 1e6 x G / Q from the air model
     const co2 = fill(CO2_REF);
     co2[1] = 1200; // between ref and cap
     co2[2] = 20000; // past the cap
@@ -84,6 +85,15 @@ describe('epidemic', () => {
     check(2, draws([0.5, 0.5, 0.5, 0.5], 0));
     expect(out.coursesUsed[0]).toBeGreaterThan(0);
     expect(out.coursesUsed[2]).toBe(0);
+    // T is floor(stock): a 30-day step recovers every treated case, so 12.7 courses treat exactly 12
+    // and ni is drawn from E at the start of the step, so E = 0 gives no new cases however many are exposed
+    const s2 = createEpidemic(people());
+    Object.assign(s2, { S: fill(400), E: fill(0), I: fill(30), R: fill(70) });
+    const out2 = epiStep(s2, 0, fill(CO2_REF), stock, 30 * 86400, script([0.99]));
+    expect(400 - s2.S[0]).toBe(binomial(400, pr(lambda, 30 * 86400), at(0.99)));
+    expect(400 - s2.S[0]).toBeGreaterThan(100);
+    expect(out2.newCases[0]).toBe(0);
+    expect(out2.coursesUsed[0]).toBe(12);
   });
 
   // @spec WORLD-EPI-004
@@ -113,12 +123,13 @@ describe('epidemic', () => {
     const dt = 12 * 3600;
     const s = createEpidemic(people());
     Object.assign(s, { E: fill(100), S: fill(400) });
-    const us = [0.5, 0.5, 0.5, 0.5, 0.3, 0.6, 0.2]; // sector 0; level 1
-    const t = 3 * 86400 + 100;
-    const r = script([...us, ...Array(19 * 7).fill(0.5), 0.5, 0.5, 0.5, 0.5, 0.3, 0.6, 0.2]); // sector 20: level 6
+    const us = [0.5, 0.5, 0.5, 0.5, 0.3, 0.6, 0.2];
+    const t = 3 * 86400 + 80000; // late on day 3: the step ends on day 4, and round(t / 86400) is 4
+    const half = (n: number) => Array(n * 7).fill(0.5);
+    const r = script([...us, ...half(19), ...us, ...half(2), ...us]); // sectors 0 (level 1), 20 and 23 (level 6)
     const out = epiStep(s, t, fill(CO2_REF), fill(0), dt, r);
     expect(r.calls).toBe(7 * 24);
-    for (const [sec, level] of [[0, 1], [20, 6]]) {
+    for (const [sec, level] of [[0, 1], [20, 6], [23, 6]]) {
       const k = out.newCases[sec];
       expect(k).toBeGreaterThan(0);
       const n1 = binomial(k, CLIN_TOP - CLIN_STEP * (level - 1), at(0.3));
@@ -131,7 +142,7 @@ describe('epidemic', () => {
     // a second step on the same day adds; an empty sector still draws seven times
     const before = s.clinic[0][3];
     const r2 = script([0.5, 0.5, 0.5, 0.5, 0.99]);
-    const out2 = epiStep(s, t + dt / 2, fill(CO2_REF), fill(0), dt / 4, r2);
+    const out2 = epiStep(s, t + 1000, fill(CO2_REF), fill(0), dt / 4, r2);
     expect(s.clinic[0][3]).toBe(before + binomial(out2.newCases[0], CLIN_TOP, at(0.99)));
     expect(r2.calls).toBe(7 * 24);
     const empty = createEpidemic(fill(0));
@@ -157,6 +168,7 @@ describe('epidemic', () => {
   // @spec WORLD-EPI-008
   it('WORLD-EPI-008 rejects invalid input with a RangeError', () => {
     const s = createEpidemic(people());
+    seed(s, 0, 1); // lambda > 0 on level 1, so an unchecked infinite dt would change sectors 0 to 3 before a NaN probability throws
     const ok = (over: Partial<{ t: number; co2: number[]; stock: number[]; dt: number }>) => {
       const a = { t: 0, co2: fill(CO2_REF), stock: fill(1), dt: EPI_DT, ...over };
       return () => epiStep(s, a.t, a.co2, a.stock, a.dt, rng(1, 'x'));
@@ -167,13 +179,16 @@ describe('epidemic', () => {
     for (const x of [-1, NaN, Infinity]) expect(ok({ stock: withAt(fill(1), 7, x) })).toThrow(RangeError);
     for (const x of [C_OUT - 1, NaN, Infinity]) expect(ok({ co2: withAt(fill(CO2_REF), 7, x) })).toThrow(RangeError);
     for (const t of [-1, NaN, Infinity]) expect(ok({ t })).toThrow(RangeError);
-    for (const dt of [0, -60, NaN]) expect(ok({ dt })).toThrow(RangeError);
+    for (const dt of [0, -60, NaN, Infinity]) expect(ok({ dt })).toThrow(RangeError);
     expect(() => rebreathed(C_OUT - 0.1)).toThrow(RangeError);
+    expect(rebreathed(C_OUT)).toBe(0);
+    expect(ok({ co2: fill(C_OUT) })).not.toThrow();
     expect(() => createEpidemic(fill(500).slice(1))).toThrow(RangeError);
     expect(() => createEpidemic(fill(-1))).toThrow(RangeError);
     // a rejected step leaves the state untouched
     const copy = structuredClone(s);
     expect(ok({ co2: withAt(fill(CO2_REF), 23, NaN) })).toThrow(RangeError);
+    expect(ok({ dt: Infinity })).toThrow(RangeError);
     expect(s).toEqual(copy);
   });
 });

@@ -103,8 +103,8 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Wet-bulb formula | Stull 2011 | - | air-heat | https://doi.org/10.1175/JAMC-D-11-0143.1 | false | Valid 5 to 99% humidity, -20 to 50 deg C |
 | Refuge share (REFUGE) | 25 | % of people, % of cooling demand | adapters | | true | STRATUM cooling floor; people rotate through the refuge |
 | Intake CO2 (C_OUT) | 420 | ppm | air-heat, epidemic | https://gml.noaa.gov/ccgg/trends/ | false | Global mean, about 420 ppm in 2024 |
-| CO2 exhaled per person (G) | 0.0052 | L/s | air-heat | https://doi.org/10.1111/ina.12383 | false | Adult, sedentary |
-| Fresh air per person (Q) | 10 | L/s | air-heat | | true | Order of ventilation design guides |
+| CO2 exhaled per person (G) | 0.0052 | L/s | air-heat, epidemic (temporary copy in CO2_REF) | https://doi.org/10.1111/ina.12383 | false | Adult, sedentary |
+| Fresh air per person (Q) | 10 | L/s | air-heat, epidemic (temporary copy in CO2_REF) | | true | Order of ventilation design guides |
 | Leakage with fans off (LEAK) | 5 | % of Q | air-heat | | true | |
 | Air volume per person (VOL_L) | 30000 | L | air-heat | | true | 30 m3; 50 min time constant with fans on |
 | CO2 limit | 5000 | ppm | air-heat | https://www.osha.gov/chemicaldata/183 | false | OSHA permissible exposure limit, an 8 h time-weighted average, not an instant threshold |

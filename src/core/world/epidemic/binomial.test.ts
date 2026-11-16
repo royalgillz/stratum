@@ -22,6 +22,8 @@ describe('binomial', () => {
     expect(binomial(2, 0.5, () => 0.25)).toBe(1);
     expect(binomial(2, 0.5, () => 0.74)).toBe(1);
     expect(binomial(2, 0.5, () => 0.75)).toBe(2);
+    // the rounded CDF of Bin(10, 0.3) sums to 0.9999999999999997, at or below this u, so n is returned
+    expect(binomial(10, 0.3, () => 1 - 2 ** -53)).toBe(10);
     // p > 0.5 mirrors p < 0.5 with the same u
     expect(binomial(7, 0.9, () => 0.3)).toBe(7 - binomial(7, 0.1, () => 0.3));
   });

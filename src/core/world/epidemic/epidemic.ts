@@ -27,6 +27,7 @@ export interface EpiState {
   E: number[];
   I: number[];
   R: number[];
+  // Per-day lists grow as steps reach each day; read a day no step has reached as 0: list[d] ?? 0.
   clinic: number[][]; // [sector][day] new cases on the clinic list
   residents: number[][]; // [sector][day] new cases on the residents' list
   both: number[][]; // [sector][day] new cases on both lists
