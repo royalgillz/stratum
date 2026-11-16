@@ -1,6 +1,7 @@
 // Phone page shell: tabs and routing. Each screen lives in src/phone/screens and talks to the
 // others only through `app` events (src/phone/app.ts). Outside LID scope (src/phone).
 import { $, app, store } from './app.ts';
+import { mountCare } from './screens/care.ts';
 import { mountFamily } from './screens/family.ts';
 import { mountListen } from './screens/listen.ts';
 import { mountReport } from './screens/report.ts';
@@ -9,6 +10,7 @@ const screens: Record<string, (root: HTMLElement) => void> = {
   listen: mountListen,
   report: mountReport,
   family: mountFamily,
+  care: mountCare,
 };
 for (const [name, mount] of Object.entries(screens)) mount($(`#screen-${name}`));
 
