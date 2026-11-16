@@ -8,6 +8,6 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: [...configDefaults.exclude, '.*/**'], // local worktrees hold their own copies of the tests
+    exclude: [...configDefaults.exclude, '.*/**', 'e2e/**'], // worktrees hold copies; e2e/ belongs to Playwright
   },
 });

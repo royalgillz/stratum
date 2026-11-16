@@ -4,49 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STRATUM phone</title>
-  <style>
-    :root { --fg: #111; --bg: #fff; --muted: #666; --line: #ddd; --green: #1b7a3a; --amber: #9a6400; --red: #b3261e; }
-    @media (prefers-color-scheme: dark) { :root { --fg: #eee; --bg: #121212; --muted: #aaa; --line: #333; --green: #6fdc8c; --amber: #ffc94d; --red: #ff8a80; } }
-    body { font-family: system-ui, sans-serif; margin: 0 auto; padding: 0 16px 32px; max-width: 32rem; color: var(--fg); background: var(--bg); }
-    h1 { font-size: 1.3rem; margin: 16px 0 4px; }
-    h2 { font-size: 1.05rem; margin: 24px 0 8px; border-top: 1px solid var(--line); padding-top: 16px; }
-    button, select, input { font: inherit; min-height: 44px; }
-    button { padding: 0 16px; margin: 4px 4px 4px 0; }
-    input[type=text] { width: 100%; box-sizing: border-box; padding: 0 8px; }
-    .muted { color: var(--muted); font-size: 0.9rem; }
-    .words { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.02em; }
-    #tier { font-size: 2.4rem; font-weight: 700; margin: 8px 0 0; }
-    #tier.GREEN { color: var(--green); } #tier.AMBER { color: var(--amber); } #tier.RED { color: var(--red); }
-    #dev { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
-    #inbox { list-style: none; padding: 0; }
-    #inbox li { padding: 8px 0; border-bottom: 1px solid var(--line); }
-    .err { color: var(--red); }
-  </style>
+  <link rel="stylesheet" href="./phone.css" />
 </head>
 <body>
-  <h1>STRATUM</h1>
-  <p class="muted">Hear the grid, tell your family you are OK. Sound only: no network needed.</p>
+  <header>
+    <h1>STRATUM</h1>
+    <p class="muted">Hear the grid, tell your family you are OK. Sound only: no network needed.</p>
+  </header>
 
-  <h2>Family</h2>
-  <div id="family"></div>
+  <!-- One tab per screen. A screen still being built keeps its tab hidden. -->
+  <nav class="tabs" role="tablist" aria-label="Screens">
+    <button role="tab" id="tab-listen" aria-controls="screen-listen" data-screen="listen">Listen</button>
+    <button role="tab" id="tab-report" aria-controls="screen-report" data-screen="report">Report</button>
+    <button role="tab" id="tab-family" aria-controls="screen-family" data-screen="family">Family</button>
+    <button role="tab" id="tab-care" aria-controls="screen-care" data-screen="care" hidden>Care</button>
+    <button role="tab" id="tab-ledger" aria-controls="screen-ledger" data-screen="ledger" hidden>Ledger</button>
+  </nav>
 
-  <h2>Listen to the grid</h2>
-  <p class="muted">Uses the microphone on this phone only. Nothing is recorded or sent. Keep the phone within about 30 cm of the hum.</p>
-  <button id="listen">Start listening</button>
-  <p id="tier" role="status" aria-live="polite">—</p>
-  <p id="dev"></p>
-  <p id="micinfo" class="muted"></p>
-
-  <h2>Report</h2>
-  <label>Level <select id="level"></select></label>
-  <label>Sector <select id="sector"></select></label>
-  <label><input type="checkbox" id="power" checked /> Power on here</label>
-  <div><button id="sendOk">Send OK to family</button></div>
-  <p id="sent" class="muted"></p>
-
-  <h2>Inbox</h2>
-  <p class="muted">Times shown are when each message was sent, not when it arrived.</p>
-  <ul id="inbox"></ul>
+  <main>
+    <section role="tabpanel" id="screen-listen" aria-labelledby="tab-listen"></section>
+    <section role="tabpanel" id="screen-report" aria-labelledby="tab-report" hidden></section>
+    <section role="tabpanel" id="screen-family" aria-labelledby="tab-family" hidden></section>
+    <section role="tabpanel" id="screen-care" aria-labelledby="tab-care" hidden></section>
+    <section role="tabpanel" id="screen-ledger" aria-labelledby="tab-ledger" hidden></section>
+  </main>
 
   <script src="/vendor/ggwave/ggwave.js"></script>
   <script type="module" src="./phone.ts"></script>

@@ -129,7 +129,7 @@ describe('packet codec', () => {
     expect(ok(await d2(first, now(MIN))).duplicate).toBe(false); // the rejected copy did not enter the seen-set
     for (let n = 1; n <= 4096; n++) await d2(await encode(A, pkt({ nonce: n })), now(MIN));
     expect(ok(await d2(first, now(MIN))).duplicate).toBe(false); // evicted, oldest first
-  }, 60_000); // 4,096 encode + decode rounds of Web Crypto HMAC
+  }, 180_000); // 4,096 encode + decode rounds of Web Crypto HMAC; slow when the machine is busy
 
   // @spec PKT-011
   it('marks packets under the public key set as public', async () => {

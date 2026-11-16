@@ -21,6 +21,10 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Packet seen-set size | 4096 | packets | packet | | true | Keyed by (key set, minute, nonce); oldest evicted first |
 | Packet stale limit | 24 | h | packet | | true | Older packets are rejected |
 | Packet MAX_HOPS | 4 | hops | packet | | true | Hops byte is reported clamped to this |
+| Relay back-off slot | 3000 | ms | relay | | true | Assumes air time (2 to 3 s) plus decode latency stays under 3 s, so a later slot hears an earlier relay's whole packet. Unmeasured: at 3 s air time suppression between neighbouring slots fails. Measure in the one-hop demo |
+| Relay back-off slots | 4 | slots | relay | | true | Delay is floor(rng() x 4) x 3 s, so 0 to 9 s. Tune in the multi-hop simulation |
+| Relay identities kept | 4096 | packets | relay | | true | Same as the packet seen-set; least recently heard evicted first |
+| Relay silence count | 2 | hearings | relay | | true | From docs/plan.md: a relay stays silent once it has heard a message twice |
 | Key words | 6 of 2048 | words | packet | | true | 66 bits. Word list and its licence still to choose |
 | Fast breathing, age 2 to 12 months | 50 | breaths/min | Breath Count | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | WHO guidance for community health workers |
 | Fast breathing, age 12 months to 5 years | 40 | breaths/min | Breath Count | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | |
@@ -40,6 +44,9 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Fair Share lottery base weight | 1 | - | fairshare | | true | Claim weight is 1 + debt, so a claim with no debt still has a chance |
 | Fair Share debt update | reset to 0 if served in full, else + shortfall | units | fairshare | | true | Owed turns accumulate for claims passed over |
 | Fair Share sum tolerance | 1e-9 | relative | fairshare | | true | Shares plus surplus equal supply within 1e-9 x max(1, supply) |
+| Shed event grace | 10 | min | shed | | true | An event lasts while the tier holds plus 10 min after it falls below; a rise back within those 10 min continues the same event, so events of one tier never overlap |
+| Shed confirmation | 3 | distinct senders | shed | | true | From docs/plan.md: public claims count as confirmed at three senders. Sender = (key set id, member byte). Also the reporters needed for a level to count as observed in an event |
+| Shed cut-odds prior | (c + 1) / (e + 2) | - | shed | https://en.wikipedia.org/wiki/Rule_of_succession | false | Laplace rule of succession; 1/2 with no data, shown as "no data yet" |
 | Witness baseline window | 48 | readings | witness | | true | Per (kind, where) stream. Tune on GECCO |
 | Witness minimum baseline | 24 | readings | witness | | true | No judgement before this many are admitted |
 | Witness residual threshold | 4 | scale units | witness | | true | Exceeding when abs(x - median) / scale >= 4 |

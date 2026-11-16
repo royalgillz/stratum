@@ -14,6 +14,10 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - The hum shows when the grid is stressed. It cannot say which level will be cut. The ledger of
   neighbours' power reports estimates that.
 - A sudden plant trip collapses the grid in seconds. The warning only helps with slow shortfalls.
+- The cut odds come from neighbours' reports. A level counts as cut in a stress event when three different
+  senders report it without power during the event, but anyone can send public reports, and one person can
+  pose as three. A level already dark before the event counts too. A level with fewer than three phones
+  reporting never gets odds: with no past stress event observed from that level the odds read "no data yet".
 - After the power is cut, the room has no hum to hear. The warning works before a cut, not during one.
 - The tracker needs to be close to the hum. With the phone 30 cm from the source it followed a slow
   ramp within 4 mHz. At 1 m in a room where people moved, echoes made the reading wander by
@@ -31,7 +35,9 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 
 - Sound carries a few metres in one room. The live demo proves one hop. Multi-hop reach is simulated.
 - A packet takes about 2 to 3 seconds. This is for status and short codes, not chat.
-- Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress.
+- Phones relay other families' messages without being able to check them, so well-formed junk can cost air time. Each phone relays any one message at most once and at most 4 hops, but an attacker can make endless new messages, and phones carry each one up to 4 hops of rooms beyond the attacker's speaker.
+- Anyone who hears a message can replay it marked "no hops left", so phones that hear the replay first never pass the real message on.
+- Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or hears no hum at all, so during a cut, or far from any hum, a forged alert still travels.
 - Messages carry their send time from the sender's clock. A receiver whose clock runs more than
   2 minutes behind the sender rejects fresh messages as from the future. Phones underground have no
   time signal, so clocks can drift apart over a long blackout.
