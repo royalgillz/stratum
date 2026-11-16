@@ -38,6 +38,9 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Shaft throughput | 1070 | people/hour | surface-return | https://911metallurgist.com/wp-content/uploads/2015/12/An-investigation-into-the-optimization-of-personnel-transportation-to-level-15-and-below-at-Khuseleka-No-1-shaft-Anglo-Platinum.pdf | false | One real platinum-mine shaft |
 | Grain energy cost under lamps | 650 | kWh/kg | light-food | https://pmc.ncbi.nlm.nih.gov/articles/PMC11961353 | false | Modelled figure from a review |
 | Lettuce energy cost under lamps | 10 to 20 | kWh/kg | light-food | https://hannahritchie.substack.com/p/vertical-farming | false | |
+| Fair Share lottery base weight | 1 | - | fairshare | | true | Claim weight is 1 + debt, so a claim with no debt still has a chance |
+| Fair Share debt update | reset to 0 if served in full, else + shortfall | units | fairshare | | true | Owed turns accumulate for claims passed over |
+| Fair Share sum tolerance | 1e-9 | relative | fairshare | | true | Shares plus surplus equal supply within 1e-9 x max(1, supply) |
 
 Mapping suits, domes and outposts onto respirator protection factors is an assumption. Label it in the UI.
 | Kernel world time step | 60 | s | kernel | | true | Fixed; 43,200 steps for 30 simulated days |
