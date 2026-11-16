@@ -38,6 +38,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- 2026-11-16: **Judge mode** (`src/district/judge.html`, `judge.ts`, `judge.css`, linked from the home page as "Judge mode"): one button plays a 90 s story with no microphone. SIMULATED 400 + 800 Hz hum, synthesized as in `tracker.test.ts`, runs through the real `createTracker` in step with the clock on a drawn LOOPBACK phone: CALIBRATING, GREEN, AMBER (about 63 s), RED (about 75 s), NO HUM after the cut at 80 s. At 85 s a real OK packet is encoded and decoded with the real codec and shown in the phone's inbox. Captions carry the story; a mute toggle silences the optional low-volume oscillator hum. The phone page address is shown with a copy button. `?speed=N` shortens the timeline for tests only and is labelled on screen. `e2e/judge.spec.ts` checks the start screen and the tier order on all six viewports.
 - Phone page split into tabs (Listen, Report, Family; Care and Ledger hidden until built). Shared services live in `src/phone/app.ts`; each screen is a module in `src/phone/screens/` that talks to the others only through app events. Tabs follow the WAI-ARIA pattern (arrow keys, `aria-selected`) and the address remembers the screen. Playwright now checks every tab on all six viewports.
 - Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
 - Playwright 1.65.1 added (approved by the human) with six viewport projects, `npm run e2e`, `e2e/phone.spec.ts` (layout, family, word errors, microphone path) and a CI `e2e` job. Locally 30/30 pass; 5 needed a retry because the Windows preview server stalls under load.
@@ -111,7 +112,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ## Open questions for the human
 
-None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record.
+Open calls from judge mode (2026-11-16) are items 9 to 12. Items 1 to 8 (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record.
 
 1. **Phase 4 resolutions**, now in the specs and designs:
    - the tracker label may also be SIMULATED (district loopback);
@@ -131,3 +132,7 @@ None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 an
    - connect Vercel to the repo for automatic deploys (CD);
    - make the CI check required on `main`.
 8. **`spikes/`**: the estimator now lives in `src/core/tracker`. Keep the spike pages deployed until the phone page replaces them at rung 1, then delete them.
+9. **Judge mode QR code**: the phone page address is plain text with a copy button. A QR code needs a new dependency (or about 300 lines of hand-written encoder). Add one?
+10. **Judge mode sound default**: sound is on after Play, since a page cannot tell whether its tab is muted. The mute toggle can be set before Play. Keep, or start muted?
+11. **Judge mode timing**: the real tracker needs 64 readings, so GREEN appears at 33.5 s, not 32 s; AMBER at about 63 s and RED at about 75 s also lag the scripted sag by the tracker's real smoothing. The deeper sag reaches -200 mHz at 75 s and holds until the cut. The demo family uses fixed words (`abandon ability able about above absent`), member 12, level 3, sector B, power off.
+12. **Judge mode test speed**: `?speed=N` (at least 1) shortens the timeline for Playwright only and shows a TEST SPEED banner; anyone can type it into the address.

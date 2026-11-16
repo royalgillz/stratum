@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STRATUM judge mode</title>
+  <link rel="stylesheet" href="./judge.css" />
+</head>
+<body>
+  <header>
+    <h1>STRATUM judge mode</h1>
+    <p class="muted">See the whole warning loop in 90 seconds, on a laptop or a phone. No microphone and no second device needed.</p>
+  </header>
+  <p id="speedNote" class="note" hidden></p>
+
+  <main>
+    <p>A drawn phone runs the real hum tracker and the real message codec. Its sound comes from a <strong>SIMULATED</strong> grid, fed in by a <strong>LOOPBACK</strong> connection instead of a microphone. Captions carry the whole story, so it works muted.</p>
+    <div class="row">
+      <button id="play" class="primary">Play the 90-second story</button>
+      <button id="mute" aria-pressed="false">Sound: on</button>
+    </div>
+
+    <section id="story" hidden aria-label="The story">
+      <div class="stage">
+        <div class="phone" role="group" aria-label="Drawn phone, LOOPBACK">
+          <p class="tag">LOOPBACK · SIMULATED</p>
+          <p id="tier" role="status">Waiting</p>
+          <p id="dev" class="small"></p>
+          <h3>Inbox</h3>
+          <ul id="inbox"><li class="muted">No messages yet</li></ul>
+        </div>
+        <div class="side">
+          <p id="time" class="small"></p>
+          <p id="caption" aria-live="polite"></p>
+          <p id="offset" class="small muted"></p>
+          <h3>Tiers seen, in order</h3>
+          <ol id="seq"></ol>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Try it on a real phone</h2>
+      <p class="muted">Open this address on an Android phone, then tap Listen. A QR code is not built yet.</p>
+      <p><code id="addr"></code></p>
+      <button id="copy">Copy address</button>
+      <p id="copied" class="small" role="status"></p>
+    </section>
+  </main>
+
+  <script type="module" src="./judge.ts"></script>
+</body>
+</html>
