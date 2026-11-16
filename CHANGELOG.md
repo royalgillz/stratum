@@ -5,6 +5,17 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 ## 2026-11-16
 
 ### Decisions
+- Approved by the human: fairshare, witness and kernel designs and specs (FAIR, WIT and KERN, 001 to 012 each), with these choices:
+  - witness computes SHA-256 synchronously in its own code, so `observe` stays synchronous;
+  - witness takes an injected clock;
+  - measured or official is decided by whether `source` starts with `official`;
+  - the LEDGER_HEAD digest covers the measured chain only;
+  - `gap(kind)` averages over places, with a per-place view added when the district needs it;
+  - the fairshare lottery weight is 1 + debt with no cap, and debt resets to 0 when fully served;
+  - no floor priority tiers for indivisible goods;
+  - the kernel uses dt = 60 s and stops hard on a write violation;
+  - the write guard may be off for the harness only if KERN-009's 1 s budget is missed.
+  - None of these needs a change to `contracts.ts`.
 - Decided by an agent (to be confirmed by the human): witness design and specs written in `docs/intent/witness/`. `observe` stays synchronous by using an own pure-TypeScript SHA-256 instead of `crypto.subtle`; time is injected through `createWitness({ now })`; two chains (measured, official) routed by `source`; the LEDGER_HEAD digest is the measured head only.
 - Decided by the human, the GitHub repo:
   - the repo is public;
