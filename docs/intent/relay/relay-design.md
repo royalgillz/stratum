@@ -46,7 +46,7 @@ A verified GRID_ALERT is relayed only when the latest tracker reading agrees (st
 - `createRelay(rng: Rng)` returns `{ hear, own }`.
 - `hear(bytes, decoded: Decoded | Reject, tracker: { state, tier? }, nowMs) → RelayAction | null`, where `RelayAction` is `{ id, send: Uint8Array(25), atMs }` or `{ cancel: id }`, and `id` is the identity as lower-case hex.
 - `own(bytes)`: counts one hearing of the identity without scheduling a send; throws RangeError unless `bytes` has 25 bytes.
-- `hear` throws RangeError when `nowMs` is not finite or `rng()` returns a value outside [0, 1).
+- `hear` throws RangeError, changing no count, when `nowMs` is not finite, a forwardable packet's bytes are not 25 bytes long, or `rng()` returns a value outside [0, 1).
 
 ## Decisions & Alternatives
 

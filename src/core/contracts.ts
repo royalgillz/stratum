@@ -43,10 +43,20 @@ export interface Household {
   shift: number; // sleep shift, 0..2
 }
 
+/** What a receiver learned from a packet: set by the gateway after decoding (LIVE) or by the simulation (SIMULATED). */
+export interface MeshHeard {
+  type: number; // packet type, 0..7
+  keySet: string; // matched key set id; for a family, the household id
+  minute: number; // the packet's own minute: full Unix minute for LIVE, world minute floor(at / 60) for SIMULATED
+  payload: { member: number; code: number; level: number; sector: number; flags: number; value: number }; // sector is 0..3 within level
+  label: Label;
+}
+
 /** A 25-byte packet v3 as it travels; `at` is arrival time in world seconds. */
 export interface MeshMessage {
   at: number;
   bytes: Uint8Array;
+  heard?: MeshHeard; // absent when nobody could decode it
 }
 
 /** One stored observation: the same quantity as measured by residents and as announced. */

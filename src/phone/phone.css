@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark; /* native buttons, selects and inputs follow the theme */
   --fg: #111; --bg: #fff; --muted: #5f5f5f; --line: #ddd; --accent: #1a4fa0;
   --green: #1b7a3a; --amber: #8a5a00; --red: #b3261e;
 }
@@ -6,6 +7,7 @@
   :root { --fg: #eee; --bg: #121212; --muted: #aaa; --line: #333; --accent: #8ab4ff; --green: #6fdc8c; --amber: #ffc94d; --red: #ff8a80; }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* author display rules (label) must not unhide */
 body { font-family: system-ui, sans-serif; margin: 0 auto; padding: 0 16px 32px; max-width: 34rem; color: var(--fg); background: var(--bg); line-height: 1.45; }
 h1 { font-size: 1.3rem; margin: 16px 0 4px; }
 h2 { font-size: 1.05rem; margin: 20px 0 8px; }
@@ -14,7 +16,7 @@ button { padding: 0 16px; margin: 4px 4px 4px 0; }
 select { min-width: 64px; }
 input[type=text] { width: 100%; padding: 0 8px; }
 label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4px 0; min-height: 44px; }
-.check input { width: 24px; height: 24px; }
+.check input { width: 24px; height: 24px; min-height: 0; flex: none; } /* the label row is the 44 px target */
 .row { display: flex; flex-wrap: wrap; }
 .muted { color: var(--muted); font-size: 0.9rem; }
 .err { color: var(--red); }
@@ -32,3 +34,39 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 
 .list { list-style: none; padding: 0; }
 .list li { padding: 8px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+
+/* Family board */
+.board li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; }
+.board li > div { flex: 1 1 14rem; min-width: 0; }
+.board .stale { font-weight: 700; }
+/* Report grid */
+#grid { border: 0; padding: 0; margin: 0; min-width: 0; }
+#grid h3 { font-size: 1rem; margin: 16px 0 6px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 8px; }
+.grid button { margin: 0; min-height: 64px; padding: 8px; display: flex; align-items: center; gap: 8px; text-align: left; overflow-wrap: anywhere; }
+.grid button span { font-size: 1.5rem; }
+#confirm { width: min(28rem, calc(100vw - 32px)); color: var(--fg); background: var(--bg); border: 1px solid var(--line); }
+#confirm h3 { margin-top: 0; }
+#confirm fieldset { border: 1px solid var(--line); margin: 8px 0; }
+#confirm label { flex-wrap: wrap; }
+#confirm input[type=radio] { width: 24px; }
+#confirm input[type=number] { width: 8rem; }
+/* Ledger: fixed columns that wrap, so six levels fit the 369 px fold cover without scrolling sideways. */
+.ledger { width: 100%; table-layout: fixed; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ledger caption { text-align: left; font-weight: 700; margin-bottom: 4px; }
+.ledger th, .ledger td { padding: 6px 4px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.ledger thead th:first-child { width: 3.5rem; }
+.ledger td { white-space: pre-line; font-size: 0.9rem; }
+.ledger td strong { font-size: 1.1rem; }
+.ledger .now { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+/* Care (Breath Count) */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.disclaimer { border: 2px solid var(--amber); padding: 8px 12px; margin: 8px 0; }
+fieldset { border: 1px solid var(--line); margin: 12px 0; min-width: 0; }
+fieldset .check { display: flex; }
+h3 { font-size: 1rem; margin: 16px 0 4px; }
+.count { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 8px 0; }
+.tap { display: block; width: 100%; min-height: 160px; margin: 8px 0; font-size: 1.4rem; font-weight: 700; touch-action: manipulation; }
+.result { border: 2px solid var(--line); border-left-width: 8px; padding: 4px 12px; margin: 12px 0; overflow-wrap: anywhere; }
+.result .head { font-size: 1.3rem; font-weight: 700; margin: 8px 0; }
+.result.GREEN { border-color: var(--green); } .result.AMBER { border-color: var(--amber); } .result.RED { border-color: var(--red); }

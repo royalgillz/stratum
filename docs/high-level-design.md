@@ -55,6 +55,11 @@ flowchart LR
   A --> W
   A --> F[fairshare<br/>floors, water-filling, debt]
   A --> P
+  A --> RL
+  A --> WM[world models<br/>grid, air, water, tunnels, epidemic]
+  SC[scenario<br/>script, runner, policy switch] --> K
+  SC --> A
+  G[district page gateway<br/>outside core: decoded live packets] -->|inject| SC
 ```
 
 | Component | Folder | Spec prefix | Serves problems |
@@ -67,7 +72,9 @@ flowchart LR
 | kernel | `src/core/kernel` | KERN | all modelled problems |
 | shed | `src/core/shed` | SHED | 1, 2 |
 | breath | `src/core/care` | BREATH | 10 |
-| world models, adapters | `src/core/world`, `src/core/adapters` | *(not yet specified)* | 1 to 15 |
+| world models (sub-HLD: grid, air and heat, water, tunnels, epidemic) | `src/core/world` | WORLD | 1, 2, 3, 4, 5, 7, 9 |
+| adapters (sub-HLD: policy, power, livable, evidence, family; rung 4 adapters not yet specified) | `src/core/adapters` | ADAPT | 1 to 15 |
+| scenario and runner | `src/core/scenario` | SCEN | all modelled problems |
 
 `contracts.ts` is the boundary every component compiles against. It changes only with the human's approval.
 
@@ -83,7 +90,7 @@ flowchart LR
 
 ## Success metrics
 
-Tracker error in mHz and NO HUM accuracy on ENF-WHU clips (REPLAY). Packet success at 1 m and 3 m (LIVE). Worst-decile served fraction and floor-breach person-days, 20 seeds against the Directorate policy (SIMULATED). Detector precision and recall on GECCO 2018 (REPLAY). Broken if: a floor is breached while supply covers all floors, a replayed packet shows as fresh, or a seed fails to reproduce its run.
+Tracker error in mHz and NO HUM accuracy on ENF-WHU clips (REPLAY). Packet success at 1 m and 3 m (LIVE). Worst-decile served fraction against the Directorate policy (SIMULATED; it varies with the script and parameters, not the seed). Floor-breach person-days are a rung 4 secondary metric. Detector precision and recall on GECCO 2018 (REPLAY). Broken if: a floor is breached while supply covers all floors, a replayed packet shows as fresh, or a seed fails to reproduce its run.
 
 ## References
 

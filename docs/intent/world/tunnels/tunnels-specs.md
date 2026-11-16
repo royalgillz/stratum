@@ -1,0 +1,12 @@
+# Tunnels and sumps model specs
+
+Prefix `WORLD-TUNNEL`. Design: `tunnels-design.md`. The problems served are in brackets. Node `s` is sector `s`; the hub is node 0. An edge `(a, b)` has `a < b`.
+
+- [ ] **WORLD-TUNNEL-001** [5, 7]: `districtTunnels()` shall return 24 nodes and exactly these 28 passable edges in this order: (0,1) (1,2) (2,3) (0,3) (4,5) (5,6) (6,7) (4,7) (8,9) (9,10) (10,11) (8,11) (12,13) (13,14) (14,15) (16,17) (17,18) (18,19) (20,21) (21,22) (22,23) (0,4) (4,8) (8,12) (12,16) (16,20) (2,6) (6,10).
+- [ ] **WORLD-TUNNEL-002** [5, 7]: `reachable(edges, hub, nodes)` shall return, for each node, whether a path of passable edges joins it to `hub`.
+- [ ] **WORLD-TUNNEL-003** [5]: `strandedIfLost(edges, flooded, people, hub)` shall return, for each node, the summed people of the other nodes that have a path to `hub` while that node is dry and have none while it is flooded, taking every other node's state from `flooded` and an edge as passable exactly when neither end is flooded.
+- [ ] **WORLD-TUNNEL-004** [5]: On the default graph with 500 people per node, `strandedIfLost` shall be above 0 exactly for nodes 0, 8, 12, 13, 14, 16, 17, 18, 20, 21 and 22 when no node is flooded; and with only node 16 flooded, it shall give 3,500 for node 16 and 0 for nodes 17 to 23.
+- [ ] **WORLD-TUNNEL-005** [5]: `sumpStep(level, sumpLevel, inflowM3h, pumpFrac, dt)` shall return `sumpLevel + (seepage(level) + inflowM3h − PUMP_CAP × pumpFrac) × dt / 3600 / SUMP_CAP`, clamped to [0, 1], with `seepage(level) = SEEP_TOP + SEEP_STEP × (level − 1)`.
+- [ ] **WORLD-TUNNEL-006** [5]: `floodInflow(events, sector, t)` shall return the summed `inflowM3h` of flood events on that sector with `t` in `[atH × 3600, (atH + durH) × 3600)`, 0 when there are none, and ignore events of other types.
+- [ ] **WORLD-TUNNEL-007** [5]: `isFlooded(sumpLevel, wasFlooded)` shall return true when `sumpLevel ≥ 1`, false when `sumpLevel < RECOVER`, and `wasFlooded` in between.
+- [ ] **WORLD-TUNNEL-008** [5, 7]: The tunnel functions shall throw a RangeError for an edge naming a node outside 0 to 23, a people array that is not 24 non-negative finite numbers, a flooded array that is not 24 booleans, a level outside 1 to 6, a `pumpFrac` outside [0, 1], a negative inflow or a non-positive `dt`.
