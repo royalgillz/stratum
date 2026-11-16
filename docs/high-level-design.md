@@ -48,6 +48,9 @@ flowchart LR
   P[packet<br/>v3 codec, keys, seen-set] --> W
   T --> S[shed<br/>cut odds per level]
   P --> S
+  P --> RL[relay<br/>store and forward, one hop live]
+  T --> RL
+  B[breath<br/>WHO breath count aid] --> P
   K --> A[adapters p01..p15<br/>reads, writes, metric]
   A --> W
   A --> F[fairshare<br/>floors, water-filling, debt]
@@ -63,6 +66,7 @@ flowchart LR
 | relay | `src/core/relay` | RELAY | 1 (grid alerts), 7, 8 |
 | kernel | `src/core/kernel` | KERN | all modelled problems |
 | shed | `src/core/shed` | SHED | 1, 2 |
+| breath | `src/core/care` | BREATH | 10 |
 | world models, adapters | `src/core/world`, `src/core/adapters` | *(not yet specified)* | 1 to 15 |
 
 `contracts.ts` is the boundary every component compiles against. It changes only with the human's approval.

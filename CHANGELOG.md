@@ -115,6 +115,8 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ## Open questions for the human
 
+- Orchestrator, 2026-11-16 night: added breath, shed and relay rows and diagram edges to the approved HLD (additive only, no existing row changed). Confirm.
+
 The 2026-11-15 calls below were all confirmed on 2026-11-16 and are kept for the record. New calls are under "Open since 2026-11-16".
 Items 1 to 8 (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record. Items 9 on are open.
 
