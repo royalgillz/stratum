@@ -5,6 +5,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 ## 2026-11-16
 
 ### Decisions
+- Decided by an agent (to be confirmed by the human): witness design and specs written in `docs/intent/witness/`. `observe` stays synchronous by using an own pure-TypeScript SHA-256 instead of `crypto.subtle`; time is injected through `createWitness({ now })`; two chains (measured, official) routed by `source`; the LEDGER_HEAD digest is the measured head only.
 - Decided by the human, the GitHub repo:
   - the repo is public;
   - `docs/audit.md` stays local only (git-ignored);
