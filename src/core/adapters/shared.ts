@@ -17,3 +17,6 @@ export const powerDemand = (people: number): number => (people * BASE_KW) / 1000
 
 /** A sector's life floor (ventilation, medical, charging), MW. */
 export const lifeFloor = (people: number): number => (people * LIFE_KW) / 1000;
+
+/** The two policies a run compares (docs/intent/adapters/adapters-design.md, "The two policies"). */
+export type Policy = 'directorate' | 'stratum';
