@@ -137,6 +137,48 @@ test.describe('District 7 page', () => {
     await expectSoundLayout(page);
   });
 
+  test('dark mode: the key text and a cut sector are visible, focus shows on the pressed rule button, the layout holds', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto('/src/district/?speed=10', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(18, 18, 18)');
+    await expect(page.locator('#map g')).toHaveCount(24, { timeout: 15_000 });
+    await page.getByRole('button', { name: 'Play' }).click();
+    // Read in the page on the first frame with a cut sector: at ?speed it lasts about a second, and a pause can arrive after it.
+    const cut = await page.waitForFunction(() => {
+      const text = document.querySelector('#map g.dark text'), sump = document.querySelector('#map g.dark rect.sump');
+      return text && sump && text.getBoundingClientRect().width > 0 && { fill: getComputedStyle(text).fill, sump: getComputedStyle(sump).stroke };
+    }, null, { polling: 'raf', timeout: 30_000 }).then((h) => h.jsonValue());
+    expect(cut).toEqual({ fill: 'rgb(238, 238, 238)', sump: 'rgb(238, 238, 238)' }); // light text, and the sump bar outlined to match
+    await page.getByRole('button', { name: 'Pause' }).click();
+    for (const el of [page.getByRole('heading', { name: 'District 7', level: 1 }), page.locator('#act'), page.locator('#clock'),
+      page.getByText('L6', { exact: true }), page.getByText('power cut', { exact: true }), page.locator('#map g text').first(),
+      page.locator('#metrics tr').first(), page.getByRole('button', { name: 'Directorate rule' })]) await expect(el).toBeVisible();
+
+    await page.locator('#seed').focus();
+    for (let i = 0; i < 3; i++) await page.keyboard.press('Tab'); // Restart, Sound, then the pressed Directorate button
+    const pressed = page.getByRole('button', { name: 'Directorate rule' });
+    await expect(pressed).toBeFocused();
+    await expect(pressed).toHaveCSS('outline-style', 'solid');
+    await expect(pressed).toHaveCSS('outline-color', 'rgb(238, 238, 238)');
+    await expectSoundLayout(page);
+  });
+
+  test('High Contrast: the pressed rule button keeps a frame, and focus still shows on it', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.goto('/src/district/', { waitUntil: 'domcontentloaded' });
+    const pressed = page.getByRole('button', { name: 'Directorate rule' });
+    await expect(pressed).toHaveAttribute('aria-pressed', 'true');
+    await expect(pressed).toHaveCSS('outline-style', 'solid');
+    await expect(pressed).toHaveCSS('outline-offset', '-6px');
+    await page.locator('#seed').focus();
+    for (let i = 0; i < 3; i++) await page.keyboard.press('Tab'); // Restart, Sound, then the pressed Directorate button
+    await expect(pressed).toBeFocused();
+    await expect(pressed).toHaveCSS('outline-offset', '3px'); // the focus outline, outside the button
+    await expect(pressed).toHaveCSS('border-top-width', '3px'); // the pressed frame, now on the border
+    await expect(pressed).toHaveCSS('border-top-style', 'solid');
+  });
+
   test('the gateway opens the microphone, and a wrong word says so', async ({ page }) => {
     await page.goto('/src/district/', { waitUntil: 'domcontentloaded' });
     await page.getByRole('button', { name: 'Listen for phones' }).click();

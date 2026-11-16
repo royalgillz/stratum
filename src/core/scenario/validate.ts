@@ -23,6 +23,9 @@ const FIELDS: Record<string, Record<string, Check>> = {
   outbreak: { sector, cases: any },
   separate: { away: fraction },
   'network-down': { durH: nonNeg },
+  'farm-cut': { level, durH: nonNeg },
+  care: { durH: nonNeg, red: nonNeg, amber: nonNeg },
+  surface: { co: nonNeg, o3: nonNeg, so2: nonNeg, crews: int(1, Infinity), bias: nonNeg },
 };
 const DELTA = ['cond', 'toc', 'turb', 'biocide'];
 
@@ -53,6 +56,13 @@ export function validateScript(script: Script): void {
     else throw new RangeError(`script.acts[${i}].mode is unknown: ${String(a.mode)}`);
   });
 
+  // @spec SCEN-SCRIPT-001
+  if (script.vary !== undefined) {
+    if (typeof script.vary !== 'object' || script.vary === null) throw new RangeError(`script.vary is not an object: ${String(script.vary)}`);
+    num('vary.shiftH', script.vary.shiftH, nonNeg);
+    num('vary.scale', script.vary.scale, (v) => v >= 0 && v < 1);
+  }
+
   let separates = 0;
   script.events.forEach((e, i) => {
     const at = `events[${i}]`;
@@ -63,6 +73,8 @@ export function validateScript(script: Script): void {
     num(`${at}.atH`, e.atH, inRun);
     const rec = e as unknown as Record<string, unknown>;
     for (const [k, ok] of Object.entries(fields)) num(`${at}.${k}`, rec[k], ok);
+    if (e.type === 'surface') num(`${at}.falsified`, e.falsified, int(0, e.crews));
+    if (e.fixed !== undefined && typeof e.fixed !== 'boolean') throw new RangeError(`script.${at}.fixed is not a boolean: ${String(e.fixed)}`);
     if (e.type === 'contamination') {
       if (typeof e.delta !== 'object' || e.delta === null) throw new RangeError(`script.${at}.delta is missing`);
       for (const k of DELTA) num(`${at}.delta.${k}`, (e.delta as unknown as Record<string, unknown>)[k], any);

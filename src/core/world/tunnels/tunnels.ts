@@ -27,15 +27,17 @@ function checkGraph(edges: readonly TunnelEdge[], hub: number, n: number): void 
   for (const { a, b } of edges) if (!isNode(a, n) || !isNode(b, n) || a >= b) throw new RangeError(`invalid edge (${a}, ${b})`);
 }
 
-function search(edges: readonly TunnelEdge[], hub: number, n: number, open: (x: TunnelEdge) => boolean): boolean[] {
+// Breadth-first search from `hub` over open edges: the fewest edges to each node, null when unreached.
+function search(edges: readonly TunnelEdge[], hub: number, n: number, open: (x: TunnelEdge) => boolean): (number | null)[] {
   const next: number[][] = Array.from({ length: n }, () => []);
   for (const x of edges) if (open(x)) next[x.a].push(x.b), next[x.b].push(x.a);
-  const seen = Array<boolean>(n).fill(false);
-  seen[hub] = true;
+  const hops = Array<number | null>(n).fill(null);
+  hops[hub] = 0;
   for (const queue = [hub]; queue.length; ) {
-    for (const v of next[queue.shift()!]) if (!seen[v]) seen[v] = true, queue.push(v);
+    const u = queue.shift()!;
+    for (const v of next[u]) if (hops[v] === null) hops[v] = hops[u]! + 1, queue.push(v);
   }
-  return seen;
+  return hops;
 }
 
 // @spec WORLD-TUNNEL-001
@@ -46,7 +48,13 @@ export function districtTunnels(): World['tunnels'] {
 // @spec WORLD-TUNNEL-002, WORLD-TUNNEL-008
 export function reachable(edges: readonly TunnelEdge[], hub: number, nodes: number): boolean[] {
   checkGraph(edges, hub, nodes);
-  return search(edges, hub, nodes, (x) => x.passable);
+  return search(edges, hub, nodes, (x) => x.passable).map((h) => h !== null);
+}
+
+// @spec WORLD-TUNNEL-009
+export function hopsFrom(edges: readonly TunnelEdge[], from: number, nodes: number): (number | null)[] {
+  checkGraph(edges, from, nodes);
+  return search(edges, from, nodes, (x) => x.passable);
 }
 
 // @spec WORLD-TUNNEL-003, WORLD-TUNNEL-004, WORLD-TUNNEL-008
@@ -60,7 +68,7 @@ export function strandedIfLost(edges: readonly TunnelEdge[], flooded: readonly b
   return people.map((_, v) => {
     const dry = reach(v, false);
     const lost = reach(v, true);
-    return people.reduce((s, p, u) => (u !== v && dry[u] && !lost[u] ? s + p : s), 0);
+    return people.reduce((s, p, u) => (u !== v && dry[u] !== null && lost[u] === null ? s + p : s), 0);
   });
 }
 

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { bySector, lastOf, lifeFloor, powerDemand, sectorId } from './shared.ts';
+import { createWorld } from '../scenario/world.ts';
+import { sevenDay } from '../scenario/seven-day.ts';
+import { bySector, lastOf, lifeFloor, powerDemand, sectorId, weight } from './shared.ts';
 
 describe('adapter shared helpers', () => {
   // @spec ADAPT-POLICY-005
@@ -29,5 +31,20 @@ describe('adapter shared helpers', () => {
     expect(powerDemand(500)).toBeCloseTo(0.5, 12);
     expect(lifeFloor(500)).toBeCloseTo(0.15, 12);
     expect(powerDemand(0)).toBe(0);
+  });
+
+  // @spec ADAPT-POLICY-009
+  it('weighs a tracked member of a sector as its people over the tracked members of the sector, 0 with none tracked', () => {
+    const w = createWorld(5, sevenDay);
+    for (let s = 0; s < 24; s++) {
+      const members = w.households.filter((h) => h.sector === s).reduce((n, h) => n + h.members, 0);
+      expect(weight(w, s), `sector ${s}`).toBe(w.sectors[s]!.people / members);
+    }
+    // The demo household counts in its sector (17) like any other.
+    expect(w.households.some((h) => h.id === sevenDay.demo.id && h.sector === 17)).toBe(true);
+    w.households = w.households.filter((h) => h.sector !== 3);
+    expect(weight(w, 3)).toBe(0);
+    w.sectors[4]!.people = 0;
+    expect(weight(w, 4)).toBe(0);
   });
 });

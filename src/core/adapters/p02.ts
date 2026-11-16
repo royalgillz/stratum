@@ -4,6 +4,7 @@ import type { Adapter } from '../contracts.ts';
 import type { Script } from '../scenario/types.ts';
 import { allocate } from '../fairshare/fairshare.ts';
 import { CAP_MARGIN, F0, capacityAt } from '../world/grid/grid.ts';
+import { farmCut } from '../world/lightfood/lightfood.ts';
 import { bySector, lastOf, lifeFloor, powerDemand, sectorId, type Policy } from './shared.ts';
 
 // docs/params.md
@@ -25,12 +26,14 @@ export function createP02(policy: Policy, script: Script): Adapter {
   let shedding = false;
   let got: number[][] = []; // per sector: cumulative granted power, water, food (good-units x s)
   let want: number[][] = []; // per sector: cumulative demanded, same units
+  const cuts = script.events.filter((e) => e.type === 'farm-cut'); // farmCut reads only these; filtered once, it runs every step
   const memo = { power: lastOf<number[]>(), water: lastOf<number[]>(), food: lastOf<number[]>() }; // food and water rarely change
   return {
     id: 'p02',
     reads: ['grid', 'sectors', 'alloc'],
     writes: ['alloc'],
     step(w, dt) {
+      const t = w.t;
       const people = w.sectors.map((s) => s.people); // one pass: each world read costs a guard call in checked mode
       const ids = people.map((_, s) => sectorId(s));
       const fair = (good: keyof typeof memo, supply: number, floor: number[], demand: number[]) => memo[good]([supply, ...floor, ...demand], () => {
@@ -39,7 +42,7 @@ export function createP02(policy: Policy, script: Script): Adapter {
       });
       const pd = people.map(powerDemand);
       const demandMW = sum(pd);
-      const cap = capacityAt(script.events, w.t, CAP_MARGIN * demandMW);
+      const cap = capacityAt(script.events, t, CAP_MARGIN * demandMW);
       // @spec ADAPT-POWER-005
       if (w.grid.f <= F0 - SHED_HZ) shedding = true;
       if (cap >= demandMW * (1 + RESERVE)) shedding = false; // capacity with reserve ends a shed even on a low f
@@ -68,8 +71,11 @@ export function createP02(policy: Policy, script: Script): Adapter {
         : fair('water', ws, people.map((p) => p * WATER_FLOOR), wd);
       // @spec ADAPT-POWER-009
       const fd = people.map((p) => p * FOOD_DEMAND);
-      const fs = FOOD_SUPPLY * sum(people);
-      const food = policy === 'directorate' ? prop(fs, fd) : fair('food', fs, people.map((p) => p * FOOD_FLOOR), fd);
+      const fed = cuts.length ? w.sectors.map((x) => !farmCut(cuts, x.level, t)) : people.map(() => true); // no cut: skip the guarded level reads
+      const fs = FOOD_SUPPLY * sum(people.map((p, s) => (fed[s] ? p : 0)));
+      const food = policy === 'directorate'
+        ? prop(fs, fd.map((d, s) => (fed[s] ? d : 0)))
+        : fair('food', fs, people.map((p) => p * FOOD_FLOOR), fd);
 
       w.alloc.power = bySector(power);
       w.alloc.water = bySector(water);

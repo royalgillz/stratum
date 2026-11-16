@@ -11,6 +11,8 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc",
     "harness": "node harness/run.ts",
+    "score:enf": "node harness/enf.ts",
+    "score:gecco": "node harness/gecco.ts",
     "check": "node scripts/check.mjs",
     "e2e": "playwright test"
   },

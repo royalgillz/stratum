@@ -4,13 +4,15 @@
   --green: #1b7a3a; --amber: #8a5a00; --red: #b3261e;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --fg: #eee; --bg: #121212; --muted: #aaa; --line: #333; --accent: #8ab4ff; --case: #555; --screen: #1d1d1d; --green: #6fdc8c; --amber: #ffc94d; --red: #ff8a80; }
+  :root { --fg: #eee; --bg: #121212; --muted: #aaa; --line: #333; --accent: #8ab4ff; --case: #6b6b6b; --screen: #1d1d1d; --green: #6fdc8c; --amber: #ffc94d; --red: #ff8a80; }
 }
 * { box-sizing: border-box; }
 body { font-family: system-ui, sans-serif; margin: 0 auto; padding: 0 16px 32px; max-width: 60rem; color: var(--fg); background: var(--bg); line-height: 1.45; }
 h1 { font-size: 1.4rem; margin: 16px 0 4px; }
 h2 { font-size: 1.1rem; margin: 24px 0 8px; }
 h3 { font-size: 0.95rem; margin: 12px 0 4px; }
+/* One visible focus outline in both themes: the default ring is faint on the light-blue dark-theme button. */
+:focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
 button { font: inherit; min-height: 44px; padding: 0 16px; margin: 4px 8px 4px 0; }
 button.primary { font-weight: 700; background: var(--accent); color: var(--bg); border: 0; border-radius: 6px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; }

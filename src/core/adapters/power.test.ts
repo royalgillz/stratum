@@ -248,6 +248,26 @@ describe('p02 fair sharing', () => {
     close(run('stratum'), claims(2300 * total, people.map((p) => 2100 * p), people.map((p) => 2500 * p)));
   });
 
+  // @spec ADAPT-POWER-009
+  it('drops a farm cut-off level from the food supply: none for it under the Directorate, a share for every sector under STRATUM', () => {
+    const people = IDS.map((_, s) => 400 + 10 * s);
+    const reached = people.reduce((a, p, s) => (s >= 12 && s < 16 ? a : a + p), 0); // level 4 is sectors 12 to 15
+    const events: ScenarioEvent[] = [{ type: 'farm-cut', atH: 1, level: 4, durH: 2 }, { type: 'trip', atH: 0, loss: 0.01, durH: 9 }];
+    const at = (policy: Policy, t: number) => {
+      const w = world(people);
+      const k = createKernel(w, [gridStub([F0]), createP02(policy, script(events))]);
+      k.run(t);
+      k.step();
+      return w.alloc.food;
+    };
+    const directorate = Object.fromEntries(IDS.map((id, s) => [id, 2300 * people[s]]));
+    close(at('directorate', H - 60), directorate); // before the cut-off
+    close(at('directorate', 3 * H), directorate); // after it ends
+    close(at('directorate', H), Object.fromEntries(IDS.map((id, s) => [id, s >= 12 && s < 16 ? 0 : 2300 * people[s]])));
+    close(at('stratum', H), claims(2300 * reached, people.map((p) => 2100 * p), people.map((p) => 2500 * p)));
+    close(at('stratum', 3 * H), claims(2300 * people.reduce((a, b) => a + b, 0), people.map((p) => 2100 * p), people.map((p) => 2500 * p)));
+  });
+
   // @spec ADAPT-POWER-010
   it('scores the person-weighted mean of the worst-off 10% of people, taking part of the last sector', () => {
     const people = [...Array<number>(23).fill(500), 600]; // 12,100 people: the worst 1,210 are sector 23 and 610 more

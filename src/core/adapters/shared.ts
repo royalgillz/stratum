@@ -1,4 +1,5 @@
 // Helpers every adapter shares (design: docs/intent/adapters/policy/policy-design.md, "Conventions").
+import type { World } from '../contracts.ts';
 
 /** Base load per person, kW (docs/params.md). */
 export const BASE_KW = 1.0;
@@ -27,6 +28,14 @@ export const powerDemand = (people: number): number => (people * BASE_KW) / 1000
 
 /** A sector's life floor (ventilation, medical, charging), MW. */
 export const lifeFloor = (people: number): number => (people * LIFE_KW) / 1000;
+
+/** People each tracked member of sector `s` stands for: its people over its tracked members, 0 when none are tracked. */
+// @spec ADAPT-POLICY-009
+export function weight(world: World, s: number): number {
+  let members = 0;
+  for (const h of world.households) if (h.sector === s) members += h.members;
+  return members > 0 ? world.sectors[s]!.people / members : 0;
+}
 
 /** A one-entry memo: returns the last value `make` gave while every number in `key` is the same. `key` must hold every input; callers must not mutate the value. */
 export function lastOf<T>(): (key: readonly number[], make: () => T) => T {

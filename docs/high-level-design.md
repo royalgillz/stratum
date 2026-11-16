@@ -14,7 +14,7 @@ One loop: **hear → prove → pass on → share fairly**, run by three engines 
 - **Mesh**: one 25-byte authenticated packet (v3) carried by sound, with store-and-forward relay.
 - **Fair Share**: one allocation rule for every scarce good: life floors first, then raise the worst-off (water-filling), and rotate what cannot be split through a debt memory.
 - **Tracker** feeds Witness with the grid hum: a tone bank on the 800 Hz component gives relative deviation after calibration, then a tier.
-- **Kernel** steps District 7 (6 levels × 4 sectors) so the engines can be scored against the Directorate's policy. Everything it produces is labelled SIMULATED.
+- **Kernel** steps District 7 (6 levels × 4 sectors) so the engines can be scored against the Directorate's policy, one adapter per problem, all fifteen. Everything it produces is labelled SIMULATED.
 
 ## Target users
 
@@ -26,11 +26,12 @@ Residents with a phone (hear, report, check on family), the people who run a lev
 - The tracker reports deviation within 5 mHz on a clean signal (spike T1 at 30 cm) and says NO HUM rather than guess.
 - Packets authenticate, cannot be replayed as fresh, and hide which family sent them.
 - Fair Share never breaches a floor while supply covers all floors, and states the breach when it cannot.
-- Every simulated run is reproducible from its seed.
+- Every simulated run is reproducible from its seed, and different seeds face different weeks: the seed varies when and how hard things go wrong, within stated bounds, never the acts the screen shows.
+- Each district result is published with the cases where STRATUM loses, from a stress week built to find them.
 
 ## Non-goals
 
-No browser APIs, network, storage or randomness outside `rng.ts` in `src/core`. No language model. No claim that the core can seize breakers or prove the surface safe. No per-agent epidemic or 3D.
+No browser APIs, network, storage or randomness outside `rng.ts` in `src/core`. No language model. No claim that the core can seize breakers or prove the surface safe. No per-agent epidemic or 3D. No movement of people between sectors: space and the return change sleep times and plans, not homes.
 
 ## Tenets
 
@@ -56,7 +57,7 @@ flowchart LR
   A --> F[fairshare<br/>floors, water-filling, debt]
   A --> P
   A --> RL
-  A --> WM[world models<br/>grid, air, water, tunnels, epidemic]
+  A --> WM[world models<br/>grid, air, water, tunnels, epidemic,<br/>light and food, space, care, surface]
   SC[scenario<br/>script, runner, policy switch] --> K
   SC --> A
   G[district page gateway<br/>outside core: decoded live packets] -->|inject| SC
@@ -72,9 +73,9 @@ flowchart LR
 | kernel | `src/core/kernel` | KERN | all modelled problems |
 | shed | `src/core/shed` | SHED | 1, 2 |
 | breath | `src/core/care` | BREATH | 10 |
-| world models (sub-HLD: grid, air and heat, water, tunnels, epidemic) | `src/core/world` | WORLD | 1, 2, 3, 4, 5, 7, 9 |
-| adapters (sub-HLD: policy, power, livable, evidence, family; rung 4 adapters not yet specified) | `src/core/adapters` | ADAPT | 1 to 15 |
-| scenario and runner | `src/core/scenario` | SCEN | all modelled problems |
+| world models (sub-HLD: grid, air and heat, water, tunnels, epidemic, light and food, space, care delivery, surface and return) | `src/core/world` | WORLD | 1 to 7, 9 to 15 |
+| adapters (sub-HLD: policy, power, livable, evidence, family, space and care, light and food, surface) | `src/core/adapters` | ADAPT | 1 to 15 |
+| scenario and runner (with the scripts leaf: seed variation, the Level 5 act, the stress week) | `src/core/scenario` | SCEN | all modelled problems |
 
 `contracts.ts` is the boundary every component compiles against. It changes only with the human's approval.
 
@@ -87,10 +88,11 @@ flowchart LR
 | Packet: HKDF keys from six generated words; tag, encrypted payload and 8-byte MAC in 25 bytes | Fits ggwave's 2–3 s budget; tag rotates every minute so listeners cannot follow a family | Signatures per packet: too many bytes |
 | Fair Share as leximin water-filling with floors | One explainable rule for all goods; proportional scaling when floors cannot all be met | Proportional to demand: favours the already-supplied |
 | One seeded generator, separate named stream per module | Adding a module does not change other modules' draws | `Math.random`: runs are not reproducible |
+| The seed varies the script, not the models | Results that draw nothing still get honest seed intervals; models stay testable alone | A fixed script: four problems give one number on every seed |
 
 ## Success metrics
 
-Tracker error in mHz and NO HUM accuracy on ENF-WHU clips (REPLAY). Packet success at 1 m and 3 m (LIVE). Worst-decile served fraction against the Directorate policy (SIMULATED; it varies with the script and parameters, not the seed). Floor-breach person-days are a rung 4 secondary metric. Detector precision and recall on GECCO 2018 (REPLAY). Broken if: a floor is breached while supply covers all floors, a replayed packet shows as fresh, or a seed fails to reproduce its run.
+Tracker error in mHz and NO HUM accuracy on ENF-WHU clips (REPLAY). Packet success at 1 m and 3 m (LIVE). One metric per problem against the Directorate policy over 20 seeds, each seed varying the script (SIMULATED), for the seven-day week and the stress week. Secondary cost figures (contacts from shift sharing, trial exposure-hours and breaches, lamp energy to feed a person) are computed beside them. Detector precision and recall on GECCO 2018 (REPLAY). Broken if: a floor is breached while supply covers all floors, a replayed packet shows as fresh, a seed fails to reproduce its run, or the stress week shows STRATUM losing nowhere.
 
 ## References
 

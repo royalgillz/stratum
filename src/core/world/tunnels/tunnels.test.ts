@@ -3,7 +3,7 @@ import type { TunnelEdge } from '../../contracts.ts';
 import type { ScenarioEvent } from '../../scenario/types.ts';
 import {
   HUB, PUMP_CAP, PUMP_KW, RECOVER, SEEP_STEP, SEEP_TOP, SUMP_CAP,
-  districtTunnels, floodInflow, isFlooded, reachable, strandedIfLost, sumpStep,
+  districtTunnels, floodInflow, hopsFrom, isFlooded, reachable, strandedIfLost, sumpStep,
 } from './tunnels.ts';
 
 const N = 24;
@@ -176,5 +176,18 @@ describe('tunnels validation', () => {
     for (const f of bad) expect(f).toThrow(RangeError);
     expect(() => sumpStep(6, 0, 0, 1, 60)).not.toThrow();
     expect(() => strandedIfLost(districtTunnels().edges, dry(), Array<number>(N).fill(0), 0)).not.toThrow();
+  });
+
+  // @spec WORLD-TUNNEL-009
+  it('WORLD-TUNNEL-009 counts the fewest passable edges from a node, null with no path', () => {
+    expect(hopsFrom([e(0, 1), e(1, 2), e(0, 2), e(3, 4)], 1, 5)).toEqual([1, 0, 1, null, null]);
+    expect(hopsFrom([e(0, 1), e(1, 2, false)], 0, 3)).toEqual([0, 1, null]);
+    expect(hopsFrom([], 0, 1)).toEqual([0]);
+    const d = hopsFrom(districtTunnels().edges, HUB, N);
+    expect(d.slice(0, 4)).toEqual([0, 1, 2, 1]);
+    expect([d[4], d[8], d[10], d[12], d[16], d[20], d[22], d[23]]).toEqual([1, 2, 4, 3, 4, 5, 7, 8]);
+    expect(hopsFrom(districtTunnels().edges, 23, N)[0]).toBe(8);
+    for (const bad of [() => hopsFrom([], 2, 2), () => hopsFrom([], -1, 24), () => hopsFrom([], 0.5, 24), () => hopsFrom([], 0, 25),
+      () => hopsFrom([e(0, 24)], 0, 24), () => hopsFrom([e(2, 1)], 0, 24)]) expect(bad).toThrow(RangeError);
   });
 });

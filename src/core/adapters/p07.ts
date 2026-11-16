@@ -10,14 +10,14 @@ import type { Policy } from './shared.ts';
 export const P_HOP = 0.9; // probability one sector-to-sector hop is heard
 export const AIR = 3; // s, air time per hop
 export const DELIVER_WINDOW = 3600; // s
-const BULLETIN = 6 * 3600, DAY = 86400; // daily 06:00 bulletin
+export const BULLETIN = 6 * 3600, DAY = 86400; // daily 06:00 bulletin
 
 type Relay = ReturnType<typeof createRelay>;
 
 export function createP07(policy: Policy, script: Script): Adapter {
   const down = (x: number) => script.events.some((e) => e.type === 'network-down' && x >= e.atH * 3600 && x < (e.atH + e.durH) * 3600);
   let relays: Relay[] | undefined;
-  // shortcut: household id -> sector, built once, assumes no adapter writes households (none does in rung 3); rebuild per step when one does
+  // household id -> sector, built once: p06 writes only households[].shift, never id or sector, so the map stays valid
   let homes: Map<string, number> | undefined;
   let held: MeshMessage[] = [];
   let taken = 0, onTime = 0;

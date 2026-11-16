@@ -23,11 +23,15 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
   inside the band, so a phone shows RED.
 - The real-time act "The hum sags" shows the hum falling, but the cut follows under a minute later.
   That is too short to count as warned, and the metric counts it as unwarned.
-- No event in the seven-day script cuts level 5: only level 6 C and D go dark. So the demo family's sector
-  stays powered, the district page's hum never falls silent, and the demo beat "Level 5 goes dark on the
-  cross-section" does not happen on that page. The silent path is untested until a scripted cut reaches level 5.
-- Grid, heat, power and tunnel results draw no randomness: they vary with the script and the parameters,
-  not with the seed. Their uncertainty comes from parameter sweeps, not from seed intervals.
+- Level 5 goes dark under the Directorate in one real-time act of the seven-day script, when a deep
+  shortfall carries deepest-first down to the demo family's sector. Once shedding has begun, the hum stays
+  steady while deeper sectors go dark: the hum warns when stress begins, not of each later cut.
+- Grid, heat, power and tunnel results draw no randomness of their own. Each seed varies the script
+  (event times by up to 1 h, sizes and durations by up to 20%), so their seed intervals show the spread of
+  the script, not model noise. The events the demo's acts show do not vary.
+- People never move between sectors. Shift sharing changes when people sleep; the return is a plan.
+- Each sector's ten tracked households stand for all its 500 people when space, light, trials and the
+  return are shared out by household.
 - Where the Directorate's figure follows from a stated rule (no warnings, a daily lab, a daily bulletin,
   clinic capture), the gap between policies shows the mechanism, not a measured gain.
 - Humidity is held at 70% as air warms, which assumes wet rock and seepage keep the air near saturation.
@@ -52,6 +56,32 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - Every ledger entry the district writes, measured or official, is SIMULATED. The district's ledger view
   carries that label.
 - A run that receives a live packet from a phone is no longer reproducible from its seed alone.
+- Shift sharing counts sleeping floor only. People awake still crowd the common rooms, and the extra
+  contacts from sharing a sleeping space are counted by the census, not fed into the outbreak model.
+  Peak power by shift is not modelled.
+- The space gain is arithmetic: three shifts share one floor. Sleeping floor per sleeper rises, but
+  living space per person does not, so it does not meet the Sphere living-space standard.
+- Care requests come at scripted rates, not from the outbreak. Couriers carry no medicine stock, and a
+  pop-up point moves without travel time. A request reaches a care point over the mesh within 4 hops,
+  each hop succeeding with the same 90% as messages, decided once when it is sent; a dropped request
+  waits for the bulletin.
+- A live NEED from a phone reaches the family board; no simulated courier answers it.
+- No scripted flood leaves a detour, so no courier route is seen bending round a flood.
+- A person meets the daytime light threshold with one 4 h session at 250 lux melanopic or more. That
+  is a weaker test than the recommendation, which asks for that level through the day. Evening and
+  sleep light are not modelled. Grow rooms count as bright rooms only if their LEDs are white or
+  blue-rich; red and blue only grow lamps may fall below 250 lux melanopic.
+- Food transfers between levels stand for OFFER and NEED packets and couriers; no packet is simulated.
+  Crops are counted by calories only, not nutrition, and only two crops have a sourced energy cost.
+- Crews' readings carry uniform noise of 10%, and falsified crews report a fixed share of the truth.
+  The Directorate's verdict never changes. The ledger digest is not passed over the simulated mesh.
+- In the seven-day week both surface results (wrong-band rate and proven protection) are fixed by the
+  scripted truth on every seed. The wrong-band rate counts an over-cautious verdict the same as an unsafe one.
+- Air-purifying respirators do not filter carbon monoxide, so when it is above its long-term limit only
+  supplied air counts.
+- A trial option fails exactly when it protects less than the surface requires; real fit varies from
+  person to person. Trials and the return are plans, not events run in world time.
+- Surface reception of 500 people a day for District 7 is an assumption, and it sets the length of the move.
 - Every model constant is an assumption unless `docs/params.md` gives a source.
 
 ## What the warning cannot do
@@ -109,9 +139,19 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 
 ## Results that go against us
 
-- Lamps cannot feed a level: one person's daily calories need roughly 120 to 360 kWh of electricity.
+- Lamps cannot feed a level: one person's food-floor calories need about 210 kWh of electricity a day
+  with lettuce and over 400 kWh with grain, against 1 kW of base load per person.
 - Shift-sharing of sleeping space raises contact rates.
 - Shafts are not the limit on the return to the surface. Surface reception is.
+- Sharing food at the floor lowers everyone's ration while one level is cut off, and when supply is
+  below everyone's floor, everyone breaches, later but together.
+- When most surface crews lie, the quorum is confidently wrong. In the stress week STRATUM's verdict
+  is wrong in nearly every round while the Directorate's fixed verdict happens to be right.
+- In this model staged trials never cost fewer exposure-hours than one direct 30-day trial: a breach is
+  caught in the first hour either way. Their real value, catching harm that shows only after longer
+  exposure, is not modelled.
+- When supply is below every life floor, Fair Share breaches every floor equally: STRATUM's heat result
+  rises above zero.
 
 ## Surface
 

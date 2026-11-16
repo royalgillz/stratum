@@ -21,7 +21,7 @@ Each step, in this order:
 
 **Metric:** "cuts warned 10 min ahead", the share of cut events that were warned, unit `share`.
 
-*What sets this number.* Under the Directorate it is 0 by rule. Under STRATUM a cut is warned only when the loss ramps slower than about 2.7% of nominal capacity per hour (AMBER at about 4.79% loss, the shed at about 5.24%, ten minutes apart), so the script's ramp rates set it. In the seven-day script only the hour-30 shortfall is warned. The real-time act "The hum sags" shows the hum falling, but its shed lands under a minute later, too short to count.
+*What sets this number.* Under the Directorate it is 0 by rule. Under STRATUM a cut is warned only when the loss ramps slower than about 2.7% of nominal capacity per hour (AMBER at about 4.79% loss, the shed at about 5.24%, ten minutes apart), so the script's ramp rates set it. In the seven-day script the hour-30 and hour-64 shortfalls are warned. The real-time act "The hum sags" shows the hum falling, but its shed lands under a minute later, too short to count.
 
 ## p02: power, water and food
 
@@ -33,9 +33,9 @@ Each step, in this order:
 
 **Water.** Supply is `RECYCLE_LPD × people × grid served fraction` L/day. Directorate: split in proportion to demand among sectors with power above 0. STRATUM: `allocate(...).shares` with floor `WATER_FLOOR` and demand `WATER_DEMAND` per person per day.
 
-**Food.** Supply is `FOOD_SUPPLY × people` kcal/day. Directorate: split in proportion to demand. STRATUM: `allocate(...).shares` with floor `FOOD_FLOOR` and demand `FOOD_DEMAND` per person per day.
+**Food.** The central farms deliver `FOOD_SUPPLY` kcal per person per day to the sectors they reach. While a `farm-cut` event is active on a level (`farmCut`), the farms cannot reach it and the supply shrinks by its people. Directorate: split in proportion to demand among reached sectors; a cut-off level gets 0, since the Directorate moves no food between levels. STRATUM: `allocate(...).shares` over all 24 sectors with floor `FOOD_FLOOR` and demand `FOOD_DEMAND` per person per day, so a cut-off level gets its share: residents' couriers carry it in (OFFER and NEED, an assumption). What each sector then eats, and its store, is `p12`'s (`docs/intent/adapters/lightfood`).
 
-**Metric:** "worst-decile served fraction", unit `share`. For each sector and good, the cumulative served fraction is granted over demanded, summed over steps. A sector's score is the mean of its three goods. Sort sectors by score, rising; the metric is the person-weighted mean score of the worst-off 10% of people, taking a fraction of the last sector needed to reach exactly 10%. It draws nothing, so it varies with the script and parameters, not the seed.
+**Metric:** "worst-decile served fraction", unit `share`. For each sector and good, the cumulative served fraction is granted over demanded, summed over steps. A sector's score is the mean of its three goods. Sort sectors by score, rising; the metric is the person-weighted mean score of the worst-off 10% of people, taking a fraction of the last sector needed to reach exactly 10%. Under a farm cut-off the Directorate's cut-off level gets no food, which can set its worst decile. It draws nothing, so it varies with the script and parameters, not the seed.
 
 ## Decisions & Alternatives
 
@@ -45,6 +45,7 @@ Each step, in this order:
 | Directorate order | Deepest first, fixed, whole sectors | Random or rotating cuts | The world text states deepest first; breakers act on whole feeders |
 | STRATUM power | `allocate`: floors, then water-filling | `rotate` of whole feeders | Floors keep fans, pumps and medical loads in every sector; sharing below demand is what a level does with its own loads |
 | Water and power | Directorate pipes water only to powered sectors | Water independent of power | Pumps and recyclers need power; this is the physical reason deep cuts also take water |
+| Food under a farm cut-off | STRATUM shares deliveries over all sectors | Leave the cut-off level out of the food term; pool food again in `p12` | One allocation per good; leaving the level out would hide its hunger from problem 2 |
 | Metric | Mean of three goods, worst 10% of people | Minimum over goods; Jain index | Readable as "the worst-off got this share"; the others are deferred secondary metrics |
 | Warning under the Directorate | None counted | Credit the hum anyway | Without the toolkit nobody reads the hum, and the Directorate announces nothing |
 

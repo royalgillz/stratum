@@ -23,8 +23,8 @@ const good = (): Script => ({
 });
 
 /** Applies `edit` to a fresh good script and expects a RangeError whose message names `field`. */
-function bad(field: string, edit: (s: any) => void) {
-  const s = good();
+function bad(field: string, edit: (s: any) => void, base: () => Script = good) {
+  const s = base();
   edit(s);
   expect(() => validateScript(s), field).toThrow(RangeError);
   expect(() => validateScript(s), field).toThrow(field);
@@ -149,5 +149,63 @@ describe('validateScript', () => {
       s.demo.id = id;
       expect(() => validateScript(s), id).not.toThrow();
     }
+  });
+
+  // A good script with one event of each rung 4 type (events[7] to [9]), a fixed flag and seed variation bounds.
+  const rung4 = (): Script => {
+    const s = good();
+    s.vary = { shiftH: 1, scale: 0.2 };
+    s.events[1].fixed = true;
+    s.events.push(
+      { type: 'farm-cut', atH: 24, level: 4, durH: 24 },
+      { type: 'care', atH: 0, durH: 48, red: 6, amber: 12 },
+      { type: 'surface', atH: 12, co: 20, o3: 0.4, so2: 1, crews: 5, falsified: 1, bias: 0.02 },
+    );
+    return s;
+  };
+  const bad4 = (field: string, edit: (s: any) => void) => bad(field, edit, rung4);
+
+  // @spec SCEN-SCRIPT-001
+  it('SCEN-SCRIPT-001 accepts farm-cut, care and surface events, fixed flags and vary bounds, with their closed ends', () => {
+    expect(() => validateScript(rung4())).not.toThrow();
+    const s: any = rung4();
+    Object.assign(s.events[7], { level: 6, durH: 0 });
+    Object.assign(s.events[8], { durH: 0, red: 0, amber: 0 });
+    Object.assign(s.events[9], { co: 0, o3: 0, so2: 0, bias: 0, crews: 1, falsified: 1 });
+    s.events[0].fixed = false;
+    s.vary = { shiftH: 0, scale: 0 };
+    expect(() => validateScript(s)).not.toThrow();
+    s.events[9].falsified = 0;
+    s.vary.scale = 0.999;
+    expect(() => validateScript(s)).not.toThrow();
+  });
+
+  // @spec SCEN-SCRIPT-001
+  it('SCEN-SCRIPT-001 rejects a bad farm-cut, care or surface event, a non-boolean fixed and bad vary bounds', () => {
+    bad4('events[7].level', (s) => (s.events[7].level = 0));
+    bad4('events[7].level', (s) => (s.events[7].level = 7));
+    bad4('events[7].durH', (s) => (s.events[7].durH = -1));
+    bad4('events[7].durH', (s) => delete s.events[7].durH);
+    for (const k of ['durH', 'red', 'amber']) bad4(`events[8].${k}`, (s) => (s.events[8][k] = -1));
+    for (const k of ['co', 'o3', 'so2', 'bias']) bad4(`events[9].${k}`, (s) => (s.events[9][k] = -0.1));
+    bad4('events[9].co', (s) => (s.events[9].co = Infinity));
+    bad4('events[9].crews', (s) => (s.events[9].crews = 0));
+    bad4('events[9].crews', (s) => (s.events[9].crews = 2.5));
+    bad4('events[9].falsified', (s) => (s.events[9].falsified = 6));
+    bad4('events[9].falsified', (s) => (s.events[9].falsified = -1));
+    bad4('events[9].falsified', (s) => (s.events[9].falsified = 0.5));
+    bad4('events[9].falsified', (s) => delete s.events[9].falsified);
+    bad4('events[2].fixed', (s) => (s.events[2].fixed = 1));
+    bad4('events[2].fixed', (s) => (s.events[2].fixed = 'true'));
+    bad4('events[2].fixed', (s) => (s.events[2].fixed = null));
+    bad4('vary.shiftH', (s) => (s.vary.shiftH = -1));
+    bad4('vary.shiftH', (s) => (s.vary.shiftH = Infinity));
+    bad4('vary.shiftH', (s) => delete s.vary.shiftH);
+    bad4('vary.scale', (s) => (s.vary.scale = 1));
+    bad4('vary.scale', (s) => (s.vary.scale = -0.1));
+    bad4('vary.scale', (s) => (s.vary.scale = NaN));
+    bad4('vary', (s) => (s.vary = null));
+    bad4('vary', (s) => (s.vary = 1));
+    bad4('events[9].falsified', (s) => ((s.events[9].falsified = 9), (s.events[9].fixed = 1)));
   });
 });
