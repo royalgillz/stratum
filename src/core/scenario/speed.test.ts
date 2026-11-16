@@ -16,10 +16,11 @@ describe('headless run speed', () => {
     { timeout: 300_000, retry: 2 }, // wall time on a shared laptop: a retry measures again after a load spike
     (policy, days, limit) => {
       const t0 = performance.now();
-      runHeadless({ ...sevenDay, days }, 1, policy);
+      const { series } = runHeadless({ ...sevenDay, days }, 1, policy);
       const ms = performance.now() - t0;
       console.log(`SCEN-009: ${policy}, ${days} days in ${ms.toFixed(0)} ms`);
       expect(ms).toBeLessThan(limit);
+      expect(Object.keys(series)).toHaveLength(15); // all fifteen adapters
     },
   );
 });

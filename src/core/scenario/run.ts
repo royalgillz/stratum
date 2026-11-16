@@ -5,6 +5,7 @@ import type { Policy } from '../adapters/shared.ts';
 import { createKernel, MAX_STEPS_PER_ADVANCE, type Kernel } from '../kernel/kernel.ts';
 import type { Act, Script } from './types.ts';
 import { validateScript } from './validate.ts';
+import { varyScript } from './vary.ts';
 import { createWorld } from './world.ts';
 
 const DT = 60;
@@ -12,6 +13,7 @@ const scaleOf = (a: Act) => (a.mode === 'realtime' ? 1 : (a.scale ?? 3600));
 
 export interface Run {
   kernel: Kernel;
+  script: Script; // the concrete script of the seed: read event times from here, never from the script passed in
   act(): Act;
   tick(realSeconds: number): number;
   inject(message: MeshMessage): void;
@@ -21,8 +23,9 @@ export interface Run {
 export interface Series { name: string; unit: string; label: Label; t: number[]; value: number[] }
 
 // @spec SCEN-004
-export function createRun(script: Script, seed: number, policy: Policy, opts: { check?: boolean } = {}): Run {
-  validateScript(script);
+export function createRun(given: Script, seed: number, policy: Policy, opts: { check?: boolean } = {}): Run {
+  validateScript(given);
+  const script = varyScript(given, seed);
   const kernel = createKernel(createWorld(seed, script), createAdapters(policy, script), { dt: DT, check: opts.check ?? true });
   const w = kernel.world;
   const end = script.days * 86400;
@@ -32,6 +35,7 @@ export function createRun(script: Script, seed: number, policy: Policy, opts: { 
   };
   return {
     kernel,
+    script,
     act: () => script.acts[index()]!,
     // @spec SCEN-005
     tick(realSeconds) {
@@ -57,7 +61,7 @@ export function createRun(script: Script, seed: number, policy: Policy, opts: { 
   };
 }
 
-// @spec SCEN-007
+// @spec SCEN-007, SCEN-008, SCEN-009
 export function runHeadless(script: Script, seed: number, policy: Policy, opts: { sampleEvery?: number; check?: boolean } = {}): { series: Partial<Record<AdapterId, Series>>; world: World } {
   const every = opts.sampleEvery ?? 3600;
   const { kernel } = createRun(script, seed, policy, { check: opts.check });

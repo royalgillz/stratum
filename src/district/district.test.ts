@@ -42,14 +42,14 @@ describe('gateway toMessage', () => {
 });
 
 describe('snapshot view', () => {
-  it('reports 24 sectors, all eight metrics, and a LIVE OK on the demo board after the next step', () => {
+  it('reports 24 sectors, all fifteen metrics, and a LIVE OK on the demo board after the next step', () => {
     const run = createRun(sevenDay, 1, 'stratum', { check: false });
     run.kernel.run(3 * 3600);
     const v = view(run, sevenDay.demo.id);
     expect(v.t).toBe(3 * 3600);
     expect(v.cells).toHaveLength(24);
     expect(v.cells.every((c) => c.served === 1 && !c.flooded && !c.unsafe)).toBe(true); // nothing has gone wrong by hour 3
-    expect(Object.keys(v.metrics)).toEqual(['p01', 'p02', 'p03', 'p04', 'p05', 'p07', 'p08', 'p09']);
+    expect(Object.keys(v.metrics)).toEqual(Array.from({ length: 15 }, (_, i) => `p${String(i + 1).padStart(2, '0')}`));
     expect(Object.values(v.metrics).every((m) => m.label === 'SIMULATED')).toBe(true);
     expect(v.board).toEqual({}); // the demo family is never separated, so only a real phone reaches its board
 
@@ -72,17 +72,18 @@ describe('snapshot view', () => {
 });
 
 describe('audio clock', () => {
-  it('shows every REAL TIME act leaving GREEN as it plays, while the world step alone would still read GREEN', () => {
+  it('shows the sag and trip acts leaving GREEN as they play, while the world step alone would still read GREEN', () => {
     const run = createRun(sevenDay, 1, 'directorate', { check: false });
     const w = run.kernel.world;
-    expect(audioClock(run, sevenDay.events, null, 0.2)).toBeNull(); // time-lapse: the world's own f
-    for (const act of sevenDay.acts.filter((a) => a.mode === 'realtime')) {
+    expect(audioClock(run, null, 0.2)).toBeNull(); // time-lapse: the world's own f
+    // The Level 5 act comes after the deep shortfall's first shed: shedding keeps load under capacity, so its hum stays steady.
+    for (const act of run.script.acts.filter((a) => a.mode === 'realtime' && !a.title.startsWith('Level 5'))) {
       run.kernel.run(Math.ceil((act.atH * 3600) / 60) * 60 - w.t);
       const tiers: string[] = [];
       let c: AudioClock | null = null;
       for (let real = 0; real < 30; real += 0.2) { // the first 30 s, before the next world step can land
         run.tick(0.2);
-        c = audioClock(run, sevenDay.events, c, 0.2);
+        c = audioClock(run, c, 0.2);
         tiers.push(view(run, 'family', c).tier);
         expect(run.act()).toBe(act);
       }
@@ -93,4 +94,22 @@ describe('audio clock', () => {
       }
     }
   });
+
+  it('shows the demo sector going dark inside the Level 5 act under the Directorate and lit under STRATUM', () => {
+    for (const policy of ['directorate', 'stratum'] as const) {
+      const run = createRun(sevenDay, 1, policy, { check: false });
+      const act = run.script.acts.find((a) => a.title === 'Level 5 goes dark: deepest first')!;
+      run.kernel.run(act.atH * 3600 - run.kernel.world.t);
+      const served: number[] = [], tiers: string[] = [];
+      while (run.act() === act) {
+        run.tick(1);
+        const v = view(run, 'family', audioClock(run, null, 1));
+        served.push(v.cells[17]!.served);
+        tiers.push(v.tier);
+      }
+      expect(new Set(tiers)).toEqual(new Set(['GREEN'])); // after the first shed the hum stays GREEN under both policies
+      if (policy === 'directorate') expect([served[0], served.at(-1)]).toEqual([1, 0]);
+      else expect(Math.min(...served)).toBeGreaterThan(0.3); // above the life floor
+    }
+  }, 30_000); // two runs to hour 75: over the 5 s default under a loaded suite
 });

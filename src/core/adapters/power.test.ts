@@ -117,14 +117,14 @@ describe('p01 warning', () => {
   });
 
   // @spec ADAPT-POWER-003, ADAPT-POWER-011
-  it('warns a quarter of the seven-day cuts under STRATUM and none under the Directorate', () => {
+  it('warns 48 of the 120 seven-day cuts under STRATUM (five sheds, two warned) and none under the Directorate', () => {
     const run = (policy: Policy) => {
       const k = createKernel(world(), [createP01(policy, sevenDay), createP02(policy, sevenDay)]);
       k.run(sevenDay.days * 24 * H);
       return k.metrics();
     };
     const s = run('stratum'), d = run('directorate');
-    expect(s.p01!.value).toBe(0.25);
+    expect(s.p01!.value).toBe(0.4);
     expect(d.p01!.value).toBe(0);
     expect(s.p02!.value).toBeGreaterThan(d.p02!.value);
   }, 60_000);

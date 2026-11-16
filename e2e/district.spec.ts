@@ -27,7 +27,7 @@ test.describe('District 7 page', () => {
     await expect(page.locator('#clock')).toContainText('SIMULATED');
     await expect(page.locator('#map text')).not.toHaveCount(0);
     await expect(page.locator('#map')).toHaveAttribute('aria-label', /SIMULATED/);
-    await expect(page.locator('#metrics tr')).toHaveCount(8);
+    await expect(page.locator('#metrics tr')).toHaveCount(15); // one row per adapter, p01 to p15
     for (const row of await page.locator('#metrics th').allTextContents()) expect(row).toContain('SIMULATED');
     await expect(page.locator('#board')).toContainText('No OK heard from this family yet');
     await expectSoundLayout(page);

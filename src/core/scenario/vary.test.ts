@@ -124,6 +124,7 @@ describe('varyScript', () => {
   it('SCEN-SCRIPT-003 returns a script equal to its input when vary is absent', () => {
     const { vary: _, ...s } = script();
     expect(varyScript(s, 3)).toEqual(s);
-    expect(varyScript(sevenDay, 3)).toEqual(sevenDay);
+    const { vary: __, ...plain } = sevenDay;
+    expect(varyScript(plain, 3)).toEqual(plain);
   });
 });

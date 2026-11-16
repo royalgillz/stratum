@@ -9,14 +9,16 @@ import { powerDemand, sectorId, type Policy } from './shared.ts';
 
 const DAY = 86400;
 
+/** The first daily decision a farm cut covers (the first missed delivery), s; Infinity with none. */
+export const cutStart = (script: Script) => Math.min(...script.events.flatMap((e) => {
+  if (e.type !== 'farm-cut') return [];
+  const d = Math.ceil(e.atH * 3600 / DAY) * DAY;
+  return d < (e.atH + e.durH) * 3600 ? [d] : [];
+}));
+
 export function createP12(policy: Policy, script: Script): Adapter {
   const crop = policy === 'directorate' ? STAPLE : bestCrop();
-  // c: the first daily decision a farm cut covers (the first missed delivery); b: the first decision from c with a breach
-  const c = Math.min(...script.events.flatMap((e) => {
-    if (e.type !== 'farm-cut') return [];
-    const d = Math.ceil(e.atH * 3600 / DAY) * DAY;
-    return d < (e.atH + e.durH) * 3600 ? [d] : [];
-  }));
+  const c = cutStart(script); // b: the first decision from c with a breach
   let b = Infinity;
   let grew: number[] | null = null; // per sector: kcal grown since the last daily decision
   return {

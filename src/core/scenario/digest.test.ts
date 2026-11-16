@@ -1,28 +1,19 @@
 // Output pin for the speed work (SCEN-009): digests of the hourly metrics and final world, recorded
 // before any speed change, so a faster run is also the same run. No timing here, so it never flakes.
 import { describe, expect, it } from 'vitest';
-import { createP01 } from '../adapters/p01.ts';
-import { createP02 } from '../adapters/p02.ts';
-import { createP03 } from '../adapters/p03.ts';
-import { createP04 } from '../adapters/p04.ts';
-import { createP05 } from '../adapters/p05.ts';
-import { createP07 } from '../adapters/p07.ts';
-import { createP08 } from '../adapters/p08.ts';
-import { createP09 } from '../adapters/p09.ts';
 import type { Policy } from '../adapters/shared.ts';
-import { createKernel } from '../kernel/kernel.ts';
 import { hex } from '../witness/ledger.ts';
 import { sha256 } from '../witness/sha256.ts';
+import { createRun } from './run.ts';
 import { sevenDay } from './seven-day.ts';
-import { createWorld } from './world.ts';
 
-const ADAPTERS = [createP01, createP02, createP03, createP04, createP05, createP07, createP08, createP09];
+const ADAPTERS = Array.from({ length: 15 }, (_, i) => `p${String(i + 1).padStart(2, '0')}`);
 
 /** What runHeadless (SCEN-007) does, unchecked (SCEN-008: same outputs as checked): metrics at t 0 and every hour. */
 function digest(policy: Policy, days: number, seed: number): string {
-  const script = { ...sevenDay, days };
-  const k = createKernel(createWorld(seed, script), ADAPTERS.map((f) => f(policy, script)), { check: false });
+  const { kernel: k } = createRun({ ...sevenDay, days }, seed, policy, { check: false });
   const series = [k.metrics()];
+  expect(Object.keys(series[0]!)).toEqual(ADAPTERS);
   for (let h = 0; h < days * 24; h++) {
     k.run(3600);
     series.push(k.metrics());
@@ -31,14 +22,14 @@ function digest(policy: Policy, days: number, seed: number): string {
 }
 
 const PINNED: Record<string, string> = {
-  'directorate 7 1': 'dbb7d325291bdf72',
-  'stratum 7 1': '7430bf0d4c547b03',
-  'directorate 30 1': '0d17e0797d172892',
-  'stratum 30 1': 'e19f4f1c275797a9',
-  'directorate 7 2': '0b692883933282aa',
-  'stratum 7 2': '8a37562236adbf17',
-  'directorate 7 3': '4518d924aa849799',
-  'stratum 7 3': '5de7af4a54e636a6',
+  'directorate 7 1': '756a8ef8131139a5',
+  'stratum 7 1': '386dd0d829f8e05e',
+  'directorate 30 1': '6f345dcc6e69348a',
+  'stratum 30 1': 'af5ab34b48bb8fa5',
+  'directorate 7 2': 'cad3da6c6bd9acf4',
+  'stratum 7 2': 'b6ccfc5a10fadd1c',
+  'directorate 7 3': 'a71a623d2b6e2abd',
+  'stratum 7 3': '942bef8c638deb1e',
 };
 
 describe('headless run outputs', () => {

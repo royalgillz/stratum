@@ -7,7 +7,7 @@ import { powerDemand, sectorId } from '../core/adapters/shared.ts';
 import type { Run } from '../core/scenario/run.ts';
 import type { Act } from '../core/scenario/types.ts';
 import { WB_LIMIT } from '../core/world/airheat/airheat.ts';
-import { CAP_MARGIN, capacityAt, swing, tierOf, type GridEvent } from '../core/world/grid/grid.ts';
+import { CAP_MARGIN, capacityAt, swing, tierOf } from '../core/world/grid/grid.ts';
 import { RECOVER } from '../core/world/tunnels/tunnels.ts';
 import { unsafe } from '../core/world/water/water.ts';
 
@@ -53,7 +53,7 @@ export interface AudioClock { t: number; sub: number; f: number; tier: Tier }
  * the current instant, so the hum sags as the act plays instead of once per 60 s world step. Null in a time-lapse,
  * where the world's own f is the reading.
  */
-export function audioClock(run: Run, events: readonly GridEvent[], prev: AudioClock | null, realDt: number): AudioClock | null {
+export function audioClock(run: Run, prev: AudioClock | null, realDt: number): AudioClock | null {
   const w = run.kernel.world;
   if (run.act().mode !== 'realtime') return null;
   const c = prev ?? { t: w.t, sub: 0, f: w.grid.f, tier: w.grid.tier };
@@ -61,7 +61,7 @@ export function audioClock(run: Run, events: readonly GridEvent[], prev: AudioCl
   const sub = Math.max(0, c.sub + realDt - (w.t - c.t)); // scale 1: a world step uses up its 60 real seconds
   const demand = w.sectors.reduce((a, x) => a + powerDemand(x.people), 0);
   const load = Object.values(w.alloc.power).reduce((a, p) => a + p, 0);
-  const f = swing(c.f, capacityAt(events, w.t + sub, CAP_MARGIN * demand), load, realDt).f; // as p01, but at the instant
+  const f = swing(c.f, capacityAt(run.script.events, w.t + sub, CAP_MARGIN * demand), load, realDt).f; // as p01, but at the instant
   return { t: w.t, sub, f, tier: tierOf(f, c.tier) };
 }
 

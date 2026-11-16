@@ -37,7 +37,7 @@ setInterval(() => {
   last = now;
   if (!playing) return; // paused: messages post their own snapshot
   for (const r of runs) r.tick(dt);
-  clocks = runs.map((r, i) => audioClock(r, sevenDay.events, clocks[i] ?? null, dt));
+  clocks = runs.map((r, i) => audioClock(r, clocks[i] ?? null, dt));
   if (runs[0].done()) playing = false;
   post();
 }, POST_MS);

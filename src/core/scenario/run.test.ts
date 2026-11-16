@@ -6,6 +6,7 @@ import { createKernel } from '../kernel/kernel.ts';
 import { createRun, runHeadless } from './run.ts';
 import { sevenDay } from './seven-day.ts';
 import type { Script } from './types.ts';
+import { varyScript } from './vary.ts';
 import { createWorld } from './world.ts';
 
 // Records the options every kernel is created with, passing everything through.
@@ -34,7 +35,7 @@ const live = (bytes = new Uint8Array(25)): MeshMessage => ({
 
 describe('createRun', () => {
   // @spec SCEN-004
-  it('validates the script and builds a dt 60 kernel over createWorld and createAdapters, checked unless check is false', () => {
+  it('validates the script, varies it by the seed and builds a dt 60 kernel over createWorld and createAdapters of the concrete script, checked unless check is false', () => {
     expect(() => createRun({ ...dayOne, days: 0 }, 1, 'stratum')).toThrow(RangeError);
     expect(() => createRun(dayOne, 1, 'other' as 'stratum')).toThrow(RangeError);
     made.length = 0;
@@ -42,14 +43,17 @@ describe('createRun', () => {
     expect(made).toEqual([{ dt: 60, check: true }]);
     createRun(dayOne, 7, 'stratum', { check: false });
     expect(made[1]).toEqual({ dt: 60, check: false });
-    expect(run.kernel.world).toEqual(createWorld(7, dayOne));
-    const k = createKernel(createWorld(7, dayOne), createAdapters('stratum', dayOne));
-    run.kernel.run(2 * H);
-    k.run(2 * H);
+    const concrete = varyScript(dayOne, 7);
+    expect(run.script).toEqual(concrete);
+    expect(concrete).not.toEqual(dayOne); // dayOne carries sevenDay's vary bounds
+    expect(run.kernel.world).toEqual(createWorld(7, concrete));
+    const k = createKernel(createWorld(7, concrete), createAdapters('stratum', concrete));
+    run.kernel.run(4 * H);
+    k.run(4 * H);
     expect(run.kernel.world).toEqual(k.world);
     expect(run.kernel.metrics()).toEqual(k.metrics());
     run.kernel.step();
-    expect(run.kernel.world.t).toBe(2 * H + 60);
+    expect(run.kernel.world.t).toBe(4 * H + 60);
   });
 });
 
@@ -151,7 +155,7 @@ describe('runHeadless', () => {
   it('samples every adapter metric at 0 and after every sampleEvery seconds to the end', () => {
     const { series, world } = runHeadless(dayOne, 4, 'stratum', { sampleEvery: 6 * H });
     expect(world.t).toBe(DAY);
-    expect(Object.keys(series)).toEqual(['p01', 'p02', 'p03', 'p04', 'p05', 'p07', 'p08', 'p09']);
+    expect(Object.keys(series)).toEqual(Array.from({ length: 15 }, (_, i) => `p${String(i + 1).padStart(2, '0')}`));
     const run = createRun(dayOne, 4, 'stratum');
     const want = [run.kernel.metrics()];
     for (let i = 0; i < 4; i++) (run.kernel.run(6 * H), want.push(run.kernel.metrics()));
