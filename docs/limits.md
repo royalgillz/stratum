@@ -31,6 +31,7 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 
 - Sound carries a few metres in one room. The live demo proves one hop. Multi-hop reach is simulated.
 - A packet takes about 2 to 3 seconds. This is for status and short codes, not chat.
+- Phones relay other families' messages without being able to check them, so well-formed junk can cost air time. Each phone relays any one message at most once and never more than 4 hops.
 - Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress.
 - Messages carry their send time from the sender's clock. A receiver whose clock runs more than
   2 minutes behind the sender rejects fresh messages as from the future. Phones underground have no
