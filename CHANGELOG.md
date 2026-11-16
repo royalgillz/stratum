@@ -5,6 +5,14 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 ## 2026-11-16
 
 ### Decisions
+- Decided by the human, three new rules:
+  - no em-dashes anywhere (now enforced by `npm run check`);
+  - no AI or Claude trailers in commits or pull requests;
+  - every UI change is tested with Playwright on desktop, laptop, tablet, phone and Galaxy Z Fold 6 viewports, folded and open.
+- Decided by the human, overnight work while the human sleeps:
+  - LID stops are skipped and every call is logged under open questions;
+  - additive-only changes to `contracts.ts` are allowed, each logged;
+  - the scope is rung 2, then the start of rung 3.
 - Approved by the human: fairshare, witness and kernel designs and specs (FAIR, WIT and KERN, 001 to 012 each), with these choices:
   - witness computes SHA-256 synchronously in its own code, so `observe` stays synchronous;
   - witness takes an injected clock;
@@ -30,6 +38,9 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
+- Playwright 1.65.1 added (approved by the human) with six viewport projects, `npm run e2e`, `e2e/phone.spec.ts` (layout, family, word errors, microphone path) and a CI `e2e` job. Locally 30/30 pass; 5 needed a retry because the Windows preview server stalls under load.
+- Vercel auto-deploy from GitHub is connected; pushes to `main` deploy.
 - Public repo at https://github.com/royalgillz/stratum. The first CI run passed on GitHub: 30 tests, check and build.
 - Branch protection on `main`:
   - the CI job `checks` is required for pull requests;

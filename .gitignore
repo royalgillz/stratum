@@ -4,3 +4,5 @@ dist
 .vercel
 docs/audit.md
 .claude/worktrees/
+test-results/
+playwright-report/
