@@ -41,6 +41,17 @@ describe('validateScript', () => {
   });
 
   // @spec SCEN-001
+  it('SCEN-001 accepts the closed ends: fractions of 0 and 1, durations of 0, a contamination ramp equal to its duration', () => {
+    const s: any = good();
+    Object.assign(s.events[0], { from: 0, to: 1, holdH: 0 });
+    s.events[1].loss = 1;
+    s.events[5].away = 0;
+    Object.assign(s.events[2], { rampH: 12, durH: 12 });
+    s.events[6].durH = 0;
+    expect(() => validateScript(s)).not.toThrow();
+  });
+
+  // @spec SCEN-001
   it('SCEN-001 rejects days that are not a positive integer', () => {
     bad('days', (s) => (s.days = 0));
     bad('days', (s) => (s.days = 1.5));
@@ -50,10 +61,12 @@ describe('validateScript', () => {
   // @spec SCEN-001
   it('SCEN-001 rejects an unknown event type and a missing event field', () => {
     bad('events[1].type', (s) => (s.events[1].type = 'meteor'));
+    for (const key of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) bad('events[1].type', (s) => (s.events[1].type = key));
     bad('events[0].recoverH', (s) => delete s.events[0].recoverH);
     bad('events[2].delta', (s) => delete s.events[2].delta);
     bad('events[2].delta.biocide', (s) => delete s.events[2].delta.biocide);
     bad('events[4].cases', (s) => (s.events[4].cases = '10'));
+    for (const key of ['cond', 'toc', 'turb', 'biocide']) bad(`events[2].delta.${key}`, (s) => delete s.events[2].delta[key]);
   });
 
   // @spec SCEN-001
@@ -80,6 +93,8 @@ describe('validateScript', () => {
     bad('events[5].away', (s) => (s.events[5].away = 1.5));
     bad('events[0].rampH', (s) => (s.events[0].rampH = -1));
     bad('events[0].holdH', (s) => (s.events[0].holdH = -1));
+    bad('events[0].recoverH', (s) => (s.events[0].recoverH = -1));
+    bad('events[2].rampH', (s) => (s.events[2].rampH = -1));
     bad('events[1].durH', (s) => (s.events[1].durH = -1));
     bad('events[3].durH', (s) => (s.events[3].durH = -1));
     bad('events[6].durH', (s) => (s.events[6].durH = -1));
@@ -112,6 +127,8 @@ describe('validateScript', () => {
     bad('acts[2].scale', (s) => (s.acts[2].scale = 0));
     bad('acts[2].scale', (s) => (s.acts[2].scale = Infinity));
     bad('acts[2].mode', (s) => (s.acts[2].mode = 'pause'));
+    bad('acts[1].scale', (s) => (s.acts[1].scale = null));
+    bad('acts[2].scale', (s) => (s.acts[2].scale = null));
   });
 
   // @spec SCEN-001
@@ -120,12 +137,17 @@ describe('validateScript', () => {
     bad('demo.id', (s) => (s.demo.id = 'h5-0'));
     bad('demo.id', (s) => (s.demo.id = 'h23-9'));
     bad('demo.level', (s) => (s.demo.level = 7));
+    bad('demo.level', (s) => (s.demo.level = 0));
     bad('demo.sector', (s) => (s.demo.sector = 4));
+    bad('demo.sector', (s) => (s.demo.sector = -1));
+    bad('demo.sector', (s) => (s.demo.sector = 1.5));
     bad('demo.members', (s) => (s.demo.members = 0));
     bad('demo.members', (s) => (s.demo.members = 2.5));
     // ids outside the generated range are free
-    const s = good();
-    s.demo.id = 'h24-0';
-    expect(() => validateScript(s)).not.toThrow();
+    for (const id of ['h24-0', 'h0-10']) {
+      const s = good();
+      s.demo.id = id;
+      expect(() => validateScript(s), id).not.toThrow();
+    }
   });
 });

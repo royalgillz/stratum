@@ -48,15 +48,16 @@ export function validateScript(script: Script): void {
   script.acts.forEach((a, i) => {
     const prev = script.acts[i - 1];
     num(`acts[${i}].atH`, a.atH, (v) => inRun(v) && (prev ? v > prev.atH : v === 0));
-    if (a.mode === 'realtime') num(`acts[${i}].scale`, a.scale ?? 1, (v) => v === 1);
-    else if (a.mode === 'timelapse') num(`acts[${i}].scale`, a.scale ?? 3600, (v) => v > 0);
+    if (a.mode === 'realtime') num(`acts[${i}].scale`, a.scale === undefined ? 1 : a.scale, (v) => v === 1);
+    else if (a.mode === 'timelapse') num(`acts[${i}].scale`, a.scale === undefined ? 3600 : a.scale, (v) => v > 0);
     else throw new RangeError(`script.acts[${i}].mode is unknown: ${String(a.mode)}`);
   });
 
   let separates = 0;
   script.events.forEach((e, i) => {
     const at = `events[${i}]`;
-    const fields = FIELDS[e.type];
+    // hasOwn, so keys on Object.prototype such as 'constructor' are not event types
+    const fields = Object.hasOwn(FIELDS, e.type) ? FIELDS[e.type] : undefined;
     if (!fields) throw new RangeError(`script.${at}.type is unknown: ${String(e.type)}`);
     if (e.type === 'separate' && ++separates > 1) throw new RangeError(`script.${at}.type: at most one separate event`);
     num(`${at}.atH`, e.atH, inRun);

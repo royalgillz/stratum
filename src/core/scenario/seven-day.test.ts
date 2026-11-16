@@ -48,6 +48,8 @@ describe('sevenDay', () => {
     expect(actAt(84).atH).toBe(83.99);
     expect((nextAct(84)!.atH - 83.99) * 3600).toBeCloseTo(120, 6);
     expect(sevenDay.acts[0]).toMatchObject({ atH: 0, mode: 'timelapse', title: 'The network is down' });
+    expect(actAt(60).title).toBe('The hum sags: under a minute of warning, too short to count');
+    expect(actAt(84).title).toBe('A plant trip gives no warning');
     sevenDay.acts.forEach((a, i) => {
       if (a.mode === 'realtime') expect(sevenDay.acts[i + 1].mode).toBe('timelapse');
     });
