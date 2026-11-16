@@ -22,7 +22,7 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Packet seen-set size | 4096 | packets | packet | | true | Keyed by (key set, minute, nonce); oldest evicted first |
 | Packet stale limit | 24 | h | packet | | true | Older packets are rejected |
 | Packet MAX_HOPS | 4 | hops | packet | | true | Hops byte is reported clamped to this |
-| Relay back-off slot | 3000 | ms | relay | | true | About one packet's air time (2 to 3 s), so a later slot hears an earlier relay's whole packet |
+| Relay back-off slot | 3000 | ms | relay | | true | Assumes air time (2 to 3 s) plus decode latency stays under 3 s, so a later slot hears an earlier relay's whole packet. Unmeasured: at 3 s air time suppression between neighbouring slots fails. Measure in the one-hop demo |
 | Relay back-off slots | 4 | slots | relay | | true | Delay is floor(rng() x 4) x 3 s, so 0 to 9 s. Tune in the multi-hop simulation |
 | Relay identities kept | 4096 | packets | relay | | true | Same as the packet seen-set; least recently heard evicted first |
 | Relay silence count | 2 | hearings | relay | | true | From docs/plan.md: a relay stays silent once it has heard a message twice |

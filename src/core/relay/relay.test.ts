@@ -144,6 +144,13 @@ describe('relay', () => {
 
     const once = await alert(1);
     expect(hear(r, once, T + 1000, NO_HUM)).toBeNull(); // counted at its first hearing, so silent now
+
+    // The rule is for verified grid alerts only: other packets go out whatever the tracker reads.
+    let nonce = 10;
+    for (const tracker of [{ state: 'LIVE', tier: 'GREEN' }, { state: 'CALIBRATING' }] as TrackerView[]) {
+      expect(hear(r, await heard({ nonce: nonce++ }), T, tracker)).not.toBeNull(); // verified OK
+      expect(hear(r, await heard({ type: 0, nonce: nonce++ }, A, false), T, tracker)).not.toBeNull(); // foreign type 0
+    }
   });
 
   // @spec RELAY-008
