@@ -60,6 +60,7 @@ flowchart LR
 | packet | `src/core/packet` | PKT | 7, 8, and all reports |
 | fairshare | `src/core/fairshare` | FAIR | 2, 3, 5, 6, 10, 11, 12, 14, 15 |
 | witness | `src/core/witness` | WIT | 1, 4, 9, 13 |
+| relay | `src/core/relay` | RELAY | 1 (grid alerts), 7, 8 |
 | kernel | `src/core/kernel` | KERN | all modelled problems |
 | shed | `src/core/shed` | SHED | 1, 2 |
 | world models, adapters | `src/core/world`, `src/core/adapters` | *(not yet specified)* | 1 to 15 |

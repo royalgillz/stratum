@@ -35,7 +35,7 @@ export interface Decoded {
 export type Reject = { reject: 'length' | 'version' | 'future' | 'stale' | 'unknown-tag' | 'mac' | 'type' };
 
 // Every value below is listed in docs/params.md.
-const VERSION = 3, MAX_HOPS = 4, FUTURE_MIN = 2, STALE_MIN = 24 * 60, SEEN_MAX = 4096;
+export const VERSION = 3, MAX_HOPS = 4, FUTURE_MIN = 2, STALE_MIN = 24 * 60, SEEN_MAX = 4096;
 
 const be32 = (m: number) => new Uint8Array([m >>> 24, (m >>> 16) & 255, (m >>> 8) & 255, m & 255]);
 const cat = (...parts: Uint8Array[]) => {

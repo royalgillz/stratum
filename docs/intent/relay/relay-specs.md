@@ -1,0 +1,13 @@
+# Relay specs
+
+Prefix `RELAY`. Design: `relay-design.md`. The problems served are in brackets.
+
+- [x] **RELAY-001** [7, 8]: When `hear` is given a decode result that is verified, or that is rejected as `unknown-tag` while the low 4 bits of byte 0 are 0 to 3, the relay shall treat the packet as forwardable; for any other decode result it shall return null and leave its counts unchanged.
+- [x] **RELAY-002** [7, 8]: The relay shall identify a forwardable packet by its 25 bytes with byte 16 set to 0, written as 50 lower-case hex characters, count every forwardable hearing of each identity whether or not it leads to a send, and keep counts for the 4,096 most recently heard identities, evicting the least recently heard first.
+- [x] **RELAY-003** [7, 8]: When a forwardable packet's identity is heard for the first time, its hops left (byte 16 clamped to MAX_HOPS = 4) is above 0, and RELAY-007 does not forbid it, `hear` shall return `{ id, send, atMs }` where `send` is a new 25-byte copy of the heard bytes with byte 16 set to hops left minus 1, and the heard bytes are not modified.
+- [x] **RELAY-004** [7, 8]: If a forwardable packet heard for the first time has hops left 0, then `hear` shall return null and still count the hearing.
+- [x] **RELAY-005** [7, 8]: When the relay schedules a send, it shall call its `Rng` exactly once and set `atMs = nowMs + floor(rng() × 4) × 3000`; when it does not schedule a send, it shall not call the `Rng`.
+- [x] **RELAY-006** [7, 8]: When a forwardable identity is heard a second or later time, the relay shall never schedule a send for it, and shall return `{ cancel: id }` and drop the pending send if one was scheduled with `atMs` later than the current `nowMs`, otherwise null.
+- [x] **RELAY-007** [1]: When a verified GRID_ALERT is heard for the first time, the relay shall schedule a send only if the given tracker reading has state NO_HUM, or state LIVE with tier AMBER or RED; under CALIBRATING, LIVE without a tier, or tier GREEN it shall return null and count the hearing; the relay shall apply this rule to no other packet.
+- [x] **RELAY-008** [7, 8]: When `own(bytes)` is called with a 25-byte packet this phone sent, the relay shall count one hearing of its identity without scheduling a send, so every later hearing follows RELAY-006 and is never relayed; `own` shall throw a RangeError for any other length.
+- [x] **RELAY-009** [7, 8]: The relay shall read no clock and draw randomness only from the `Rng` given to `createRelay`, return identical actions for identical inputs and `Rng` sequences, and throw a RangeError from `hear` when `nowMs` is not finite or a drawn value lies outside [0, 1).
