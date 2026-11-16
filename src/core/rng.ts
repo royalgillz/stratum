@@ -12,6 +12,7 @@ function hash(seed: number, name: string): number {
 }
 
 /** mulberry32 seeded from (seed, stream). Same inputs, same sequence, on every runtime. */
+// @spec KERN-010, KERN-011, KERN-012
 export function rng(seed: number, stream: string): Rng {
   let a = hash(seed, stream);
   return () => {

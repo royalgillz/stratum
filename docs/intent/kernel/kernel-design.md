@@ -19,7 +19,7 @@ The world time step `dt` is fixed at creation (default 60 s). One step:
 2. Call `adapter.step(world, dt, stream)` once.
 3. Set `world.t = t0 + n × dt`, where `n` is the number of steps taken. `t` is computed, not accumulated, so it never drifts. Adapters see `t` as of the start of the step.
 
-Only the kernel writes `t`. An empty adapter list is valid: time advances and there are no metrics.
+Only the kernel writes `t`. Argument errors (`dt`, `run`, `advance`, `setClock`) throw a `RangeError` and leave the kernel untouched; only adapter faults kill it. An empty adapter list is valid: time advances and there are no metrics.
 
 ## Two clocks
 
@@ -41,13 +41,13 @@ On a violation the kernel throws a `KernelError` naming the adapter, the key and
 
 ## Metrics
 
-`metrics()` calls each adapter's `metric(world)` in id order, on a read-only view, and returns the results keyed by adapter id. A metric whose `label` is not LIVE, REPLAY or SIMULATED, or whose `value` is not finite, is a violation. The kernel does not cache; calling it twice gives the same answer.
+`metrics()` calls each adapter's `metric(world)` in id order, on a read-only view, and returns the results keyed by adapter id. A metric whose `label` is not LIVE, REPLAY or SIMULATED, or whose `value` is not finite, is a violation. On a dead kernel it throws the original error. The kernel does not cache; calling it twice gives the same answer.
 
 ## Reproducibility and speed
 
 The same seed, adapter set, `dt` and duration give the same final `World` and metrics, bit for bit: fixed order, per-id streams, computed `t`, no clock reads. This holds for `run` and `step`; `advance` depends on the caller's real-time gaps, so it is reproducible only given the same gaps.
 
-Spike T5 needs 30 simulated days (43,200 steps at 60 s) in under 10 s with all adapters, about 230 µs per step. The kernel's own share (ordering, streams, guard) is budgeted at 10 %, measured with trivial adapters, guard on. Checked mode can be switched off for the speed run if the guard costs too much.
+Spike T5 needs 30 simulated days (43,200 steps at 60 s) in under 10 s with all adapters, about 230 µs per step. The kernel's own share (ordering, streams, guard) is budgeted at 10 %, measured with trivial adapters, guard on. If the guard puts the kernel over that budget, the harness may run with checked mode off; tests and the live app always keep it on.
 
 ## Interface
 
