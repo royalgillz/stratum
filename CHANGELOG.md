@@ -19,6 +19,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- Witness built (`src/core/witness/`, 25 tests, WIT-001 to WIT-012 marked `[x]`). Phase 4 tightened the specs: even-count medians take the upper middle value, `tStart` is the earliest exceeding reading among the last five, `direction` and `peakZ` are defined, the quorum and Chapman return shapes are fixed, and "latest" means last appended.
 - Git history rewritten before the first push, to remove `docs/audit.md` from every commit; commit hashes changed. A bundle of the old history is kept outside the repo.
 
 ## 2026-11-15
