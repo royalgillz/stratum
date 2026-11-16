@@ -23,6 +23,7 @@ const HEAD: Record<string, string> = {
 };
 
 const MINUTE = 60000;
+const SHORT = 'Decision aid, not a medical device. If you are worried, take the child to a health worker.';
 
 export function mountCare(root: HTMLElement) {
   root.innerHTML = `
@@ -33,7 +34,7 @@ export function mountCare(root: HTMLElement) {
       <div class="row">
         <label>Years <select id="years"><option value="">Choose</option>
           ${[0, 1, 2, 3, 4].map((y) => `<option>${y}</option>`).join('')}<option value="5">5 or older</option></select></label>
-        <label>Months <select id="months">${Array.from({ length: 12 }, (_, m) => `<option>${m}</option>`).join('')}</select></label>
+        <label>Months <select id="months"><option value="">Choose</option>${Array.from({ length: 12 }, (_, m) => `<option>${m}</option>`).join('')}</select></label>
       </div>
     </fieldset>
     <div id="steps" hidden>
@@ -53,57 +54,72 @@ export function mountCare(root: HTMLElement) {
         <p class="count"><span id="left">60 s left</span> · <span id="taps">0 breaths</span></p>
         <button id="tap" class="tap">Tap once per breath</button>
         <button id="stop">Stop</button>
+        <p class="muted">${SHORT}</p>
       </div>
     </div>
     <p id="announce" class="sr-only" role="status" aria-live="polite"></p>
-    <div id="result" class="result" hidden></div>
+    <div id="result" class="result" tabindex="-1" hidden></div>
     <div id="need" hidden>
+      <p id="where"></p>
       <button id="request">Request medicine</button>
-      <p id="sent" class="muted" role="status"></p>
+      <p id="sent" role="status"></p>
     </div>`;
 
   const years = $<HTMLSelectElement>('#years', root), months = $<HTMLSelectElement>('#months', root);
   const start = $<HTMLButtonElement>('#start', root), announce = $('#announce', root);
-  const ageMonths = () => (years.value === '' ? null : Number(years.value) * 12 + Number(months.value));
+  // Months matter only under one year (thresholds change at 2 and 12 months), so only then must they be chosen.
+  const ageMonths = () => (years.value === '' || (years.value === '0' && months.value === '') ? null : Number(years.value) * 12 + Number(months.value));
   const cough = () => root.querySelector<HTMLInputElement>('input[name=cough]:checked')?.value;
   const signs = () => Object.fromEntries(SIGNS.map(([k]) => [k, $<HTMLInputElement>(`[data-sign=${k}]`, root).checked])) as unknown as DangerSigns;
+  const counter = $('#counter', root);
   let result: BreathResult | null = null;
+  let count: { tapsMs: number[]; elapsedMs: number } | null = null; // the last finished count, null while counting
+  const where = () => `level ${store.get('stratum.level') ?? '5'}, sector ${String.fromCharCode(65 + Number(store.get('stratum.sector') ?? 0))}`;
+  const showWhere = () => ($('#where', root).textContent = `Sends for ${where()} (change on the Report tab).`);
+  new MutationObserver(showWhere).observe(root, { attributeFilter: ['hidden'] }); // back from the Report tab
 
   function show(r: BreathResult) {
-    result = r;
     const box = $('#result', root);
+    // A ticked danger sign turns the card RED below the fold: bring it into view once.
+    if (r.classification === 'RED' && result?.classification !== 'RED') requestAnimationFrame(() => box.scrollIntoView({ block: 'nearest' }));
+    result = r;
     box.className = `result ${r.classification ?? ''}`;
     const rate = r.rate === null ? 'Rate: none (no full minute counted)' : `Rate: ${r.rate} breaths per minute`;
-    box.innerHTML = '<p class="head"></p><p class="card"></p><p class="rate"></p>';
+    box.innerHTML = `<p class="head"></p><p class="card"></p><p class="rate"></p><p class="muted">${SHORT}</p>`;
     $('.head', box).textContent = HEAD[String(r.classification)];
     $('.card', box).textContent = r.card;
-    $('.rate', box).textContent = r.threshold === null ? '' :
-      `${rate} (fast is ${r.threshold} or more at this age) ·${r.label}${r.ignoredTaps ? ` · ${r.ignoredTaps} double taps ignored` : ''}`;
+    $('.rate', box).textContent = r.threshold === null || r.classification === 'NOT_ASSESSED' ? '' :
+      `${rate} (fast is ${r.threshold} or more at this age) · ${r.label}${r.ignoredTaps ? ` · ${r.ignoredTaps} double taps ignored` : ''}`;
     box.hidden = false;
     $('#need', root).hidden = !needRequest(r);
+    showWhere();
     $('#sent', root).textContent = '';
     announce.textContent = `${HEAD[String(r.classification)]}. ${r.card}`;
   }
 
-  // An age outside 2 months to under 5 years needs no count: the core gives its card at once.
+  // The card shows as soon as the core can answer without a count: an age out of range, a danger sign
+  // (RED) or no cough (NOT ASSESSED). Otherwise it waits for a count. Inputs changed later re-classify.
   const update = () => {
-    const age = ageMonths();
+    const age = ageMonths(), s = signs();
     const inRange = age !== null && age >= 2 && age < 60;
     $('#steps', root).hidden = !inRange;
-    start.disabled = !inRange || !cough() || !$('#counter', root).hidden;
-    if (age !== null && !inRange) show(classify({ ageMonths: age, cough: false, tapsMs: [], elapsedMs: 0, signs: signs(), label: 'LIVE' }));
-    else if (result && (result.classification === null || result.classification === 'REFER_YOUNG')) {
+    start.disabled = !inRange || cough() !== 'yes' || !counter.hidden;
+    if (age === null || (inRange && !count && cough() !== 'no' && !Object.values(s).some(Boolean))) {
       $('#result', root).hidden = true; $('#need', root).hidden = true; result = null;
+      return;
     }
+    show(classify({ ageMonths: age, cough: cough() === 'yes', tapsMs: count?.tapsMs ?? [], elapsedMs: count?.elapsedMs ?? 0, signs: s, label: 'LIVE' }));
   };
   root.addEventListener('change', update);
 
   start.onclick = () => {
     const taps: number[] = [], t0 = performance.now();
     let said = 60;
-    const counter = $('#counter', root), tap = $<HTMLButtonElement>('#tap', root);
-    $('#result', root).hidden = true; $('#need', root).hidden = true;
-    counter.hidden = false; start.disabled = true;
+    const tap = $<HTMLButtonElement>('#tap', root);
+    count = null;
+    counter.hidden = false;
+    update(); // hides an old card; a danger sign keeps RED on screen
+
     $('#taps', root).textContent = '0 breaths';
     announce.textContent = 'Counting for 60 seconds. Tap once per breath.';
     tap.focus();
@@ -120,11 +136,13 @@ export function mountCare(root: HTMLElement) {
     };
     const finish = () => {
       clearInterval(timer);
-      const elapsedMs = performance.now() - t0;
+      count = { tapsMs: taps, elapsedMs: performance.now() - t0 };
       counter.hidden = true;
       start.textContent = 'Count again';
       update();
-      show(classify({ ageMonths: ageMonths()!, cough: cough() === 'yes', tapsMs: taps, elapsedMs, signs: signs(), label: 'LIVE' }));
+      // The focused tap button is now hidden: move focus to the result, or back to Start.
+      const box = $('#result', root);
+      (box.hidden ? start : box).focus();
     };
     tap.onclick = () => {
       taps.push(performance.now() - t0);
@@ -151,9 +169,12 @@ export function mountCare(root: HTMLElement) {
           level: Number(store.get('stratum.level') ?? 5), sector: Number(store.get('stratum.sector') ?? 0),
         },
       });
-      sent.textContent = 'Sending to your family… keep the phone still. Uses your level and sector from the Report tab.';
+      sent.textContent = `Sending to your family for ${where()}… keep the phone still.`;
       await app.send(bytes);
       sent.textContent = `Medicine request sent to your family at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
+    } catch (err) {
+      console.error(err);
+      sent.textContent = 'Not sent: sound could not play on this phone. Tap Request medicine again, or tell your family in person.';
     } finally {
       btn.disabled = false;
     }
