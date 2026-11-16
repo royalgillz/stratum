@@ -30,7 +30,7 @@ The codec is pure. Randomness (nonce, key words) and the current time come in fr
 
 **M** is the full Unix minute as 4 bytes, big-endian. Only its low 16 bits travel. Because the full minute is bound into the tag, keystream and MAC, a packet replayed after the 16-bit counter wraps (about 45 days) resolves to a different minute and fails the MAC.
 
-The payload is 6 bytes: member (1), status or codebook code (1), level in the high 4 bits and sector in the low 4 bits (1), flags with bit 0 = power on (1), and a big-endian value (2).
+The payload is 6 bytes: member (1), status or codebook code (1), level 1–6 in the high 4 bits and sector within the level 0–3 in the low 4 bits (1), flags with bit 0 = power on (1), and a big-endian value (2). Adapters map level and sector to the `World.sectors` index as (level − 1) × 4 + sector.
 
 | Type | Code | Key set |
 | --- | --- | --- |
@@ -64,10 +64,10 @@ Decode never throws on bad bytes. Byte 16 is reported clamped to MAX_HOPS (4), s
 
 ## Interface
 
-- `deriveKeys(words) → KeySet | { error: 'unknown-word', word }`
-- `generateWords(random: Uint8Array(9)) → string[6]`
-- `encode(keys, { type, minute, nonce, hops, payload }) → Uint8Array(25)`
-- `createDecoder(keySets, publicKeys)` returns `decode(bytes, nowMs) → Decoded | { reject: reason }`
+- `deriveKeys(words) → KeySet | { error: 'word-count' } | { error: 'unknown-word', word }`
+- `generateWords(random: Uint8Array(9)) → string[6]`, reading bits most-significant first, 11 per word
+- `encode(keys, { type, minute, nonce, hops, payload }) → Uint8Array(25)`. Throws RangeError for a field outside its range. It does not enforce which key set a type may use; decode does.
+- `createDecoder(familyKeySets, publicKeys)` returns `decode(bytes, nowMs) → Decoded | { reject: reason }`. Each family key set carries a caller-chosen `id`; the public set's id is `public`.
 
 `Decoded` holds:
 - type;
@@ -76,7 +76,7 @@ Decode never throws on bad bytes. Byte 16 is reported clamped to MAX_HOPS (4), s
 - `minute`;
 - the matched key set's id;
 - `public`;
-- `duplicate` and `timesHeard`.
+- `duplicate` and `timesHeard`, which counts the first hearing (so the first repeat reports 2).
 
 ## Decisions & Alternatives
 

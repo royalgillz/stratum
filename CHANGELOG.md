@@ -23,6 +23,11 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 - Decided by the human: deadline is Fri Nov 20, 11:00 PM (organizers). AI tools allowed without limit.
 
 ### Changes
+- **Tracker implemented** (`src/core/tracker/tonebank.ts`, `tracker.ts`): TRACK-001 to TRACK-012 all `[x]`, with 12 tests on synthetic hum.
+  - About 67 ms per reading at 48 kHz on the laptop.
+  - Found during testing: a tone just outside the band leaked in at the in-band edge with 80 dB signal-to-noise, which would have caused a false RED. Fix: the coarse bank now searches a 2 Hz guard zone beyond each edge, and a peak there means NO HUM. TRACK-004 and the design are updated to match.
+- **Packet implemented** (`src/core/packet/keys.ts`, `codec.ts`): PKT-001 to PKT-012 all `[x]`, with 13 tests. The tests recompute HKDF and HMAC independently, cover the 45-day counter wrap, and cover seen-set eviction past 4,096.
+- Phase 4 (finding specs that could be read two ways) resolved eight items; see "Open questions for the human".
 - `scripts/check.mjs` and `npm run check`. It fails on:
   - a dangling `@spec`;
   - an `[x]` spec with no test;
@@ -46,3 +51,22 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 ## Open questions for the human
 
 Judgement calls made while the human was away. Confirm or reverse each.
+
+1. **Phase 4 resolutions**, now in the specs and designs:
+   - the tracker label may also be SIMULATED (district loopback);
+   - the 4 readings skipped after a gap carry `f` but no deviation or tier;
+   - the reading that completes calibration is itself LIVE;
+   - the packet sector is the sector within the level (0–3), mapped to `World.sectors` as (level − 1) × 4 + sector;
+   - the encoder checks only field ranges, and decode alone enforces which key set a type may use;
+   - the caller names family key set ids, and the public set's id is `public`;
+   - `timesHeard` counts the first hearing;
+   - word bits are read most-significant first, and a word count other than six is an error.
+2. **Out-of-band guard zone** (TRACK-004): a 2 Hz guard zone searched beyond each band edge replaces the "outermost bin" rule, which missed tones just outside the band.
+3. **RED to GREEN timing**: the AMBER exit counter also counts readings taken while still RED. A jump from −200 mHz straight to 0 mHz therefore shows RED, then AMBER, then GREEN one reading apart, after 10 s. Keep this, or restart the 10 s AMBER hold when AMBER is entered?
+4. **Even-length medians** (2 or 4 smoothing estimates, 60 calibration readings) take the upper middle value. Fine, or average the two middle values?
+5. **Phone CPU**: a reading costs about 67 ms at 48 kHz on the laptop, so perhaps 200–300 ms on a phone, inside the 500 ms hop. Recommendation: the audio adapter (`src/audio`, outside LID scope) decimates to 8 kHz before the tracker, which is about 6× cheaper and still well above 800 Hz. Alternatively, run the tracker in a Worker.
+6. **Silence**: NO_HUM readings caused by digital silence carry `snrDb` = NaN. The phone UI must not print it.
+7. **GitHub**: create the repo? Public or private? `docs/audit.md` says "for you, not for agents" and would become public. After that:
+   - connect Vercel to the repo for automatic deploys (CD);
+   - make the CI check required on `main`.
+8. **`spikes/`**: the estimator now lives in `src/core/tracker`. Keep the spike pages deployed until the phone page replaces them at rung 1, then delete them.

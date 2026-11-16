@@ -17,7 +17,7 @@ The sample rate is fixed when the tracker is created. The hop is `round(0.5 × r
 
 For each reading, the tracker applies a Hann window and searches the tone band `h × (f0 ± w)`:
 
-1. **Coarse bank:** Goertzel power every 0.25 Hz across the band.
+1. **Coarse bank:** Goertzel power every 0.25 Hz across the band, plus a 2 Hz guard zone beyond each edge.
 2. **Fine bank:** Goertzel power every 0.02 Hz across ±0.16 Hz around the coarse peak.
 3. **Interpolation:** a parabola through the log power of the fine peak and its two neighbours. The vertex offset is clamped to ±0.5 bins, and a flat top counts as offset 0.
 
@@ -26,7 +26,9 @@ The tone frequency divided by `h` is the grid frequency. **Signal-to-noise** is 
 **A reading is NO HUM** when any of these holds:
 - signal-to-noise is below 13 dB;
 - any value is not finite (for example, digital silence);
-- the coarse peak is in the outermost bin at either end (the tone lies outside the band).
+- the coarse peak lies in a guard zone (the tone is outside the band).
+
+A tone just outside the band leaks into it, and its strongest in-band bin is not necessarily the outermost one; only searching beyond the edge tells "near the edge" from "outside".
 
 | Parameter | Phone (in-world grid) | ENF-WHU replay | Source |
 | --- | --- | --- | --- |
@@ -77,8 +79,10 @@ A reading holds:
 - `state`;
 - `snrDb`;
 - `f` in Hz (not NO HUM);
-- `deviationMHz` and `tier` (LIVE only);
-- `label`: LIVE from a microphone, REPLAY from a file.
+- `deviationMHz` and `tier` (LIVE only, and not on the 4 readings skipped after a gap);
+- `label`: LIVE from a microphone, REPLAY from a file, SIMULATED from the district's loopback.
+
+The reading that completes calibration is itself reported LIVE.
 
 ## Decisions & Alternatives
 
