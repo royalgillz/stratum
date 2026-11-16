@@ -26,8 +26,8 @@ export function outlet(level: number, t: number, events: readonly ScenarioEvent[
   if (!Number.isFinite(t)) throw new RangeError(`invalid t ${t}`);
   const cs = events.filter((e): e is Contamination => e.type === 'contamination');
   for (const e of cs) {
-    // negated comparisons so NaN fails too
-    if (!Number.isFinite(e.atH) || !(e.rampH >= 0) || !(e.durH >= 0) || !(e.rampH <= e.durH)) {
+    // negated comparisons so NaN fails too; rampH <= durH also rejects a negative or NaN durH
+    if (!Number.isFinite(e.atH) || !(e.rampH >= 0) || !(e.rampH <= e.durH)) {
       throw new RangeError(`invalid contamination timing at ${e.atH} h`);
     }
     if (!CHANNELS.every((c) => Number.isFinite(e.delta[c]))) throw new RangeError(`invalid contamination delta at ${e.atH} h`);

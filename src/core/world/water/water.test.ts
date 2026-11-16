@@ -58,13 +58,14 @@ describe('water', () => {
     expect(q.toc).toBeCloseTo(0.5 + 0.02 * 0.5 * g(0.5, 0.5), 12);
     expect(q.turb).toBeCloseTo(0.2 + 0.02 * 0.2 * g(0.9, 0.25), 12);
     expect(q.biocide).toBeCloseTo(2 + 0.02 * 2 * g(0.1, 0), 12);
-    // the count never depends on the values, and the same stream gives the same output
+    // the count never depends on the values
     let n = 0;
     const r = rng(7, 'p04');
     const counted = () => (n++, r());
     for (let k = 0; k < 50; k++) outlet(5, k * 600, [contam(0, 5, 0.5, 12)], counted);
     expect(n).toBe(400);
-    expect(outlet(5, 100, [], rng(7, 'x'))).toEqual(outlet(5, 100, [], rng(7, 'x')));
+    // golden value: catches a change to the rng or the noise formula end to end
+    expect(outlet(5, 100, [], rng(7, 'x')).cond).toBe(146.93365692465431);
   });
 
   // @spec WORLD-WATER-004
@@ -95,12 +96,16 @@ describe('water', () => {
       contam(0, 1, 0, 2, Infinity),
       contam(NaN, 1, 0, 2),
     ];
+    for (const c of ['cond', 'toc', 'turb', 'biocide'] as const) {
+      bad.push({ type: 'contamination', atH: 0, level: 1, rampH: 0, durH: 2, delta: { cond: 60, toc: 4, turb: 1.5, biocide: -1.5, [c]: NaN } });
+    }
     for (const e of bad) expect(() => outlet(1, 0, [e], zero)).toThrow(RangeError);
     // a bad event on another level is still a caller bug
     expect(() => outlet(2, 0, [contam(0, 1, 3, 2)], zero)).toThrow(RangeError);
     // validation happens before any draw
     let n = 0;
     expect(() => outlet(1, NaN, [], () => (n++, 0))).toThrow(RangeError);
+    expect(() => outlet(1, 0, [contam(0, 1, 3, 2)], () => (n++, 0))).toThrow(RangeError);
     expect(n).toBe(0);
   });
 });
