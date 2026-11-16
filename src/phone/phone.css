@@ -39,5 +39,5 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 .ledger th, .ledger td { padding: 6px 4px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
 .ledger thead th:first-child { width: 3.5rem; }
 .ledger td { white-space: pre-line; font-size: 0.9rem; }
-.ledger td::first-line { font-weight: 700; font-size: 1.1rem; }
+.ledger td strong { font-size: 1.1rem; }
 .ledger .now { background: color-mix(in srgb, var(--accent) 18%, transparent); }
