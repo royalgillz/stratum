@@ -37,5 +37,25 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Shaft throughput | 1070 | people/hour | surface-return | https://911metallurgist.com/wp-content/uploads/2015/12/An-investigation-into-the-optimization-of-personnel-transportation-to-level-15-and-below-at-Khuseleka-No-1-shaft-Anglo-Platinum.pdf | false | One real platinum-mine shaft |
 | Grain energy cost under lamps | 650 | kWh/kg | light-food | https://pmc.ncbi.nlm.nih.gov/articles/PMC11961353 | false | Modelled figure from a review |
 | Lettuce energy cost under lamps | 10 to 20 | kWh/kg | light-food | https://hannahritchie.substack.com/p/vertical-farming | false | |
+| Fair Share lottery base weight | 1 | - | fairshare | | true | Claim weight is 1 + debt, so a claim with no debt still has a chance |
+| Fair Share debt update | reset to 0 if served in full, else + shortfall | units | fairshare | | true | Owed turns accumulate for claims passed over |
+| Fair Share sum tolerance | 1e-9 | relative | fairshare | | true | Shares plus surplus equal supply within 1e-9 x max(1, supply) |
+| Witness baseline window | 48 | readings | witness | | true | Per (kind, where) stream. Tune on GECCO |
+| Witness minimum baseline | 24 | readings | witness | | true | No judgement before this many are admitted |
+| Witness residual threshold | 4 | scale units | witness | | true | Exceeding when abs(x - median) / scale >= 4 |
+| Witness persistence | 3 of 5 | readings | witness | | true | The m-of-n rule |
+| Witness event clear | 5 | readings | witness | | true | Consecutive non-exceeding readings to close an event |
+| Witness relative scale floor | 1 | % of abs(median) | witness | | true | Stops a flat series alarming on every wobble |
+| Witness absolute scale floor | 1e-9 | kind's unit | witness | | true | Avoids division by zero |
+| MAD to standard deviation factor | 1.4826 | ratio | witness | https://en.wikipedia.org/wiki/Median_absolute_deviation | false | For normal data |
+| Quorum crews | 3 | crews | witness | | true | Same as the packet's "confirmed at three" |
+| Quorum agreement band | 25 | % of median | witness | | true | A crew agrees if within this of the median |
+| Chapman interval | 1.96 | sd | witness | https://wwwnc.cdc.gov/eid/article/21/12/15-0756_article | false | Normal 95% interval on the Chapman variance |
+| Ledger hash | SHA-256 | | witness | https://csrc.nist.gov/pubs/fips/180-4/upd1/final | false | FIPS 180-4. Genesis strings STRATUM-ledger-v1:measured and :official |
+| Ledger digest length | 16 | bytes | witness, packet | | true | First 16 bytes of the measured chain head, as in the packet design |
 
 Mapping suits, domes and outposts onto respirator protection factors is an assumption. Label it in the UI.
+| Kernel world time step | 60 | s | kernel | | true | Fixed; 43,200 steps for 30 simulated days |
+| Kernel time-lapse scale | 3600 | world s per real s | kernel | | true | One simulated hour per real second, from docs/plan.md |
+| Kernel steps per advance, cap | 600 | steps | kernel | | true | Excess owed time is dropped so a stalled tab cannot freeze on resume |
+| Kernel overhead budget | 10 | % of T5 budget | kernel | | true | 1 s of the 10 s in spike T5 (docs/spikes.md) |
