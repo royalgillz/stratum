@@ -35,9 +35,6 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Breath tap debounce | 250 | ms | care/breath | | true | A tap closer than this to the last counted tap is a double tap; allows up to 240 per minute |
 | Breath plausible rate | 10 to 120 | breaths/min | care/breath | | true | Outside this band, without a danger sign, the card asks for a recount |
 | Breath missed-tap gap | 3 | median intervals | care/breath | | true | A longer gap (start, between taps, or to 60 s) in a full count asks for a recount |
-| Wet-bulb limit, working areas | 27.5 | deg C | air-heat | | false | From the earlier report. Add the source URL before use |
-| Fast breathing, age 2 to 12 months | 50 | breaths/min | Breath Count | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | WHO guidance for community health workers |
-| Fast breathing, age 12 months to 5 years | 40 | breaths/min | Breath Count | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | |
 | Wet-bulb limit, working areas | 27.5 | deg C | air-heat, adapters | | true | South African deep-mine thermal-stress practice, from the earlier report (docs/plan.md). Source URL to add; treated as an assumption until then |
 | Total organic carbon limit | 3 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | ISS potable water |
 | Iodine biocide, biocidal range | 1 to 4 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | |
