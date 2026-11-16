@@ -22,8 +22,9 @@ const EDGES = [
 const isNode = (x: number, n: number) => Number.isInteger(x) && x >= 0 && x < n;
 
 function checkGraph(edges: readonly TunnelEdge[], hub: number, n: number): void {
+  if (!Number.isInteger(n) || n < 1 || n > NODES) throw new RangeError(`invalid nodes ${n}`);
   if (!isNode(hub, n)) throw new RangeError(`invalid hub ${hub}`);
-  for (const { a, b } of edges) if (!isNode(a, n) || !isNode(b, n)) throw new RangeError(`invalid edge (${a}, ${b})`);
+  for (const { a, b } of edges) if (!isNode(a, n) || !isNode(b, n) || a >= b) throw new RangeError(`invalid edge (${a}, ${b})`);
 }
 
 function search(edges: readonly TunnelEdge[], hub: number, n: number, open: (x: TunnelEdge) => boolean): boolean[] {
@@ -83,6 +84,7 @@ export function floodInflow(events: readonly ScenarioEvent[], sector: number, t:
   for (const e of events) {
     if (e.type !== 'flood' || e.sector !== sector) continue;
     if (!(e.inflowM3h >= 0) || e.inflowM3h === Infinity) throw new RangeError(`invalid flood inflow ${e.inflowM3h}`);
+    if (!Number.isFinite(e.atH) || !(e.durH >= 0) || e.durH === Infinity) throw new RangeError(`invalid flood time ${e.atH}, ${e.durH}`);
     if (t >= e.atH * 3600 && t < (e.atH + e.durH) * 3600) sum += e.inflowM3h;
   }
   return sum;
@@ -91,5 +93,6 @@ export function floodInflow(events: readonly ScenarioEvent[], sector: number, t:
 // @spec WORLD-TUNNEL-007, WORLD-TUNNEL-008
 export function isFlooded(sumpLevel: number, wasFlooded: boolean): boolean {
   if (!(sumpLevel >= 0 && sumpLevel <= 1)) throw new RangeError(`invalid sumpLevel ${sumpLevel}`);
+  if (typeof wasFlooded !== 'boolean') throw new RangeError(`invalid wasFlooded ${wasFlooded}`);
   return sumpLevel >= 1 ? true : sumpLevel < RECOVER ? false : wasFlooded;
 }

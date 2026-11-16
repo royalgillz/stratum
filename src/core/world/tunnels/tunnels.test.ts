@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TunnelEdge } from '../../contracts.ts';
 import type { ScenarioEvent } from '../../scenario/types.ts';
 import {
-  HUB, PUMP_CAP, RECOVER, SEEP_STEP, SEEP_TOP, SUMP_CAP,
+  HUB, PUMP_CAP, PUMP_KW, RECOVER, SEEP_STEP, SEEP_TOP, SUMP_CAP,
   districtTunnels, floodInflow, isFlooded, reachable, strandedIfLost, sumpStep,
 } from './tunnels.ts';
 
@@ -87,7 +87,11 @@ describe('tunnels sumps', () => {
     const seep = (level: number) => SEEP_TOP + SEEP_STEP * (level - 1);
     const want = (level: number, s: number, inflow: number, pf: number, dt: number) =>
       s + ((seep(level) + inflow - PUMP_CAP * pf) * dt) / 3600 / SUMP_CAP;
+    // pins the constants to docs/params.md
+    expect({ SUMP_CAP, SEEP_TOP, SEEP_STEP, PUMP_CAP, PUMP_KW, RECOVER })
+      .toEqual({ SUMP_CAP: 200, SEEP_TOP: 2, SEEP_STEP: 1, PUMP_CAP: 15, PUMP_KW: 20, RECOVER: 0.9 });
     expect(sumpStep(1, 0.3, 0, 0, 3600)).toBeCloseTo(0.3 + 2 / 200, 12);
+    expect(sumpStep(6, 0.3, 0, 0, 3600)).toBeCloseTo(0.3 + 7 / 200, 12);
     expect(sumpStep(6, 0.3, 15, 0.5, 60)).toBeCloseTo(want(6, 0.3, 15, 0.5, 60), 12);
     expect(sumpStep(3, 0.5, 4, 0.2, 600)).toBeCloseTo(want(3, 0.5, 4, 0.2, 600), 12);
     expect(sumpStep(6, 0.999, 100, 0, 3600)).toBe(1);
@@ -133,6 +137,10 @@ describe('tunnels validation', () => {
       () => reachable([e(0, 24)], 0, 24),
       () => reachable([e(-1, 2)], 0, 24),
       () => reachable([e(0, 1.5)], 0, 24),
+      () => reachable([e(0, 25)], 0, 30),
+      () => reachable([], 0, 2.5),
+      () => reachable([e(3, 3)], 0, 24),
+      () => reachable([e(2, 1)], 0, 24),
       () => strandedIfLost([e(0, 24)], dry(), people, 0),
       () => strandedIfLost([e(0, 1)], dry(), people.slice(1), 0),
       () => strandedIfLost([e(0, 1)], dry(), [...people.slice(1), -1], 0),
@@ -148,13 +156,20 @@ describe('tunnels validation', () => {
       () => sumpStep(1, 0.5, 0, 1.1, 60),
       () => sumpStep(1, 0.5, 0, NaN, 60),
       () => sumpStep(1, 0.5, -1, 0, 60),
+      () => sumpStep(1, 0.5, Infinity, 0, 60),
+      () => sumpStep(1, 0.5, 0, 0, Infinity),
       () => sumpStep(1, 0.5, 0, 0, 0),
       () => sumpStep(1, 0.5, 0, 0, -60),
       () => sumpStep(1, 0.5, 0, 0, NaN),
       () => sumpStep(1, NaN, 0, 0, 60),
       () => sumpStep(1, 1.5, 0, 0, 60),
       () => isFlooded(NaN, false),
+      () => isFlooded(0.95, undefined as unknown as boolean),
       () => floodInflow([flood(0, 1, -5, 1)], 1, 0),
+      () => floodInflow([flood(0, 1, 5, NaN)], 1, 0),
+      () => floodInflow([flood(0, 1, 5, -2)], 1, 0),
+      () => floodInflow([flood(0, 1, 5, Infinity)], 1, 0),
+      () => floodInflow([flood(NaN, 1, 5, 1)], 1, 0),
       () => floodInflow([], 24, 0),
       () => floodInflow([], 1, NaN),
     ];
