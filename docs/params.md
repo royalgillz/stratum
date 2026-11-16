@@ -41,8 +41,8 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Fair Share lottery base weight | 1 | - | fairshare | | true | Claim weight is 1 + debt, so a claim with no debt still has a chance |
 | Fair Share debt update | reset to 0 if served in full, else + shortfall | units | fairshare | | true | Owed turns accumulate for claims passed over |
 | Fair Share sum tolerance | 1e-9 | relative | fairshare | | true | Shares plus surplus equal supply within 1e-9 x max(1, supply) |
-| Shed stress event window and minimum gap | 10 | min | shed | | true | Power-off reports with packet minute in [event, event + 10) count for the event; events of one tier start at least 10 min apart, so windows never overlap |
-| Shed confirmation | 3 | distinct senders | shed | | true | From docs/plan.md: public claims count as confirmed at three senders. Sender = (key set id, member byte) |
+| Shed event grace | 10 | min | shed | | true | An event lasts while the tier holds plus 10 min after it falls below; a rise back within those 10 min continues the same event, so events of one tier never overlap |
+| Shed confirmation | 3 | distinct senders | shed | | true | From docs/plan.md: public claims count as confirmed at three senders. Sender = (key set id, member byte). Also the reporters needed for a level to count as observed in an event |
 | Shed cut-odds prior | (c + 1) / (e + 2) | - | shed | https://en.wikipedia.org/wiki/Rule_of_succession | false | Laplace rule of succession; 1/2 with no data, shown as "no data yet" |
 | Witness baseline window | 48 | readings | witness | | true | Per (kind, where) stream. Tune on GECCO |
 | Witness minimum baseline | 24 | readings | witness | | true | No judgement before this many are admitted |
