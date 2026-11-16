@@ -15,6 +15,9 @@ describe('grid', () => {
     expect(capacityAt([trip({ loss: 0.7 }), trip({ loss: 0.6 })], t, 100)).toBe(0);
     const other = [{ type: 'flood', atH: 0, durH: 10, inflowM3h: 15, sector: 22 }, { type: 'network-down', atH: 0, durH: 168 }];
     expect(capacityAt([...other, trip()], t, 100)).toBeCloseTo(75, 9);
+    // loss values may sit on the closed ends of [0, 1]
+    expect(capacityAt([trip({ loss: 1 })], t, 100)).toBe(0);
+    expect(capacityAt([sf({ from: 0 })], 1 * HR, 100)).toBe(100);
   });
 
   // @spec WORLD-GRID-002
@@ -67,6 +70,8 @@ describe('grid', () => {
     let f = F0;
     for (let i = 0; i < 3000; i++) f = swing(f, 99, 100, 0.02).f;
     expect(f).toBeCloseTo(swing(F0, 99, 100, 60).f, 9);
+    // literal numbers pin tau = 2H / D = 4 s
+    expect(swing(399, 100, 100, 4).f).toBeCloseTo(400 - Math.exp(-1), 12);
   });
 
   // @spec WORLD-GRID-006

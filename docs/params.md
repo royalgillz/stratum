@@ -13,9 +13,9 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Tracker NO HUM threshold | 13 | dB | tracker | | true | Spike T1: noise alone 6 to 7 dB, hum 33 to 59 dB |
 | Tracker calibration length | 30 | s | tracker | | true | 60 readings; reference is their median |
 | Tracker smoothing | 5 | readings | tracker | | true | Spike T1: ramp within 4 mHz, 100 mHz step half-way in 2.7 s |
-| AMBER threshold | -50 | mHz | tracker | | true | Leave above -30 mHz for 10 s. About 3x the 1 m room noise |
+| AMBER threshold | -50 (enter), -30 (leave) | mHz | tracker, grid | | true | Leave above -30 mHz for 10 s. About 3x the 1 m room noise |
 | AMBER fall trigger | 50 in 10 | mHz in s | tracker | | true | A fast fall warns before the level threshold |
-| RED threshold | -150 | mHz | tracker | | true | Leave above -130 mHz for 10 s |
+| RED threshold | -150 (enter), -130 (leave) | mHz | tracker, grid | | true | Leave above -130 mHz for 10 s |
 | Tier entry confirmation | 2 | readings | tracker | | true | 1 s |
 | Packet MAC length | 8 | bytes | packet | | true | Truncated HMAC-SHA-256, fits 25 bytes |
 | Packet future window | 2 | min | packet | | true | Packets dated further ahead are rejected |
