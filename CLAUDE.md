@@ -30,6 +30,7 @@ Real: phone hum tracker, sound packets, ledger, allocator. Simulated: the distri
 - Claims in README and UI must match the tiers in `docs/coverage.md`. Never write "solves".
 - Breath Count is a decision aid, not a medical device. Classify children under five only.
 - Record what agents built and what the human decided in `docs/ai-use.md`.
+- Record every decision and change in `CHANGELOG.md`, dated, newest first, in the same commit as the change.
 
 ## Repo layout
 
@@ -62,7 +63,10 @@ npm test
 npm run typecheck
 npm run harness -- --seeds 20
 npm run build
+npm run check      # @spec links, [x] specs have tests, src/core rules
 ```
+
+CI (`.github/workflows/ci.yml`) runs typecheck, test, check and build on every push to main and every pull request.
 
 ## Done means
 
@@ -134,3 +138,7 @@ Stop after each phase for user review. **Docs carry current intent, written to b
 ### Code annotations
 
 Annotate code and tests with `@spec` comments citing EARS IDs (`// @spec TRACK-001`), at the entry point of the behavior's implementation graph, not on every helper.
+
+## LID Tooling
+
+- **Coherence check**: `scripts/check.mjs` (`npm run check`). Fails when an `@spec` cites a missing ID, when a `[x]` spec has no test citing it, or when `src/core` uses a browser API or `Math.random`.

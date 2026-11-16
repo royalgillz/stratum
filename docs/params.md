@@ -6,6 +6,23 @@ or `assumption: true`. The science-reviewer agent checks this file before a modu
 | Parameter | Value | Unit | Module | Source URL | Assumption | Note |
 | --- | --- | --- | --- | --- | --- | --- |
 | Grid nominal frequency | 400 | Hz | tracker, grid | | true | In-world design choice. Track the 800 Hz component |
+| Tracker harmonic | 2 | - | tracker | | true | 800 Hz at a 400 Hz grid; spike T1 passed on it |
+| Tracker band half-width | 2.5 (phone), 1.5 (ENF-WHU) | Hz (grid) | tracker | | true | Tone band at least ±3 Hz so the noise floor lies outside the Hann main lobe |
+| Tracker noise-floor exclusion | 1 | Hz (tone) | tracker | | true | Coarse bins within 1 Hz of the peak are left out of the noise median |
+| Tracker window, hop | 2, 0.5 | s | tracker | | true | From docs/handoff.md |
+| Tracker NO HUM threshold | 13 | dB | tracker | | true | Spike T1: noise alone 6 to 7 dB, hum 33 to 59 dB |
+| Tracker calibration length | 30 | s | tracker | | true | 60 readings; reference is their median |
+| Tracker smoothing | 5 | readings | tracker | | true | Spike T1: ramp within 4 mHz, 100 mHz step half-way in 2.7 s |
+| AMBER threshold | -50 | mHz | tracker | | true | Leave above -30 mHz for 10 s. About 3x the 1 m room noise |
+| AMBER fall trigger | 50 in 10 | mHz in s | tracker | | true | A fast fall warns before the level threshold |
+| RED threshold | -150 | mHz | tracker | | true | Leave above -130 mHz for 10 s |
+| Tier entry confirmation | 2 | readings | tracker | | true | 1 s |
+| Packet MAC length | 8 | bytes | packet | | true | Truncated HMAC-SHA-256, fits 25 bytes |
+| Packet future window | 2 | min | packet | | true | Packets dated further ahead are rejected |
+| Packet seen-set size | 4096 | packets | packet | | true | Keyed by (key set, minute, nonce); oldest evicted first |
+| Packet stale limit | 24 | h | packet | | true | Older packets are rejected |
+| Packet MAX_HOPS | 4 | hops | packet | | true | Hops byte is reported clamped to this |
+| Key words | 6 of 2048 | words | packet | | true | 66 bits. Word list and its licence still to choose |
 | Fast breathing, age 2 to 12 months | 50 | breaths/min | Breath Count | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | WHO guidance for community health workers |
 | Fast breathing, age 12 months to 5 years | 40 | breaths/min | Breath Count | https://ncbi.nlm.nih.gov/books/NBK143752/ | false | |
 | Wet-bulb limit, working areas | 27.5 | deg C | air-heat | | false | From the earlier report. Add the source URL before use |
