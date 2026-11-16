@@ -38,6 +38,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- 2026-11-16: Whole-app UI review (four reviewers on six viewports in light and dark, one fixer; 42 findings, 5 high, 37 fixed): Listen, Report, Family, Ledger, Care and judge mode share one tier vocabulary (GREEN/AMBER/RED); the send status stays on screen while sending; no default level and sector (no guessed location on air); plain microphone errors; no relay count before listening; Family shows RED/AMBER care requests, plain message names, LIVE inbox, stale members first, join errors keep typed words; Ledger leads with the odds table; Care explains a greyed Start and marks REFER red; judge captions follow the tracker tier, with a compact phone on narrow screens; the home page says what STRATUM does. Playwright: 234 passed, no retries. Calls U1 to U9.
 - 2026-11-16: District 7 world models built (rung 3 wave A, workflow builders with review and fix rounds, LID stops waived): grid (WORLD-GRID-001 to 008), air and heat (WORLD-AIR-001 to 008), water (WORLD-WATER-001 to 006), tunnels and sumps (WORLD-TUNNEL-001 to 008), epidemic (WORLD-EPI-001 to 008), plus `validateScript`, the seven-day script and the adapter helpers (`sectorId`, `powerDemand`, `lifeFloor`). 39 review findings fixed, most by tests that now kill mutants. 183 tests. Calls W1 on.
 - 2026-11-16: `src/core/scenario/types.ts`: the script types (`Script`, `Act`, `ScenarioEvent`, `Demo`) from the scenario design, written first so the five world-model builders share one event shape.
 - 2026-11-16: Rung 3 design (architect agent, three auditors, fix round; LID stops waived): world models sub-HLD with grid (WORLD-GRID), air and heat (WORLD-AIR), water (WORLD-WATER), tunnels and sumps (WORLD-TUNNEL) and epidemic (WORLD-EPI); adapters sub-HLD with policy (ADAPT-POLICY), power p01 and p02, livable p03 and p05, evidence p04 and p09, family p07 and p08; scenario and runner (SCEN); 107 new specs, all open. 74 audit findings (8 high) resolved. `contracts.ts`: new `MeshHeard` type and optional `MeshMessage.heard` (additive, D1). Calls D1 to D43.
@@ -355,6 +356,18 @@ IDs are per component, so answers can name them ("S3: keep"). Each is an agent c
 - **W61** **script**: shared.ts and its test cite ADAPT-POLICY-005, which covers the s00 to s23 names and the demand and life-floor formulas. That spec stays [ ] because most of it needs createAdapters.
 - **W62** **script**: BASE_KW and LIFE_KW are exported so there is one source for the values in docs/params.md. No params.md rows were changed: all the constants I used are already there.
 - **W63** **script**: The commit message is plain, with no AI or Co-Authored-By trailer, per the task's hard rule. It went through on the first try. Nothing was pushed.
+
+### Whole-app UI review (U)
+
+- **U1** Care had the same "level 5, sector A" default as Report. It was removed there too: with no level and sector chosen on the Report tab, Care says "Choose your level and sector on the Report tab first." and does not send, so no guessed place goes on air.
+- **U2** The confirm text shows power for OK messages as well as REPORT, since OK messages carry power.
+- **U3** Inbox names come from the codebook: "Needs help: <label>" and "Report: <label>".
+- **U4** A RED or AMBER care line replaces the "Heard recently" or "Not heard" line on the family board; the age stays on the line below.
+- **U5** Inbox repeats are matched by key set, minute, type, member and code (the decoded packet has no nonce), so two identical messages from one member in one minute merge into one row.
+- **U6** The judge page scrolls to the story and focuses it when Play is tapped.
+- **U7** Judge captions are timed from the tracker output on the story signal (GREEN 33.5 s, AMBER 63 s, RED 75.5 s, NO HUM 82 s). If the tracker or the signal changes, re-measure; the e2e test fails if a caption claims a tier early.
+- **U8** Tier words are one vocabulary everywhere ("● GREEN: normal", "▲ AMBER: WARNING, grid under strain", "■ RED: DANGER, cut likely soon"), in `src/phone/tiers.ts`, shared by the phone and judge mode.
+- **U9** Not checked: real screen-reader output (NVDA, VoiceOver, TalkBack), and dark mode by eye.
 
 ### Confirmed (2026-11-15 calls, confirmed 2026-11-16)
 
