@@ -38,6 +38,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- Shed Ledger (`src/core/shed/`, agent build, LID stops waived): design and specs in `docs/intent/shed/`, SHED-001 to SHED-010 with 10 tests, all `[x]`. Cut odds `(c + 1) / (e + 2)` per level and tier from power-off REPORT and OK packets, 3 distinct senders inside a 10-minute window. HLD component table, `docs/params.md`, `docs/coverage.md` (rows 1 and 2) and `docs/limits.md` updated. No change to `contracts.ts`. Judgement calls are open questions below (Shed 1 to 8).
 - Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
 - Playwright 1.65.1 added (approved by the human) with six viewport projects, `npm run e2e`, `e2e/phone.spec.ts` (layout, family, word errors, microphone path) and a CI `e2e` job. Locally 30/30 pass; 5 needed a retry because the Windows preview server stalls under load.
 - Vercel auto-deploy from GitHub is connected; pushes to `main` deploy.
@@ -110,7 +111,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ## Open questions for the human
 
-None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record.
+The 2026-11-15 calls below were all confirmed on 2026-11-16 and are kept for the record. New calls are under "Open since 2026-11-16".
 
 1. **Phase 4 resolutions**, now in the specs and designs:
    - the tracker label may also be SIMULATED (district loopback);
@@ -130,3 +131,14 @@ None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 an
    - connect Vercel to the repo for automatic deploys (CD);
    - make the CI check required on `main`.
 8. **`spikes/`**: the estimator now lives in `src/core/tracker`. Keep the spike pages deployed until the phone page replaces them at rung 1, then delete them.
+
+### Open since 2026-11-16
+
+1. **Shed: what a stress event is.** An AMBER event opens when the tier rises from GREEN to AMBER or RED, a RED event when it rises to RED. A GREEN to RED jump opens one of each, so AMBER odds mean "AMBER or worse". Alternative: one event per episode at its highest tier.
+2. **Shed: 10-minute window and gap.** A power-off report counts for an event when its packet minute is in [event minute, event minute + 10); a second event of the same tier within 10 minutes is ignored. One parameter, an assumption. The demo's cut act is 60 to 90 s, well inside it.
+3. **Shed: sender identity.** A sender is (key set id, member byte). Public reports carry a self-chosen member byte, so one person can pose as three senders. Weigh family reports above public ones?
+4. **Shed: open events are left out of the odds** until their 10-minute window ends, so the odds shown during a live event come from past events only.
+5. **Shed: report time is the packet's own minute** (sender's clock), not arrival time, and odds do not depend on arrival order. Relies on the codec's 2-minute future and 24-hour stale limits.
+6. **Shed: power-on reports are ignored**; they do not cancel power-off reports. Sector is not used (odds are per level).
+7. **Shed: own records, not `Witness.observe`.** `observe` stamps arrival time and runs the change detector, and the odds need the packet minute and arrival-order independence. The p01 or p02 adapter may still log each accepted report through `observe` for the hash chain. HLD tenet "reuse an engine" is bent here; please confirm.
+8. **Shed: HLD edited** to add the `shed` row to the component table and two diagram edges (tracker and packet into shed). No `contracts.ts` change. Reports are kept without a cap (marked as a `shortcut:` in the code).
