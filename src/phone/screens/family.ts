@@ -1,4 +1,6 @@
 import { TYPES, type Decoded } from '../../core/packet/codec.ts';
+import { NEED_CODES } from '../../core/care/breath.ts';
+import { TYPES } from '../../core/packet/codec.ts';
 import { generateWords } from '../../core/packet/keys.ts';
 import { $, app, clock, random, store, type Heard } from '../app.ts';
 
@@ -114,7 +116,11 @@ export function mountFamily(root: HTMLElement) {
     const p = r.payload;
     const where = `level ${p.level}, sector ${String.fromCharCode(65 + p.sector)}`;
     const li = document.createElement('li');
-    li.textContent = `${clock(r.minute)} · ${TYPE_NAME[r.type] ?? r.type} from member ${p.member} · ${where} · power ${p.flags & 1 ? 'on' : 'off'}`
+    // Power is a field of OK and REPORT only; a care NEED says what the child needs instead.
+    const what = r.type === TYPES.OK || r.type === TYPES.REPORT ? ` · power ${p.flags & 1 ? 'on' : 'off'}`
+      : r.type === TYPES.NEED && p.code === NEED_CODES.BREATH_RED ? ' · Medicine request: RED (danger sign)'
+        : r.type === TYPES.NEED && p.code === NEED_CODES.BREATH_AMBER ? ` · Medicine request: AMBER, ${p.value} breaths per minute` : '';
+    li.textContent = `${clock(r.minute)} · ${TYPE_NAME[r.type] ?? r.type} from member ${p.member} · ${where}${what}`
       + (r.public ? ' · public' : '') + (r.duplicate ? ` · heard ${r.timesHeard}×` : '');
     $('#inbox', root).prepend(li);
     if (app.family && r.keySet === app.family.id) { heard.push(r); renderBoard(); }
