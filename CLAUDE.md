@@ -89,3 +89,48 @@ Tests pass, typecheck passes, the module's metric appears in harness output,
   the problem numbers it serves, so `docs/coverage.md` can be built from them.
 - `spikes/` is throwaway code: no specs, no tests. Delete it once the decision is recorded
   in `docs/spikes.md`.
+
+## LID
+- Mode: Scoped
+- Version: 1.3.0
+
+## LID Scope
+
+Paths in scope:
+- `src/core/**`
+
+## Linked-Intent Development (MANDATORY)
+
+**Consult the `linked-intent-dev` skill for ALL code changes in scope.** All changes flow through the arrow of intent in one direction:
+
+```
+HLD → LLDs → EARS → Tests → Code
+```
+
+- **New features and refactors**: full six-phase workflow (HLD check → LLD check/draft → EARS → intent-narrowing edge audit → tests-first → code).
+- **Bug fixes**: walk the arrow like any other change — find where behavior diverged from intent and cascade from there. No short-circuit.
+- **If unsure**: use the full workflow.
+
+Stop after each phase for user review. **Docs carry current intent, written to be read cold** — write each doc as if authored fresh today, from current intent alone: no narration of how it changed, no meaning that needs the conversation that produced it, no rebuttals to questions only a past discussion raised. Rationale, considered alternatives, and constraints a fresh author would independently write stay; record rejected alternatives and why in the LLD's Decisions & Alternatives table, not as asides in body prose.
+
+**Memory vs. intent.** Before saving durable project knowledge to agent or tool memory, test whether it is project *intent* — would a fresh agent, in any tool, next session, need it to build this system correctly? If yes, record it in the arrow (HLD / LLD / EARS / decision doc), which travels and cascades — not in private, per-tool memory. Knowledge about the user or how they like to work stays in memory.
+
+### Navigation
+
+| What you need | Where to look |
+|---|---|
+| High-level design | `docs/high-level-design.md` |
+| Design tree (sub-HLDs, LLDs, their specs) | `docs/intent/` — one folder per node |
+| EARS specs | beside each design doc as `{node}-specs.md` in the node's folder under `docs/intent/` |
+| Decision docs | `docs/decisions/` (project-level) and `docs/intent/<segment>/decisions/` |
+
+### Terminology
+
+- **HLD**: High-Level Design — single project-level doc at `docs/high-level-design.md`.
+- **LLD**: Low-Level Design — component design doc in `docs/intent/`. Leaf LLDs own EARS; depth-2 (one HLD over flat leaf LLDs) is the default.
+- **EARS**: structured one-line requirements in `{node}-specs.md`. Markers: `[x]` implemented, `[ ]` active gap, `[D]` deferred.
+- **Arrow segment**: one leaf LLD plus the specs, tests and code citing its EARS IDs. Within-segment cascade is free; across-segment cascade pauses.
+
+### Code annotations
+
+Annotate code and tests with `@spec` comments citing EARS IDs (`// @spec TRACK-001`), at the entry point of the behavior's implementation graph, not on every helper.
