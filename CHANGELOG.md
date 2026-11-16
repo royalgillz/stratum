@@ -38,6 +38,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- 2026-11-16: Breath Count classifier built by an agent (`src/core/care/breath.ts`, design and specs in `docs/intent/breath/`): BREATH-001 to BREATH-012 implemented and marked [x], 12 tests. Full 60 s count only (no extrapolation), 250 ms tap debounce, recount outside 10 to 120 per minute, under 2 months referred, no classification at 60 months or more, NEED codes 0x10 (RED) and 0x11 (AMBER). Six Breath Count rows in `docs/params.md`; problems 9 and 10 in `docs/coverage.md`. No change to `contracts.ts` or the packet codec. Judgement calls are open questions below.
 - Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
 - Playwright 1.65.1 added (approved by the human) with six viewport projects, `npm run e2e`, `e2e/phone.spec.ts` (layout, family, word errors, microphone path) and a CI `e2e` job. Locally 30/30 pass; 5 needed a retry because the Windows preview server stalls under load.
 - Vercel auto-deploy from GitHub is connected; pushes to `main` deploy.
@@ -110,7 +111,21 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ## Open questions for the human
 
-None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record.
+### Open (2026-11-16)
+
+1. **breath**: infants under 2 months get `REFER_YOUNG` ("too young for this aid"), not a classification. The WHO young-infant threshold of 60 per minute was not used because the source page could not be read to cite it (it sits behind a browser check). This holds even with a danger sign, and no medicine request is offered. Add the 60 threshold once you can cite the young-infant chart?
+2. **breath**: a count stopped before 60 s gives no rate and a RECOUNT card (no extrapolation). A danger sign still gives RED at once, with rate null and request value 0.
+3. **breath**: a tap less than 250 ms after the last counted tap is dropped as a double tap and reported in `ignoredTaps`. Taps at 60 s or later are left out silently.
+4. **breath**: without a danger sign, a full-count rate under 10 or over 120 gives RECOUNT ("if you get the same count, take the child to a health worker"). Over 120 could instead give AMBER, the safer colour. Which?
+5. **breath**: at 60 months or more the result has no classification, even with a danger sign; the card only says the aid is for children under five. Should that card also say to see a health worker when a danger sign is ticked?
+6. **breath**: NEED payload codes 0x10 (RED, urgent referral and medicine) and 0x11 (AMBER, fast breathing, medicine), with 0x10 to 0x1F reserved for care. `value` is the rate, or 0 with no full count. The age is not sent, so problem 9 cannot split cases by age yet.
+7. **breath**: card texts are plain language written by an agent, hold no digits (the phone shows the rate beside its label), and have not been reviewed by a clinician. The disclaimer is fixed text in `breath.ts`. Please read them.
+8. **breath**: bad input (negative or non-finite age or elapsed time, taps out of order, negative or after the elapsed time) throws `RangeError` rather than returning a card, treating it as a phone bug.
+9. **breath**: the module lives in `src/core/care/` as instructed, while `CLAUDE.md` lists care under `src/core/world/`. The HLD component table has no Breath Count row yet; it was not edited because the HLD is human-approved. `contracts.ts` is unchanged.
+
+### Confirmed
+
+The calls below (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record.
 
 1. **Phase 4 resolutions**, now in the specs and designs:
    - the tracker label may also be SIMULATED (district loopback);
