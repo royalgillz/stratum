@@ -39,6 +39,8 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ### Changes
 - Phone page split into tabs (Listen, Report, Family; Care and Ledger hidden until built). Shared services live in `src/phone/app.ts`; each screen is a module in `src/phone/screens/` that talks to the others only through app events. Tabs follow the WAI-ARIA pattern (arrow keys, `aria-selected`) and the address remembers the screen. Playwright now checks every tab on all six viewports.
+- Shed Ledger review fixes (agent, LID stops waived): an event now lasts while its tier holds plus 10 minutes after it falls, and a rise back within those 10 minutes continues it (SHED-002, new SHED-011), so a tracker restarting at GREEN after a NO HUM gap opens no false event; readings without a tier are no longer passed as GREEN. `events` counts only closed events in which 3 distinct senders reported the level, power on or off (SHED-004 to SHED-007), so a level with too few phones reads "no data yet" instead of looking safe. `tier` and `report` take an optional label and `odds` returns the weakest (new SHED-012). Design wording: "evidence", not "proof"; the adapter shall log accepted reports through `Witness.observe`; "reported without power", not "cut by the event". Tests added for AMBER to RED opening a RED event only, and for the tier being kept when no event opens. Open questions Shed 2, 6 and 7 updated, Shed 9 to 12 added.
+- Shed Ledger (`src/core/shed/`, agent build, LID stops waived): design and specs in `docs/intent/shed/`, SHED-001 to SHED-010 with 10 tests, all `[x]`. Cut odds `(c + 1) / (e + 2)` per level and tier from power-off REPORT and OK packets, 3 distinct senders inside a 10-minute window. HLD component table, `docs/params.md`, `docs/coverage.md` (rows 1 and 2) and `docs/limits.md` updated. No change to `contracts.ts`. Judgement calls are open questions below (Shed 1 to 8).
 - Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
 - Playwright 1.65.1 added (approved by the human) with six viewport projects, `npm run e2e`, `e2e/phone.spec.ts` (layout, family, word errors, microphone path) and a CI `e2e` job. Locally 30/30 pass; 5 needed a retry because the Windows preview server stalls under load.
 - Vercel auto-deploy from GitHub is connected; pushes to `main` deploy.
@@ -111,7 +113,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 
 ## Open questions for the human
 
-None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 and are kept for the record.
+The 2026-11-15 calls below were all confirmed on 2026-11-16 and are kept for the record. New calls are under "Open since 2026-11-16".
 
 1. **Phase 4 resolutions**, now in the specs and designs:
    - the tracker label may also be SIMULATED (district loopback);
@@ -131,3 +133,18 @@ None open. The calls below (from 2026-11-15) were all confirmed on 2026-11-16 an
    - connect Vercel to the repo for automatic deploys (CD);
    - make the CI check required on `main`.
 8. **`spikes/`**: the estimator now lives in `src/core/tracker`. Keep the spike pages deployed until the phone page replaces them at rung 1, then delete them.
+
+### Open since 2026-11-16
+
+1. **Shed: what a stress event is.** An AMBER event opens when the tier rises from GREEN to AMBER or RED, a RED event when it rises to RED. A GREEN to RED jump opens one of each, so AMBER odds mean "AMBER or worse". Alternative: one event per episode at its highest tier.
+2. **Shed: event length.** An event lasts while its tier holds, plus 10 minutes after the tier falls below it; a rise back within those 10 minutes continues the same event. A report counts for the event when its packet minute is inside that window. One parameter, an assumption. An event whose phones never send another tier (stuck app, phone moved) stays open and is left out of the odds.
+3. **Shed: sender identity.** A sender is (key set id, member byte). Public reports carry a self-chosen member byte, so one person can pose as three senders. Weigh family reports above public ones?
+4. **Shed: open events are left out of the odds** until their 10-minute window ends, so the odds shown during a live event come from past events only.
+5. **Shed: report time is the packet's own minute** (sender's clock), not arrival time, and odds do not depend on arrival order. Relies on the codec's 2-minute future and 24-hour stale limits.
+6. **Shed: power-on reports only count towards "observed"**; they do not cancel power-off reports. Sector is not used (odds are per level).
+7. **Shed: own records, not `Witness.observe`.** `observe` stamps arrival time and runs the change detector, and the odds need the packet minute and arrival-order independence. The p01 or p02 adapter shall log each accepted report through `observe` (measured chain, source = sender), so the problem 2 claim rests on the hash chain. HLD tenet "reuse an engine" is bent here; please confirm.
+8. **Shed: HLD edited** to add the `shed` row to the component table and two diagram edges (tracker and packet into shed). No `contracts.ts` change. Reports are kept without a cap (marked as a `shortcut:` in the code).
+9. **Shed: `events` counts only observed events.** The plan says e counts stress events at that tier; the ledger counts only closed events in which 3 distinct senders reported the level, power on or off. Otherwise a level with fewer than 3 phones could never score a cut and looked safest. If phones mostly report when their power is off, observed events skew towards cuts and the odds read high (errs towards warning). Keep, or add a separate `observed` count beside the plan's e?
+10. **Shed: readings without a tier are not passed to the ledger** (it keeps the last tier). The phone adapter must follow this. App restarts lose the ledger: nothing persists, and rebuilding means replaying every tier change and accepted report. Add storage?
+11. **Shed: a level already without power before an event counts for it** ("reported without power during the event"). Requiring each sender to change from power on to power off is deferred.
+12. **Shed: labels.** `tier` and `report` take an optional label and `odds` returns the weakest label among all accepted inputs (not only those for the queried level). Pages should also show family and public reporters apart until weighting (Shed 3) is decided; the ledger does not split them yet.

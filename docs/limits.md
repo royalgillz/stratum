@@ -14,6 +14,10 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - The hum shows when the grid is stressed. It cannot say which level will be cut. The ledger of
   neighbours' power reports estimates that.
 - A sudden plant trip collapses the grid in seconds. The warning only helps with slow shortfalls.
+- The cut odds come from neighbours' reports. A level counts as cut in a stress event when three different
+  senders report it without power during the event, but anyone can send public reports, and one person can
+  pose as three. A level already dark before the event counts too. A level with fewer than three phones
+  reporting never gets odds: with no past stress event observed from that level the odds read "no data yet".
 - After the power is cut, the room has no hum to hear. The warning works before a cut, not during one.
 - The tracker needs to be close to the hum. With the phone 30 cm from the source it followed a slow
   ramp within 4 mHz. At 1 m in a room where people moved, echoes made the reading wander by
