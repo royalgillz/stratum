@@ -5,6 +5,8 @@ const VISIBLE_TABS = [
   ['Listen', 'Listen to the grid'],
   ['Report', 'Report'],
   ['Family', 'Family'],
+  ['Ledger', 'Shed Ledger'],
+  ['Care', 'Breath Count'],
 ] as const;
 
 test.describe('phone page', () => {

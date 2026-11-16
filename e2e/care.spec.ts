@@ -92,7 +92,7 @@ test.describe('Care tab: Breath Count', () => {
     await expect(result).toContainText('RED');
     await expect(result).toContainText('Rate: none');
     await expect(page.getByRole('button', { name: 'Request medicine' })).toBeVisible();
-    await expect(page.locator('#where')).toHaveText('Sends for level 5, sector A (change on the Report tab).');
+    await expect(page.locator('#careWhere')).toHaveText('Sends for level 5, sector A (change on the Report tab).');
     const box = async (name: string) => (await page.getByLabel(name).boundingBox())!;
     expect((await box('Chest indrawing (the lower chest pulls in when the child breathes in)')).width).toBe((await box('Vomits everything')).width);
     await expectSoundLayout(page);
@@ -121,7 +121,7 @@ test('a send that cannot play says it was not sent', async ({ page }) => {
   await page.getByLabel('Years').selectOption('2');
   await page.getByLabel('Convulsions (fits)').check();
   await page.getByRole('button', { name: 'Request medicine' }).click();
-  await expect(page.locator('#screen-care #sent')).toHaveText(/^Not sent: sound could not play/);
+  await expect(page.locator('#careSent')).toHaveText(/^Not sent: sound could not play/);
   await expect(page.getByRole('button', { name: 'Request medicine' })).toBeEnabled();
   await expectSoundLayout(page);
 });

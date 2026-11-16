@@ -1,6 +1,5 @@
 import { TYPES, type Decoded } from '../../core/packet/codec.ts';
 import { NEED_CODES } from '../../core/care/breath.ts';
-import { TYPES } from '../../core/packet/codec.ts';
 import { generateWords } from '../../core/packet/keys.ts';
 import { $, app, clock, random, store, type Heard } from '../app.ts';
 

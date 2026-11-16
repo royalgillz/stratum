@@ -1,17 +1,32 @@
 import type { Reading } from '../../core/tracker/tracker.ts';
-import { $, app } from '../app.ts';
+import { $, app, store } from '../app.ts';
 
 const TIER_TEXT = { GREEN: '● NORMAL', AMBER: '▲ WARNING: grid under strain', RED: '■ DANGER: cut likely soon' } as const;
 
 export function mountListen(root: HTMLElement) {
   root.innerHTML = `
     <h2>Listen to the grid</h2>
-    <p class="muted">Uses the microphone on this phone only. Nothing is recorded or sent. Keep the phone within about 30 cm of the hum.</p>
+    <p class="muted">Uses the microphone on this phone only. Nothing is recorded or uploaded. Keep the phone within about 30 cm of the hum.</p>
     <button id="listen">Start listening</button>
     <p id="tier" role="status" aria-live="polite">Not listening yet</p>
     <p id="dev"></p>
-    <p id="micinfo" class="muted"></p>`;
+    <p id="micinfo" class="muted"></p>
+    <label class="check"><input type="checkbox" id="relayOn" /> Pass on messages for others</label>
+    <p id="relayCount" role="status" aria-live="polite">Passed on 0 messages this session · LIVE</p>
+    <p class="muted">With no network, phones carry each other's messages a few metres at a time; this phone never decodes other families' messages, it only repeats them.</p>`;
   const btn = $<HTMLButtonElement>('#listen', root);
+
+  const relayOn = $<HTMLInputElement>('#relayOn', root);
+  relayOn.checked = app.relaying;
+  relayOn.onchange = () => {
+    app.relaying = relayOn.checked;
+    store.set('stratum.relay', relayOn.checked ? null : 'off');
+  };
+  let relayed = 0;
+  app.on('relayed', () => {
+    relayed++;
+    $('#relayCount', root).textContent = `Passed on ${relayed} message${relayed === 1 ? '' : 's'} this session · LIVE`;
+  });
 
   btn.onclick = async () => {
     btn.disabled = true;

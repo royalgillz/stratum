@@ -60,9 +60,9 @@ export function mountCare(root: HTMLElement) {
     <p id="announce" class="sr-only" role="status" aria-live="polite"></p>
     <div id="result" class="result" tabindex="-1" hidden></div>
     <div id="need" hidden>
-      <p id="where"></p>
+      <p id="careWhere"></p>
       <button id="request">Request medicine</button>
-      <p id="sent" role="status"></p>
+      <p id="careSent" role="status"></p>
     </div>`;
 
   const years = $<HTMLSelectElement>('#years', root), months = $<HTMLSelectElement>('#months', root);
@@ -75,7 +75,7 @@ export function mountCare(root: HTMLElement) {
   let result: BreathResult | null = null;
   let count: { tapsMs: number[]; elapsedMs: number } | null = null; // the last finished count, null while counting
   const where = () => `level ${store.get('stratum.level') ?? '5'}, sector ${String.fromCharCode(65 + Number(store.get('stratum.sector') ?? 0))}`;
-  const showWhere = () => ($('#where', root).textContent = `Sends for ${where()} (change on the Report tab).`);
+  const showWhere = () => ($('#careWhere', root).textContent = `Sends for ${where()} (change on the Report tab).`);
   new MutationObserver(showWhere).observe(root, { attributeFilter: ['hidden'] }); // back from the Report tab
 
   function show(r: BreathResult) {
@@ -93,7 +93,7 @@ export function mountCare(root: HTMLElement) {
     box.hidden = false;
     $('#need', root).hidden = !needRequest(r);
     showWhere();
-    $('#sent', root).textContent = '';
+    $('#careSent', root).textContent = '';
     announce.textContent = `${HEAD[String(r.classification)]}. ${r.card}`;
   }
 
@@ -154,7 +154,7 @@ export function mountCare(root: HTMLElement) {
   };
 
   $<HTMLButtonElement>('#request', root).onclick = async (e) => {
-    const btn = e.currentTarget as HTMLButtonElement, sent = $('#sent', root), need = result && needRequest(result);
+    const btn = e.currentTarget as HTMLButtonElement, sent = $('#careSent', root), need = result && needRequest(result);
     if (!need) return;
     if (!app.family) {
       sent.textContent = 'Join a family first (Family tab). Without a family key the request cannot be sent privately: anyone nearby could hear which level has a sick child.';
