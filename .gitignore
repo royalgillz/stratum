@@ -3,3 +3,4 @@ dist
 .wrangler
 .vercel
 docs/audit.md
+.claude/worktrees/
