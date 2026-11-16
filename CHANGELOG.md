@@ -38,6 +38,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- 2026-11-16, family board review fixes: LIVE label on the count and row lines; the count is now "N of M other members" (you are left out, so all heard can be reached); before a family exists the board asks to create or join one instead of pointing to Listen; "just now" instead of "0 min ago"; the focused Nickname button keeps focus across rebuilds; Playwright pins the own member number and checks the exact count, "(you)" and the 30 min staleness with a fake clock.
 - 2026-11-16, family board (problem 8) on the Family tab (`src/phone/screens/family.ts`): one row per family member heard with the latest packet's own send time and age, level, sector, power and type; "not heard for over 30 min" with an icon; "N of M members heard in the last 30 min"; local nicknames kept on this phone only; empty state says messages arrive only while the Listen tab is on. Tests: `boardRows` in `family.test.ts`, `e2e/family-board.spec.ts`.
 - Phone page split into tabs (Listen, Report, Family; Care and Ledger hidden until built). Shared services live in `src/phone/app.ts`; each screen is a module in `src/phone/screens/` that talks to the others only through app events. Tabs follow the WAI-ARIA pattern (arrow keys, `aria-selected`) and the address remembers the screen. Playwright now checks every tab on all six viewports.
 - Commit history rewritten and force-pushed with the human's order, to remove the AI attribution trailer from all 19 commits that had one. File contents are unchanged (tree hash verified). Branch protection was relaxed only for that push and then restored.
@@ -137,8 +138,9 @@ Family board (2026-11-16), agent calls, open:
 
 1. **Stale means over 30 whole minutes**: age is counted in whole minutes from the packet's own minute, so exactly 30 min is still fresh and 31 is stale. A sender clock running ahead shows 0 min ago.
 2. **Repeats are ignored** on the board (the first hearing always arrives first); for two different packets from one member in the same minute, the later one heard wins.
-3. **"You"**: the board always says "You are member N", and a row whose member is this phone's number is marked "(you)". N counts every fresh row, including your own if your phone hears its own chirp; M is the members ever heard plus you.
+3. **"You"**: the board always says "You are member N", and a row whose member is this phone's number is marked "(you)". The count leaves you out: "N of M other members heard in the last 30 min", where M is the other members ever heard; it is hidden while no other member has been heard.
 4. **Board resets** when the family changes (join or leave), and heard members are not stored: a reload starts empty.
 5. **Nicknames** use the browser prompt and are keyed by member number only (`stratum.nick.<n>`), so they carry over to another family with the same number.
-6. **No LIVE/REPLAY/SIMULATED label** on the board: times, ages, level, sector and power are reported or clock values, not measurements or model outputs.
+6. **LIVE label** on the board's count line and on each row's detail line, since every board packet was heard by the microphone. The inbox lines below the board still carry no label (unchanged by the board work).
+8. **Focus on rebuild**: the board is still rebuilt on every packet and every 30 s; the Nickname button that had focus is re-focused by its aria-label afterwards, which may make a screen reader announce it again.
 7. **Playwright drives fake packets** through a test-only `addInitScript` hook on `EventTarget.prototype.addEventListener` that keeps the object subscribing to `packet` (the app); nothing new is exposed on `window` by the app.

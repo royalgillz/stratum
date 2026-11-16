@@ -70,13 +70,19 @@ export function mountFamily(root: HTMLElement) {
   function renderBoard() {
     const rows = boardRows(heard, Date.now());
     heard = rows.map((r) => r.d);
+    // a rebuild must not drop keyboard or screen-reader focus from a Nickname button
+    const focused = board.contains(document.activeElement) ? document.activeElement?.getAttribute('aria-label') : null;
     board.replaceChildren(el('p', `You are member ${app.member}.`));
+    if (!app.family) {
+      board.append(el('p', 'Create or join a family above first. Then messages from family phones appear here while the Listen tab is on.', 'muted'));
+      return;
+    }
     if (!rows.length) {
       board.append(el('p', 'Nothing heard from your family yet. Messages arrive only while the Listen tab is on: open it, tap Start listening, and keep this phone near the others.', 'muted'));
       return;
     }
-    const members = new Set([app.member, ...rows.map((r) => r.d.payload.member)]);
-    board.append(el('p', `${rows.filter((r) => !r.stale).length} of ${members.size} members heard in the last ${STALE_MIN} min`));
+    const others = rows.filter((r) => r.d.payload.member !== app.member);
+    if (others.length) board.append(el('p', `LIVE · ${others.filter((r) => !r.stale).length} of ${others.length} other members heard in the last ${STALE_MIN} min`));
     const ul = el('ul', '', 'list board');
     for (const { d, ago, stale } of rows) {
       const p = d.payload, nick = store.get(nickKey(p.member));
@@ -86,7 +92,7 @@ export function mountFamily(root: HTMLElement) {
       text.append(
         el('strong', who),
         el('div', stale ? `⚠ Not heard for over ${STALE_MIN} min` : '✓ Heard recently', stale ? 'stale' : ''),
-        el('div', `${TYPE_NAME[d.type] ?? d.type} sent ${clock(d.minute)}, ${ago} min ago · level ${p.level}, sector ${String.fromCharCode(65 + p.sector)} · power ${p.flags & 1 ? 'on' : 'off'}`, 'muted'),
+        el('div', `LIVE · ${TYPE_NAME[d.type] ?? d.type} sent ${clock(d.minute)}, ${ago === 0 ? 'just now' : `${ago} min ago`} · level ${p.level}, sector ${String.fromCharCode(65 + p.sector)} · power ${p.flags & 1 ? 'on' : 'off'}`, 'muted'),
       );
       const btn = el('button', 'Nickname') as HTMLButtonElement;
       btn.setAttribute('aria-label', `Nickname for member ${p.member}`);
@@ -100,6 +106,7 @@ export function mountFamily(root: HTMLElement) {
       ul.append(li);
     }
     board.append(ul);
+    if (focused) board.querySelector<HTMLElement>(`[aria-label="${focused}"]`)?.focus();
   }
 
   app.on('family', () => { heard = []; renderBoard(); render(); });
