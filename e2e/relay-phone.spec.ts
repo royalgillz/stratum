@@ -5,7 +5,7 @@ test('Listen tab offers relaying, on by default, and remembers the choice across
   await page.goto('/src/phone/#listen', { waitUntil: 'domcontentloaded' });
   const box = page.getByRole('checkbox', { name: 'Pass on messages for others' });
   await expect(box).toBeChecked();
-  await expect(page.getByRole('status').filter({ hasText: 'Passed on 0 messages this session · LIVE' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Relaying starts when you tap Start listening.' })).toBeVisible(); // nothing relays before the mic opens
   expect((await box.boundingBox())!.height, 'checkbox is not stretched to 44 px').toBeLessThan(30);
   await expect(page.getByText(/never decodes other families' messages/)).toBeVisible();
   await expectSoundLayout(page);

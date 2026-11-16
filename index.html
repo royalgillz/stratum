@@ -4,17 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STRATUM</title>
+  <style>
+    :root { color-scheme: light dark; } /* dark pages for dark phones, as judge mode does */
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 16px; line-height: 1.45; }
+    a.go { display: inline-block; min-height: 44px; line-height: 44px; font-weight: 700; }
+    summary { padding: 12px 0; cursor: pointer; }
+  </style>
 </head>
-<body style="font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem">
+<body>
   <h1>STRATUM</h1>
-  <p>Hello from the Hollow. Rung 0.</p>
-  <p><a href="/src/phone/">Phone page</a>: hear the grid, send OK to your family.</p>
-  <p><a href="/src/district/judge.html">Judge mode</a>: the 90-second story, no microphone needed.</p>
-  <h2>Spikes</h2>
-  <ul>
-    <li><a href="/spikes/emitter.html">Emitter</a> (laptop): 400 + 800 Hz hum</li>
-    <li><a href="/spikes/listener.html">Listener</a> (phone): hum tracker</li>
-    <li><a href="/spikes/packets.html">Packets</a> (both): ggwave, 25 bytes</li>
-  </ul>
+  <p>A phone that hears the grid weaken before a power cut, and passes short family messages by sound. Real: the phone hum tracker and the message codec. Simulated: the grid and the message in judge mode.</p>
+  <p><a class="go" href="/src/district/judge.html">Judge mode</a>: the 90-second story, no microphone needed.</p>
+  <p><a class="go" href="/src/phone/">Phone page</a>: hear the grid, send OK to your family.</p>
+  <details>
+    <summary>Developer spikes</summary>
+    <ul>
+      <li><a class="go" href="/spikes/emitter.html">Emitter</a> (laptop): 400 + 800 Hz hum</li>
+      <li><a class="go" href="/spikes/listener.html">Listener</a> (phone): hum tracker</li>
+      <li><a class="go" href="/spikes/packets.html">Packets</a> (both): ggwave, 25 bytes</li>
+    </ul>
+  </details>
 </body>
 </html>
