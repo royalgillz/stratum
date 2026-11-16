@@ -22,7 +22,7 @@ Node `s` is sector `s`; node 0 (level 1, sector 0) is the hub: clinic, water poi
 That is 28 edges. Levels 1 to 3 have two ways out; levels 4 to 6 hang from the main shaft alone, so one flooded section there can strand everyone below it. On the dry graph the critical nodes are the hub, the shaft node of level 3 (node 8, which carries everything below it) and every node of levels 4 to 6 except the last of each corridor. The layout is an assumption that reflects "the deeper you live, the worse it gets".
 
 - `reachable(edges, hub, nodes)`: breadth-first search over passable edges.
-- `strandedIfLost(edges, flooded, people, hub)`: for each node, the people of the other nodes that reach the hub while that node is dry and lose that path when it floods, with every other node's flooded state as given. An edge counts as passable when neither end is flooded; the `passable` flags in `edges` are ignored. A node is **critical** when this is above 0. Only paths that exist now count, so people already cut off make no node critical, and a flooded node whose drying would reconnect others is critical. Forty-eight searches of 24 nodes; exact.
+- `strandedIfLost(edges, flooded, people, hub)`: for each node, the people of the other nodes that reach the hub while that node is dry and lose that path when it floods, with every other node's flooded state as given. An edge counts as passable when neither end is flooded; the `passable` flags in `edges` are ignored. A node is **critical** when this is above 0. Only paths that exist now count, so people already cut off make no node critical, and a flooded node whose drying would reconnect others is critical; a flooded hub is critical and carries everyone who would reach it dry. Forty-eight searches of 24 nodes; exact.
 
 ## Sumps
 
@@ -35,7 +35,7 @@ Each sector has one sump, `sumpLevel` in [0, 1] of capacity `SUMP_CAP` m³.
 
 ## Interface
 
-`districtTunnels() → World['tunnels']`, `reachable(edges, hub, nodes)`, `strandedIfLost(edges, flooded, people, hub)`, `sumpStep(level, sumpLevel, inflowM3h, pumpFrac, dt)`, `floodInflow(events, sector, t)`, `isFlooded(sumpLevel, wasFlooded)`, `HUB`.
+`districtTunnels() → World['tunnels']`, `reachable(edges, hub, nodes)`, `strandedIfLost(edges, flooded, people, hub)`, `sumpStep(level, sumpLevel, inflowM3h, pumpFrac, dt)`, `floodInflow(events, sector, t)`, `isFlooded(sumpLevel, wasFlooded)`, and the constants `HUB`, `SUMP_CAP`, `SEEP_TOP`, `SEEP_STEP`, `PUMP_CAP`, `PUMP_KW`, `RECOVER` (adapters import these rather than re-declare them). Every function throws `RangeError` on bad input (WORLD-TUNNEL-008).
 
 ## Decisions & Alternatives
 

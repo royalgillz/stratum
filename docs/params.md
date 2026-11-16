@@ -12,9 +12,9 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Tracker NO HUM threshold | 13 | dB | tracker | | true | Spike T1: noise alone 6 to 7 dB, hum 33 to 59 dB |
 | Tracker calibration length | 30 | s | tracker | | true | 60 readings; reference is their median |
 | Tracker smoothing | 5 | readings | tracker | | true | Spike T1: ramp within 4 mHz, 100 mHz step half-way in 2.7 s |
-| AMBER threshold | -50 | mHz | tracker | | true | Leave above -30 mHz for 10 s. About 3x the 1 m room noise |
+| AMBER threshold | -50 (enter), -30 (leave) | mHz | tracker, grid | | true | Leave above -30 mHz for 10 s. About 3x the 1 m room noise |
 | AMBER fall trigger | 50 in 10 | mHz in s | tracker | | true | A fast fall warns before the level threshold |
-| RED threshold | -150 | mHz | tracker | | true | Leave above -130 mHz for 10 s |
+| RED threshold | -150 (enter), -130 (leave) | mHz | tracker, grid | | true | Leave above -130 mHz for 10 s |
 | Tier entry confirmation | 2 | readings | tracker | | true | 1 s |
 | Packet MAC length | 8 | bytes | packet | | true | Truncated HMAC-SHA-256, fits 25 bytes |
 | Packet future window | 2 | min | packet | | true | Packets dated further ahead are rejected |
@@ -33,7 +33,7 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Breath tap debounce | 250 | ms | care/breath | | true | A tap closer than this to the last counted tap is a double tap; allows up to 240 per minute |
 | Breath plausible rate | 10 to 120 | breaths/min | care/breath | | true | Outside this band, without a danger sign, the card asks for a recount |
 | Breath missed-tap gap | 3 | median intervals | care/breath | | true | A longer gap (start, between taps, or to 60 s) in a full count asks for a recount |
-| Wet-bulb limit, working areas | 27.5 | deg C | air-heat, adapters | | true | South African deep-mine thermal-stress practice, from the earlier report (docs/plan.md). Source URL to add; treated as an assumption until then |
+| Wet-bulb limit, working areas (WB_LIMIT) | 27.5 | deg C | air-heat, adapters | | true | South African deep-mine thermal-stress practice, from the earlier report (docs/plan.md). Source URL to add; treated as an assumption until then |
 | Total organic carbon limit | 3 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | ISS potable water |
 | Iodine biocide, biocidal range | 1 to 4 | mg/L | water | https://ntrs.nasa.gov/api/citations/20170001718/downloads/20170001718.pdf | false | |
 | Carbon monoxide, immediately dangerous | 1200 | ppm | surface-return | https://www.cdc.gov/niosh/idlh/intridl4.html | false | NIOSH IDLH |
@@ -101,11 +101,11 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Wet-bulb formula | Stull 2011 | - | air-heat | https://doi.org/10.1175/JAMC-D-11-0143.1 | false | Valid 5 to 99% humidity, -20 to 50 deg C |
 | Refuge share (REFUGE) | 25 | % of people, % of cooling demand | adapters | | true | STRATUM cooling floor; people rotate through the refuge |
 | Intake CO2 (C_OUT) | 420 | ppm | air-heat, epidemic | https://gml.noaa.gov/ccgg/trends/ | false | Global mean, about 420 ppm in 2024 |
-| CO2 exhaled per person (G) | 0.0052 | L/s | air-heat | https://doi.org/10.1111/ina.12383 | false | Adult, sedentary |
-| Fresh air per person (Q) | 10 | L/s | air-heat | | true | Order of ventilation design guides |
+| CO2 exhaled per person (G) | 0.0052 | L/s | air-heat, epidemic (temporary copy in CO2_REF) | https://doi.org/10.1111/ina.12383 | false | Adult, sedentary |
+| Fresh air per person (Q) | 10 | L/s | air-heat, epidemic (temporary copy in CO2_REF) | | true | Order of ventilation design guides |
 | Leakage with fans off (LEAK) | 5 | % of Q | air-heat | | true | |
 | Air volume per person (VOL_L) | 30000 | L | air-heat | | true | 30 m3; 50 min time constant with fans on |
-| CO2 limit | 5000 | ppm | air-heat | https://www.osha.gov/chemicaldata/183 | false | OSHA permissible exposure limit, an 8 h time-weighted average, not an instant threshold |
+| CO2 limit (CO2_LIMIT) | 5000 | ppm | air-heat | https://www.osha.gov/chemicaldata/183 | false | OSHA permissible exposure limit, an 8 h time-weighted average, not an instant threshold |
 | Ventilated CO2 reference (CO2_REF) | about 940 | ppm | air-heat, epidemic | | true | Derived in code as C_OUT + 1e6 x G / Q, not set; follows any change to G or Q |
 | Ventilation cap on transmission (BETA_CAP) | 5 | x beta at CO2_REF | epidemic | | true | Beta scales with the rebreathed fraction, applied to all transmission, up to this cap. Rudnick and Milton cover ordinary indoor CO2; fans off would give about 20 x without it |
 | Exhaled-breath CO2 (C_EXHALED) | 38000 | ppm | epidemic | https://doi.org/10.1034/j.1600-0668.2003.00189.x | false | Rudnick and Milton 2003, rebreathed fraction |
@@ -128,6 +128,7 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Slow shortfall in sevenDay | hour 30: loss 4% to 8% over 4 h, hold 6 h, recover 2 h | loss fraction of nominal | scenario | | true | 1% per hour: warned |
 | Contamination timing in sevenDay | hour 52, level 5, 30 min ramp, 12 h | - | scenario | | true | |
 | Fast shortfall in sevenDay | hour 60: loss 4.75% to 5.45% over 75 s, hold 2 h, recover 1 h | loss fraction of nominal | scenario | | true | Shed lands on the next 60 s step |
+| Real-time acts in sevenDay | hour 60 for 90 s; hour 83.99 for 120 s | - | scenario | | true | Covers the fast shed and the trip at 60 s steps. Captions are in scenario-design.md |
 | Plant trip in sevenDay | hour 84: 5.8% lost for 3 h | loss fraction of nominal | scenario | | true | About 1.1% of load unserved, -2.2 Hz: inside the tracker band |
 | Late shortfall in sevenDay | hour 100: loss 5% to 10% over 1 h, hold 12 h, recover 2 h | loss fraction of nominal | scenario | | true | Starts above the AMBER point |
 | Basic reproduction number (R0) | 2.5 | - | epidemic | | true | At the ventilated CO2 reference |
