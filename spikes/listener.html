@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spike: listener</title>
+</head>
+<body style="font-family: system-ui, sans-serif; margin: 1rem">
+  <h1>Listener (T1)</h1>
+  <p>Tracks the 800 Hz hum component. Keep the emitter at offset 0 for the first 30 s (calibration).</p>
+  <button id="start">Start microphone</button>
+  <button id="recal">Recalibrate</button>
+  <button id="export">Export log</button>
+  <p id="big" style="font-size: 2.2rem; font-variant-numeric: tabular-nums; margin: 1rem 0">-</p>
+  <p id="info" style="font-variant-numeric: tabular-nums"></p>
+  <p id="settings" style="font-size: 0.8rem; color: #666"></p>
+  <pre id="log" style="font-size: 0.85rem"></pre>
+  <script type="module" src="./listener.ts"></script>
+</body>
+</html>
