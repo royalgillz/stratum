@@ -17,7 +17,7 @@ const HEAD: Record<string, string> = {
   AMBER: '▲ AMBER: fast breathing',
   GREEN: '● GREEN: breathing not fast',
   RECOUNT: '↻ RECOUNT: count again',
-  REFER_YOUNG: '✚ REFER: too young for this aid',
+  REFER_YOUNG: '✚ REFER: see a health worker',
   NOT_ASSESSED: '○ NOT ASSESSED',
   null: '✕ NOT FOR THIS CHILD',
 };
@@ -26,9 +26,10 @@ const MINUTE = 60000;
 const SHORT = 'Decision aid, not a medical device. If you are worried, take the child to a health worker.';
 
 export function mountCare(root: HTMLElement) {
+  const cut = DISCLAIMER.indexOf('. ') + 1; // only the first sentence is bold, so the age picker stays near the top
   root.innerHTML = `
     <h2>Breath Count</h2>
-    <p id="disclaimer" class="disclaimer" role="note"><strong>⚠ ${DISCLAIMER}</strong></p>
+    <p id="disclaimer" class="disclaimer" role="note"><strong>⚠ ${DISCLAIMER.slice(0, cut)}</strong>${DISCLAIMER.slice(cut)}</p>
     <fieldset>
       <legend>1. Child's age</legend>
       <div class="row">
@@ -47,11 +48,14 @@ export function mountCare(root: HTMLElement) {
         <legend>3. Danger signs: tick any you see</legend>
         ${SIGNS.map(([k, t]) => `<label class="check"><input type="checkbox" data-sign="${k}" /> ${t}</label>`).join('')}
       </fieldset>
-      <h3>4. Count breaths for one minute</h3>
-      <p class="muted">Watch the chest or belly while the child is calm. Tap the big button once each time the chest rises.</p>
-      <button id="start" disabled>Start 60-second count</button>
+      <div id="step4">
+        <h3>4. Count breaths for one minute</h3>
+        <p class="muted">Watch the chest or belly while the child is calm. Tap the big button once each time the chest rises.</p>
+        <button id="start" disabled aria-describedby="startWhy">Start 60-second count</button>
+        <p id="startWhy" class="muted">Answer question 2 first. Breaths are counted only for cough or difficult breathing.</p>
+      </div>
       <div id="counter" hidden>
-        <p class="count"><span id="left">60 s left</span> · <span id="taps">0 breaths</span></p>
+        <p class="count"><span id="left">60 s left</span> · <span id="taps">0 breaths</span> · LIVE</p>
         <button id="tap" class="tap">Tap once per breath</button>
         <button id="stop">Stop</button>
         <p class="muted">${SHORT}</p>
@@ -63,6 +67,7 @@ export function mountCare(root: HTMLElement) {
       <p id="careWhere"></p>
       <button id="request">Request medicine</button>
       <p id="careSent" role="status"></p>
+      <button id="careFamily" hidden>Go to Family tab</button>
     </div>`;
 
   const years = $<HTMLSelectElement>('#years', root), months = $<HTMLSelectElement>('#months', root);
@@ -74,8 +79,11 @@ export function mountCare(root: HTMLElement) {
   const counter = $('#counter', root);
   let result: BreathResult | null = null;
   let count: { tapsMs: number[]; elapsedMs: number } | null = null; // the last finished count, null while counting
-  const where = () => `level ${store.get('stratum.level') ?? '5'}, sector ${String.fromCharCode(65 + Number(store.get('stratum.sector') ?? 0))}`;
-  const showWhere = () => ($('#careWhere', root).textContent = `Sends for ${where()} (change on the Report tab).`);
+  // The place chosen on the Report tab; none chosen sends nothing (a guessed level would be a false location).
+  const lv = () => store.get('stratum.level') || '', sc = () => store.get('stratum.sector') || '';
+  const where = () => `level ${lv()}, sector ${String.fromCharCode(65 + Number(sc()))}`;
+  const NO_PLACE = 'Choose your level and sector on the Report tab first.';
+  const showWhere = () => ($('#careWhere', root).textContent = lv() && sc() ? `Sends for ${where()} (change on the Report tab).` : NO_PLACE);
   new MutationObserver(showWhere).observe(root, { attributeFilter: ['hidden'] }); // back from the Report tab
 
   function show(r: BreathResult) {
@@ -84,8 +92,8 @@ export function mountCare(root: HTMLElement) {
     if (r.classification === 'RED' && result?.classification !== 'RED') requestAnimationFrame(() => box.scrollIntoView({ block: 'nearest' }));
     result = r;
     box.className = `result ${r.classification ?? ''}`;
-    const rate = r.rate === null ? 'Rate: none (no full minute counted)' : `Rate: ${r.rate} breaths per minute`;
-    box.innerHTML = `<p class="head"></p><p class="card"></p><p class="rate"></p><p class="muted">${SHORT}</p>`;
+    const rate = r.rate === null ? 'Rate: no full minute counted yet' : `Rate: ${r.rate} breaths per minute`;
+    box.innerHTML = `<p class="head"></p><p class="card"></p><p class="rate"></p>`; // the disclaimer above stays on screen
     $('.head', box).textContent = HEAD[String(r.classification)];
     $('.card', box).textContent = r.card;
     $('.rate', box).textContent = r.threshold === null || r.classification === 'NOT_ASSESSED' ? '' :
@@ -93,7 +101,8 @@ export function mountCare(root: HTMLElement) {
     box.hidden = false;
     $('#need', root).hidden = !needRequest(r);
     showWhere();
-    $('#careSent', root).textContent = '';
+    $('#careSent', root).textContent = $('#careSent', root).className = '';
+    $('#careFamily', root).hidden = true;
     announce.textContent = `${HEAD[String(r.classification)]}. ${r.card}`;
   }
 
@@ -103,6 +112,11 @@ export function mountCare(root: HTMLElement) {
     const age = ageMonths(), s = signs();
     const inRange = age !== null && age >= 2 && age < 60;
     $('#steps', root).hidden = !inRange;
+    months.closest('label')!.hidden = years.value === '5'; // months change nothing at five or older
+    months.options[0].text = years.value === '' || years.value === '0' ? 'Choose' : 'Optional';
+    // With no cough the card says NOT ASSESSED: no count step. Unanswered: say why Start is greyed.
+    $('#step4', root).hidden = cough() === 'no';
+    $('#startWhy', root).hidden = cough() === 'yes';
     start.disabled = !inRange || cough() !== 'yes' || !counter.hidden;
     if (age === null || (inRange && !count && cough() !== 'no' && !Object.values(s).some(Boolean))) {
       $('#result', root).hidden = true; $('#need', root).hidden = true; result = null;
@@ -118,6 +132,7 @@ export function mountCare(root: HTMLElement) {
     const tap = $<HTMLButtonElement>('#tap', root);
     count = null;
     counter.hidden = false;
+    start.hidden = true; // a greyed Start above the tap target reads like a second control
     update(); // hides an old card; a danger sign keeps RED on screen
 
     $('#taps', root).textContent = '0 breaths';
@@ -138,6 +153,7 @@ export function mountCare(root: HTMLElement) {
       clearInterval(timer);
       count = { tapsMs: taps, elapsedMs: performance.now() - t0 };
       counter.hidden = true;
+      start.hidden = false;
       start.textContent = 'Count again';
       update();
       // The focused tap button is now hidden: move focus to the result, or back to Start.
@@ -153,20 +169,29 @@ export function mountCare(root: HTMLElement) {
     tick();
   };
 
+  $<HTMLButtonElement>('#careFamily', root).onclick = () => (location.hash = 'family'); // phone.ts switches tabs on hashchange
   $<HTMLButtonElement>('#request', root).onclick = async (e) => {
     const btn = e.currentTarget as HTMLButtonElement, sent = $('#careSent', root), need = result && needRequest(result);
     if (!need) return;
     if (!app.family) {
+      sent.className = 'err';
+      $('#careFamily', root).hidden = false;
       sent.textContent = 'Join a family first (Family tab). Without a family key the request cannot be sent privately: anyone nearby could hear which level has a sick child.';
       return;
     }
+    if (!lv() || !sc()) {
+      sent.className = 'err';
+      sent.textContent = NO_PLACE;
+      return;
+    }
     btn.disabled = true;
+    sent.className = '';
     try {
       const bytes = await encode(app.family, {
         type: TYPES.NEED, minute: Math.floor(Date.now() / MINUTE), nonce: app.nonce(), hops: 3,
         payload: {
           member: app.member, code: need.code, value: need.value, flags: 0,
-          level: Number(store.get('stratum.level') ?? 5), sector: Number(store.get('stratum.sector') ?? 0),
+          level: Number(lv()), sector: Number(sc()),
         },
       });
       sent.textContent = `Sending to your family for ${where()}… keep the phone still.`;
@@ -174,6 +199,7 @@ export function mountCare(root: HTMLElement) {
       sent.textContent = `Medicine request sent to your family at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;
     } catch (err) {
       console.error(err);
+      sent.className = 'err';
       sent.textContent = 'Not sent: sound could not play on this phone. Tap Request medicine again, or tell your family in person.';
     } finally {
       btn.disabled = false;

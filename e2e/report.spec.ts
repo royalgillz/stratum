@@ -1,14 +1,36 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { CODEBOOK } from '../src/phone/codebook.ts';
 import { expectSoundLayout } from './layout.ts';
+
+/** Level and sector have no default (a guess would go on air as a false place): pick them as a user would. */
+async function place(page: Page) {
+  await page.locator('#level').selectOption('5');
+  await page.locator('#sector').selectOption('A');
+}
+
+test('with no level and sector chosen, nothing can be sent and the dialog says why', async ({ page }) => {
+  await page.goto('/src/phone/#report', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#level')).toHaveValue('');
+  await page.getByRole('button', { name: 'Flooding or route blocked' }).click();
+  const dlg = page.getByRole('dialog');
+  await expect(dlg).toContainText('Choose your level and sector first');
+  await expect(dlg.getByRole('button', { name: 'Send now' })).toBeHidden();
+  await expectSoundLayout(page);
+  await dlg.getByRole('button', { name: 'Cancel' }).click();
+  await place(page);
+  await page.getByRole('button', { name: 'Flooding or route blocked' }).click();
+  await expect(dlg).toContainText('Level 5, sector A, power on.');
+  await expect(dlg.getByRole('button', { name: 'Send now' })).toBeVisible();
+});
 
 test.describe('report grid', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/src/phone/#report', { waitUntil: 'domcontentloaded' });
+    await place(page);
   });
 
   test('shows every codebook button, grouped, without breaking the layout', async ({ page }) => {
-    for (const h of ['OK', 'Need', 'Report here']) await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
+    for (const h of ['OK', 'Need', 'Problems here']) await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
     for (const e of CODEBOOK) await expect(page.getByRole('button', { name: e.label, exact: true })).toBeVisible();
     await expectSoundLayout(page);
   });
@@ -21,6 +43,10 @@ test.describe('report grid', () => {
     await expect(dlg.getByLabel('Everyone nearby')).toBeChecked();
     await expect(dlg.getByLabel('Family only')).toBeDisabled(); // no family yet
     await expect(dlg.getByLabel('How many people?')).toBeHidden();
+    // A visible backdrop, and the disabled choice looks disabled (both were invisible in dark mode).
+    expect(await page.locator('#confirm').evaluate((d) => getComputedStyle(d, '::backdrop').backgroundColor)).toBe('rgba(0, 0, 0, 0.6)');
+    const color = (name: string) => dlg.locator('label', { hasText: name }).evaluate((l) => getComputedStyle(l).color);
+    expect(await color('Family only')).not.toBe(await color('Everyone nearby'));
     await expectSoundLayout(page);
     await dlg.getByRole('button', { name: 'Cancel' }).click();
     await expect(dlg).toBeHidden();
@@ -32,15 +58,23 @@ test.describe('report grid', () => {
     const dlg = page.getByRole('dialog');
     await expect(dlg).toContainText('Family tab');
     await expect(dlg.getByRole('button', { name: 'Send now' })).toBeHidden();
+    await expect(dlg.getByRole('button', { name: 'Go to Family tab' })).toBeVisible();
     await expect(dlg.getByLabel('How many people?')).toBeHidden();
     await expectSoundLayout(page);
     await dlg.getByRole('button', { name: 'Cancel' }).click();
 
     await page.getByRole('button', { name: 'People coughing or sick' }).click();
     await expect(dlg).toContainText('goes to everyone nearby');
+    await expect(dlg.getByRole('button', { name: 'Go to Family tab' })).toBeHidden();
     await dlg.getByLabel('How many people?').fill('4');
     await dlg.getByRole('button', { name: 'Send now' }).click();
     await expect(page.getByRole('button', { name: 'Medicine' })).toBeDisabled(); // sending state
+    // The status stays on screen while the message is on air, even when the grid fills the viewport.
+    const sent = page.locator('#sent');
+    await expect(sent).toContainText('keep the phone still');
+    const box = (await sent.boundingBox())!, vh = page.viewportSize()!.height;
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(vh);
     await expectSoundLayout(page);
     await expect(page.getByRole('status')).toContainText('Sent "People coughing or sick" to everyone nearby', { timeout: 15_000 });
     await expect(page.getByRole('button', { name: 'Medicine' })).toBeEnabled();
@@ -52,6 +86,8 @@ test.describe('report grid', () => {
     await page.getByRole('tab', { name: 'Report' }).click();
     await page.getByRole('button', { name: 'Medicine' }).click();
     const dlg = page.getByRole('dialog');
+    await expect(dlg).toContainText('Level 5, sector A.'); // a need carries no power state
+    await expect(dlg).not.toContainText('power');
     await expect(dlg.getByLabel('Family only')).toBeChecked();
     await expect(dlg.getByLabel('Everyone nearby')).toBeEnabled();
     await expectSoundLayout(page);
