@@ -3,7 +3,9 @@ import { defineConfig } from '@playwright/test';
 // Every UI test runs on every viewport below (CLAUDE.md UI rule). Chromium emulates all of them.
 // Fold 6 sizes are approximate CSS viewports: cover 968 x 2376 px and inner 1856 x 2160 px at a
 // device pixel ratio of about 2.6.
-const CI = Boolean((globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env.CI); // no @types/node
+const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {}; // no @types/node
+const CI = Boolean(env.CI);
+const PORT = Number(env.PW_PORT ?? 4173); // parallel worktrees each pass their own PW_PORT
 const touch = { hasTouch: true, isMobile: true };
 
 export default defineConfig({
@@ -14,7 +16,7 @@ export default defineConfig({
   workers: 4, // more parallel browsers than this overload the local preview server on Windows
   reporter: CI ? 'list' : [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: `http://localhost:${PORT}`,
     browserName: 'chromium',
     permissions: ['microphone'],
     launchOptions: { args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] },
@@ -30,8 +32,8 @@ export default defineConfig({
     { name: 'fold6-open', use: { viewport: { width: 714, height: 831 }, deviceScaleFactor: 2.6, ...touch } },
   ],
   webServer: {
-    command: 'npx vite build && npx vite preview --port 4173 --strictPort',
-    url: 'http://localhost:4173',
+    command: `npx vite build && npx vite preview --port ${PORT} --strictPort`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !CI,
     timeout: 120_000,
   },
