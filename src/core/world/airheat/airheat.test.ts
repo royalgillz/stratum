@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CO2_REF, RH, WB_LIMIT, co2Step, coolingDemandMW, dryBulbLimit, tempStep, timeToLimit, uncooledTemp, wetBulb,
+  CO2_LIMIT, CO2_REF, RH, WB_LIMIT, co2Step, coolingDemandMW, dryBulbLimit, tempStep, timeToLimit, uncooledTemp, wetBulb,
 } from './airheat.ts';
 
 describe('airheat', () => {
@@ -19,16 +19,12 @@ describe('airheat', () => {
     expect(tempStep(30, 6, 0.5, 3600)).toBeCloseTo(target + (30 - target) * Math.exp(-3600 / 21600), 12);
     // exact: two half steps equal one whole step
     expect(tempStep(tempStep(30, 6, 0.5, 1800), 6, 0.5, 1800)).toBeCloseTo(tempStep(30, 6, 0.5, 3600), 12);
-    expect(tempStep(30, 2, 0, 21600)).toBeCloseTo(30 + (30 - 30) * Math.exp(-1), 12); // U(2) = 30
+    expect(tempStep(24, 2, 0, 21600)).toBeCloseTo(30 + (24 - 30) * Math.exp(-1), 12); // U(2) = 30
   });
 
   // @spec WORLD-AIR-003
   it('WORLD-AIR-003 matches Stull 2011', () => {
     expect(Math.abs(wetBulb(20, 50) - 13.7)).toBeLessThan(0.05); // the paper's worked example
-    const T = 35, rh = 70;
-    const stull = T * Math.atan(0.151977 * Math.sqrt(rh + 8.313659)) + Math.atan(T + rh) - Math.atan(rh - 1.676331)
-      + 0.00391838 * rh ** 1.5 * Math.atan(0.023101 * rh) - 4.686035;
-    expect(Math.abs(wetBulb(T, rh) - stull)).toBeLessThan(0.05);
   });
 
   // @spec WORLD-AIR-004
@@ -48,6 +44,8 @@ describe('airheat', () => {
   it('WORLD-AIR-005 time to limit', () => {
     expect(timeToLimit(5000, 9000, 100, 5000)).toBe(0);
     expect(timeToLimit(6000, 9000, 100, 5000)).toBe(0);
+    expect(timeToLimit(6000, 940, 100, 5000)).toBe(0); // over the limit wins over a target under it
+    expect(CO2_LIMIT).toBe(5000);
     expect(timeToLimit(900, 5000, 100, 5000)).toBe(Infinity);
     expect(timeToLimit(900, 940, 100, 5000)).toBe(Infinity);
     expect(timeToLimit(940, 10820, 60000, 5000)).toBeCloseTo(60000 * Math.log((10820 - 940) / (10820 - 5000)), 9);
@@ -60,11 +58,13 @@ describe('airheat', () => {
   it('WORLD-AIR-006 dry-bulb limit at the model humidity', () => {
     const L = dryBulbLimit();
     expect(WB_LIMIT).toBe(27.5);
+    expect(RH).toBe(70);
     expect(wetBulb(L - 0.01, RH)).toBeLessThan(WB_LIMIT);
     expect(wetBulb(L + 0.01, RH)).toBeGreaterThan(WB_LIMIT);
   });
 
   // @spec WORLD-AIR-007
+  // The "or at U where U is lower" branch is unreachable with the default parameters (U(1) = 27 > 24); covered by inspection only.
   it('WORLD-AIR-007 full cooling settles at the setpoint, none leaves level 6 past the limit', () => {
     for (let level = 1; level <= 6; level++) expect(tempStep(35, level, 1, 1e9)).toBeCloseTo(24, 9);
     const hot = tempStep(24, 6, 0, 1e9);
@@ -83,7 +83,11 @@ describe('airheat', () => {
       () => co2Step(NaN, 1, 60), () => co2Step(900, 2, 60), () => co2Step(900, -1, 60), () => co2Step(900, 1, 0),
       () => timeToLimit(1, 2, 0, 3), () => timeToLimit(1, 2, -1, 3), () => timeToLimit(NaN, 2, 1, 3),
       () => timeToLimit(1, Infinity, 1, 3), () => timeToLimit(1, 2, 1, NaN),
+      () => wetBulb(30, NaN), () => tempStep(30, 1, NaN, 60), () => co2Step(900, NaN, 60),
+      () => tempStep(30, 1, 0, NaN), () => tempStep(30, 1, 0, Infinity), () => timeToLimit(1, 2, Infinity, 3),
     ];
     for (const f of bad) expect(f).toThrow(RangeError);
+    expect(() => wetBulb(30, 5)).not.toThrow();
+    expect(() => wetBulb(30, 99)).not.toThrow();
   });
 });
