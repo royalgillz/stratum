@@ -42,7 +42,7 @@ Every decision and change, dated, newest first. **Decided by** says who made the
 - `.github/workflows/ci.yml`: typecheck, test, check and build on push to main and on pull requests.
 - `src/core/packet/wordlist.ts`: BIP-39 English (MIT), SHA-256 `2f5eed53…dbda`, verified 2,048 unique words.
 - LID set up in Scoped mode (`src/core/**`). Added `docs/high-level-design.md` and the tracker and packet designs and specs.
-- `docs/params.md`: tracker and packet parameters, all marked as assumptions.
+- `docs/params.md`: tracker and packet parameters, all marked as assumptions. `docs/limits.md`: the 30 cm tracking limit, phone clock skew, and the 24 h message age limit.
 - Spike tooling: CSV log export on the listener and emitter pages (replacing screenshots, which disturbed the measurement); 5-minute log.
 - Deadline updated in `CLAUDE.md`, `docs/handoff.md` and `docs/plan.md`.
 

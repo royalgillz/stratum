@@ -15,6 +15,9 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
   neighbours' power reports estimates that.
 - A sudden plant trip collapses the grid in seconds. The warning only helps with slow shortfalls.
 - After the power is cut, the room has no hum to hear. The warning works before a cut, not during one.
+- The tracker needs to be close to the hum. With the phone 30 cm from the source it followed a slow
+  ramp within 4 mHz. At 1 m in a room where people moved, echoes made the reading wander by
+  ±15 mHz even after smoothing, so the warning levels sit well above that.
 
 ## Phone battery
 
@@ -29,6 +32,10 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - Sound carries a few metres in one room. The live demo proves one hop. Multi-hop reach is simulated.
 - A packet takes about 2 to 3 seconds. This is for status and short codes, not chat.
 - Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress.
+- Messages carry their send time from the sender's clock. A receiver whose clock runs more than
+  2 minutes behind the sender rejects fresh messages as from the future. Phones underground have no
+  time signal, so clocks can drift apart over a long blackout.
+- Messages older than 24 hours are rejected.
 
 ## Fair sharing
 
