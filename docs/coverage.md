@@ -26,6 +26,8 @@ Never write "solves".
 | 8 | Reconnect families | Live | src/core/packet/codec.ts, keys.ts | PKT-001 to PKT-012 (OK beacons, family keys) | Codec only; family board not built yet | Not yet | |
 | 9 | Track the real outbreak, route supplies | Modelled, real reports | | | | src/phone/codebook.ts, src/phone/screens/report.ts (sends real reports; no analysis yet) | |
 | 10 | Basic care for people who cannot reach a clinic | Live (aid and request), Modelled (delivery) | | | | | |
+| 9 | Track the real outbreak, route supplies | Modelled, real reports | | | Case-report format not designed yet (Breath Count medicine requests are not case reports) | Not yet | |
+| 10 | Basic care for people who cannot reach a clinic | Live (aid and request), Modelled (delivery) | src/core/care/breath.ts | BREATH-001 to BREATH-012 | Classifier only (12 tests on synthetic taps, SIMULATED); delivery not built yet | Phone page not built yet | |
 | 11 | Track and treat life without sunlight | Modelled | | | | | |
 | 12 | Grow and share neighbourhood food | Modelled, real requests | | | | src/phone/codebook.ts, src/phone/screens/report.ts (sends real reports; no analysis yet) | |
 | 13 | Prove whether the surface is safe, tell everyone | Modelled, real digest packet | | | | | |
