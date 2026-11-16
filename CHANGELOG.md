@@ -18,6 +18,13 @@ Every decision and change, dated, newest first. **Decided by** says who made the
   - `spikes/` is deleted once the rung 1 phone test passes.
 
 ### Changes
+- Public repo at https://github.com/royalgillz/stratum. The first CI run passed on GitHub: 30 tests, check and build.
+- Branch protection on `main`:
+  - the CI job `checks` is required for pull requests;
+  - force-push and deletion are blocked;
+  - admins may still push directly.
+- Vercel to GitHub auto-deploy is not connected yet: Vercel's GitHub App needs access to the repo. Deploys continue with `npx vercel deploy --prod --yes`.
+- Builders started in separate worktrees for fairshare, witness and kernel (design and specs only, pending review).
 - Git history rewritten before the first push, to remove `docs/audit.md` from every commit; commit hashes changed. A bundle of the old history is kept outside the repo.
 
 ## 2026-11-15
