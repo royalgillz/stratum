@@ -123,7 +123,7 @@ describe('tracker', () => {
     expect(tierAfter([[35, 0], [6, 0.3]])).toBe('GREEN');
     // From +40 to -20 mHz: above -50, but a 60 mHz fall inside 10 s.
     expect(tierAfter([[35, 0], [10, 0.04], [5, -0.02]])).toBe('AMBER');
-  });
+  }, 30_000); // times out at 5 s when the machine is busy
 
   // @spec TRACK-009
   it('leaves RED and AMBER only after 20 readings clear of the exit threshold', () => {

@@ -60,3 +60,5 @@ tbody th { font-weight: 400; }
 .card th[scope=row] { width: 40%; }
 /* Values wrap between number and unit, so a long figure never widens a narrow screen. */
 .card td, #metrics td { white-space: normal; }
+/* Wider fonts (Linux CI) can make one long word wider than a 369 px column: let it break there. */
+@media (max-width: 480px) { th, td { overflow-wrap: anywhere; hyphens: auto; } }

@@ -150,8 +150,9 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - In this model staged trials never cost fewer exposure-hours than one direct 30-day trial: a breach is
   caught in the first hour either way. Their real value, catching harm that shows only after longer
   exposure, is not modelled.
-- When supply is below every life floor, Fair Share breaches every floor equally: STRATUM's heat result
-  rises above zero.
+- When supply is below every life floor, Fair Share breaches every floor equally, so STRATUM's heat
+  result is above zero (about 9,300 person-hours in the seven-day week, about 139,000 in the stress
+  week, against the Directorate's 65,000 and 178,000).
 
 ## Surface
 

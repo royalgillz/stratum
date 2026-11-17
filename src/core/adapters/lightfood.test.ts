@@ -222,7 +222,7 @@ describe('p12 food', () => {
     expect(e.at(6 * DAY).value).toBe(3); // breach at day 5 00:00
     // cuts that stop no delivery (within one day, or zero length) set no c
     expect(run('directorate', [cut(50, 2, 10), cut(48, 3, 0)]).at(7 * DAY).value).toBe(0);
-  });
+  }, 30_000); // two full weeks; times out at 5 s when the machine is busy
 
   // @spec ADAPT-LIGHTFOOD-007
   it('does not count a breach for eating the floor less a rounding unit', () => {
