@@ -30,7 +30,9 @@ for (const scheme of ['light', 'dark'] as const) {
         await expect(card.locator('tbody th').first()).toContainText(i === 8 ? '30-day run, 20 seeds' : 'Seven-day week, 20 seeds');
         await expect(card.locator('tbody th', { hasText: 'Stress week, 20 seeds' })).toHaveCount(1);
       }
-      await expect(page.locator('#matrix tbody tr')).toHaveCount(31); // seven-day and stress week for each, and p09's 30-day run
+      await expect(page.locator('#matrix tbody tr:not(.beside)')).toHaveCount(31); // seven-day and stress week for each, and p09's 30-day run
+      await expect(cards(page).nth(11).locator('tbody tr', { hasText: 'Stress week' })).toContainText('against STRATUM: every level breaches');
+      await expect(cards(page).nth(13).locator('tr.beside', { hasText: 'trial breaches' }).last()).toContainText('4'); // the stress week's cost is on screen
       // Problem 3 from the committed evidence: STRATUM's heat person-hours, interval below.
       await expect(cards(page).nth(2).locator('tbody td').nth(1)).toContainText(show(seven.policies.stratum.p03.final.mean, 'person-h'));
       // Problem 9's headline is the 30-day run; the small seven-day outbreak is marked as noise.
@@ -74,7 +76,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.goto('/src/district/coverage.html', { waitUntil: 'domcontentloaded' });
       await expect(cards(page)).toHaveCount(15, { timeout: 15_000 }); // the page script still comes from the preview server, which stalls under load
       await expect(page.getByText(/Stress week/)).toHaveCount(0);
-      await expect(page.locator('#matrix tbody tr')).toHaveCount(16); // p09 adds its 30-day run
+      await expect(page.locator('#matrix tbody tr:not(.beside)')).toHaveCount(16); // p09 adds its 30-day run
       await expect(page.locator('#status')).toHaveText('');
     });
   });

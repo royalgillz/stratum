@@ -42,7 +42,7 @@ for (const [id, marker] of specs) {
   }
 }
 
-const forbidden = /\b(window|document|navigator|localStorage|sessionStorage|indexedDB|fetch|XMLHttpRequest|AudioContext|Math\.random)\b/;
+const forbidden = /\b(window|document|navigator|localStorage|sessionStorage|indexedDB|fetch|XMLHttpRequest|AudioContext|Math\.random|getRandomValues|randomUUID)\b/;
 for (const f of code.filter((f) => rel(f).startsWith('src/core/') && !f.endsWith('.test.ts'))) {
   readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
     // Comments and string literals may name forbidden things (the word list holds "window").

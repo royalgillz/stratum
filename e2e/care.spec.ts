@@ -68,6 +68,19 @@ test.describe('Care tab: Breath Count', () => {
     await expectSoundLayout(page);
     await page.getByRole('button', { name: 'Stop' }).click();
     await expect(page.locator('#result')).toContainText('RECOUNT');
+    await expect(page.locator('#result')).toBeFocused();
+    await expect(page.locator('#announce')).not.toContainText('RECOUNT'); // the focused card reads it once
+  });
+
+  test('answering No to cough mid-count stops the count and discards it', async ({ page }) => {
+    await choose(page, '1');
+    await page.getByRole('button', { name: 'Start 60-second count' }).click();
+    await page.getByRole('button', { name: 'Tap once per breath' }).click();
+    await page.getByRole('radio', { name: 'No' }).check();
+    await expect(page.locator('#counter')).toBeHidden();
+    await expect(page.locator('#result')).toContainText('NOT ASSESSED');
+    await page.clock.runFor(61_000);
+    await expect(page.locator('#result')).not.toBeFocused(); // no timer left to finish
   });
 
   for (const [outcome, breaths, every] of [['GREEN', 30, 1900], ['AMBER', 45, 1300]] as const) {

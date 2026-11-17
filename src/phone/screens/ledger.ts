@@ -46,7 +46,7 @@ export function mountLedger(root: HTMLElement) {
   root.innerHTML = `
     <h2>Odds of a power cut</h2>
     <p class="muted">Chance each level loses power the next time the grid is under strain, from what neighbours reported.</p>
-    <div id="ledger"></div>
+    <div id="ledgerOut"></div>
     <details><summary>How this is worked out</summary><p class="muted">Each number estimates the chance a level is cut in the next stress event at that tier. It
       starts from an even guess and moves toward what neighbours reported, so a few events never give 0% or 100%.
       A level counts as cut in an event when 3 different phones report it without power during the event or the
@@ -56,7 +56,7 @@ export function mountLedger(root: HTMLElement) {
     <p class="muted">Kept in this page's memory only: the ledger resets when the page reloads.</p>`;
 
   const view = ledgerView();
-  const out = $('#ledger', root);
+  const out = $('#ledgerOut', root);
   let shown = '';
 
   function render() {

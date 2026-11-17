@@ -92,7 +92,9 @@ On the laptop first, then repeat steps 1 to 3 on the phone (its screen is narrow
 cut off and the page does not scroll sideways).
 
 1. `/src/district/`: the results table has fifteen numbered rows, **1.** to **15.**, each with
-   "higher is better" or "lower is better", a tier badge and SIMULATED, and a value for both rules.
+   "higher is better" or "lower is better", a tier badge and SIMULATED. Before Play every value reads
+   "not started"; once the week runs, each row shows a value for both rules (a few say "no outbreak" or
+   similar until their event).
    Click **Play** and let it run to the end of the week (about 3 minutes; the real-time act
    "Level 5 goes dark: deepest first" plays at real pace).
 2. On the cross-section: a thin food store bar along the bottom of each sector, and a **Surface:**

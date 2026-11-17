@@ -39,7 +39,12 @@ $('.tabs').addEventListener('keydown', (e) => {
   next.focus();
   show(next.dataset.screen!);
 });
-window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+window.addEventListener('hashchange', () => {
+  show(location.hash.slice(1));
+  // A "Go to ..." button hid its own panel: put focus on the new tab, not the page.
+  const a = document.activeElement;
+  if (!a || a === document.body || a.closest('[role=tabpanel][hidden]')) tabs.find((t) => t.tabIndex === 0)?.focus();
+});
 show(location.hash.slice(1) || 'listen');
 
 const saved = store.get('stratum.words');

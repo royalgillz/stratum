@@ -91,7 +91,7 @@ test.describe('District 7 page', () => {
     const act = page.locator('#act');
     await expect(act).toContainText('The hum sags: under a minute of warning, too short to count · REAL TIME · paused');
     const f = Number(/grid ([\d.]+) Hz/.exec((await clock.textContent())!)![1]);
-    expect(f).toBeLessThan(399.95);
+    expect(f).toBeLessThanOrEqual(399.95); // AMBER starts at f <= 399.95 (grid.ts), and the page pauses on its first frame
     const [f1, f2, gain] = await hum(3);
     expect(f1).toBeCloseTo(f, 2);
     expect(f2).toBeCloseTo(2 * f, 2);
@@ -99,7 +99,8 @@ test.describe('District 7 page', () => {
 
     await page.getByRole('button', { name: 'Play' }).click();
     await expect(page.getByRole('button', { name: 'Week ended' })).toBeDisabled({ timeout: 120_000 });
-    await expect(clock).toContainText('World time day 8, '); // at ?speed the last tick may overshoot midnight: Run.tick does not clamp to the end
+    await expect(clock).toContainText('World time end of day 7 · ');
+    await expect(page.locator('#act')).toHaveText('Week ended · press Restart to replay');
     await expectSoundLayout(page); // the week's longest figures
     await page.getByRole('button', { name: 'Sound: on' }).click();
     await expect.poll(async () => (await hum(1))[0]).toBe(0);
@@ -130,7 +131,7 @@ test.describe('District 7 page', () => {
       await expect(page.locator('#metrics td')).toHaveCount(30); // both policies side by side
       await expect(page.locator('#metrics td', { hasText: 'not yet run' })).toHaveCount(0);
       await expect(page.locator('#map .surface')).toHaveText('Surface: no reading yet');
-      await expect(page.locator('#metrics tr').nth(7).locator('td')).toHaveText(['no separations yet', 'no separations yet']); // no placeholder 0 h
+      await expect(page.locator('#metrics tr').nth(7).locator('td')).toHaveText(['not started', 'not started']); // no placeholder 0 h
       await expect(page.locator('#map rect.food-track')).toHaveCount(24);
       await expect(page.getByText('food store, bottom edge', { exact: false })).toBeVisible();
       await expect(page.getByRole('link', { name: 'coverage matrix' })).toHaveAttribute('href', './coverage.html');

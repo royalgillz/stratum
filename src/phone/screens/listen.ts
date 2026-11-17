@@ -17,7 +17,7 @@ export function mountListen(root: HTMLElement) {
   root.innerHTML = `
     <h2>Listen to the grid</h2>
     <p class="muted">Uses the microphone on this phone only. Nothing is recorded or uploaded. Keep the phone within about 30 cm of the hum.</p>
-    <button id="listen">Start listening</button>
+    <button id="listenBtn">Start listening</button>
     <p id="tier" class="idle" role="status" aria-live="polite">Not listening yet</p>
     <p id="dev"></p>
     <p id="replay" class="muted">${REPLAY_TEXT}</p>
@@ -26,7 +26,7 @@ export function mountListen(root: HTMLElement) {
     <label class="check"><input type="checkbox" id="relayOn" /> Pass on messages for others</label>
     <p id="relayCount" role="status" aria-live="polite">Relaying starts when you tap Start listening.</p>
     <p class="muted">With no network, phones carry each other's messages a few metres at a time; this phone never decodes other families' messages, it only repeats them.</p>`;
-  const btn = $<HTMLButtonElement>('#listen', root);
+  const btn = $<HTMLButtonElement>('#listenBtn', root);
 
   const relayOn = $<HTMLInputElement>('#relayOn', root);
   relayOn.checked = app.relaying;

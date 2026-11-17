@@ -15,6 +15,9 @@ test.describe('ledger screen', () => {
     await expectSoundLayout(page);
     await page.getByRole('button', { name: 'Go to Listen' }).click();
     await expect(page.getByRole('tab', { name: 'Listen' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Listen' })).toBeFocused(); // not dropped to the page
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Start listening' })).toBeFocused(); // the URL fragment names no element
   });
 
   test('shows levels 1 to 6 with no data yet once listening, without horizontal scroll', async ({ page }) => {

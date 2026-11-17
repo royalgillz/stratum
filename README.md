@@ -13,7 +13,7 @@ Live: https://stratum-nine-swart.vercel.app
 3. **Coverage matrix** (`/src/district/coverage.html`): each problem's tier, mechanism, 20-seed results and the results against us.
 4. **Phone page** (`/src/phone/`, Android Chrome): Listen, Report, Family, Ledger, Care.
 
-Works offline: open the phone page once with network and it then opens and runs with none, and Chrome on Android can install it to the home screen (Add to Home screen). An update arrives on the next visit with network.
+Works offline: open the phone page once with network and it then opens and runs with none, and Chrome on Android can install it to the home screen (Add to Home screen) (tested in Chromium with Playwright, not yet on a phone). An update arrives on the next visit with network.
 
 The Listen screen shows how the same hum tracker did on real grid recordings (ENF-WHU, REPLAY): typically 31 mHz off, with 16% of the 129 recordings locked onto another tone. Tap "How sure is this?" for the per-clip and pooled medians.
 
@@ -24,15 +24,15 @@ On a real phone and laptop, follow the run sheet [docs/rung-test.md](docs/rung-t
 Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real public recordings) or **SIMULATED** (District 7, and judge mode's drawn phone).
 
 - Real code: the hum tracker, the 25-byte sound packets and their cryptography, the relay, the ledger and the allocator.
-- Tested on a real phone so far: the hum tracker and phone-to-laptop packets (spikes T1 to T3 on one Android phone and a laptop, [docs/spikes.md](docs/spikes.md)); the full app's run sheet is pending. No iPhone was tested.
+- Tested on a real phone so far: the hum tracker and 25 bytes by sound from phone to laptop (spikes T1 to T3 on one Android phone and a laptop, spike code, not the shipped tracker or codec, [docs/spikes.md](docs/spikes.md)); the full app's run sheet is pending. No iPhone was tested.
 - Scored on real data (REPLAY): the tracker on 130 ENF-WHU grid recordings, the water detector on GECCO 2018.
 - Simulated: District 7 and everything in it.
 
 | Tier | Problems |
 | --- | --- |
 | Live (a part runs on a real phone) | 1 (power warning), 7 (messages without the network), 8 (families, device test pending), 10 (Breath Count and the medicine request, device test pending) |
-| Modelled (algorithm in District 7 against the Directorate's rule) | 1 (air), 2, 3, 4, 5, 6, 9, 10 (delivery), 11, 12, 13, 14, 15 |
-| Thin or Roadmap | none |
+| Modelled (algorithm in District 7 against the Directorate's rule) | 2, 3, 4, 5, 6, 9, 10 (delivery), 11, 12, 13, 14, 15 |
+| Thin or Roadmap | 1 (air warning: no rule warns before an air cut) |
 
 The phone sends real reports for 2, 4, 5, 9 and 12, but District 7 does not analyse them yet. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md). Known limits: [docs/limits.md](docs/limits.md).
 

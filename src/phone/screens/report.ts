@@ -20,7 +20,7 @@ export function mountReport(root: HTMLElement) {
         .map((e) => `<button data-code="${e.code}"><span aria-hidden="true">${e.icon}</span>${e.label}</button>`).join('')}</div>`).join('')}
     </fieldset>
     <p id="sent" role="status"></p>
-    <dialog id="confirm" aria-labelledby="confirm-title">
+    <dialog id="confirm" aria-labelledby="confirm-title" aria-describedby="where nofamily">
       <form method="dialog">
         <h3 id="confirm-title"></h3>
         <p id="where"></p>
@@ -41,10 +41,10 @@ export function mountReport(root: HTMLElement) {
   sector.append(new Option('Choose', ''));
   for (let l = 1; l <= 6; l++) level.append(new Option(String(l), String(l)));
   for (let s = 0; s < 4; s++) sector.append(new Option(String.fromCharCode(65 + s), String(s)));
-  level.value = store.get('stratum.level') ?? '';
-  sector.value = store.get('stratum.sector') ?? '';
-  level.onchange = () => store.set('stratum.level', level.value);
-  sector.onchange = () => store.set('stratum.sector', sector.value);
+  level.value = app.place.level;
+  sector.value = app.place.sector;
+  level.onchange = () => store.set('stratum.level', (app.place.level = level.value));
+  sector.onchange = () => store.set('stratum.sector', (app.place.sector = sector.value));
 
   const grid = $<HTMLFieldSetElement>('#grid', root), sent = $('#sent', root), dlg = $<HTMLDialogElement>('#confirm', root);
   const power = $<HTMLInputElement>('#power', root), count = $<HTMLInputElement>('#count', root);
@@ -53,7 +53,7 @@ export function mountReport(root: HTMLElement) {
   const powerOn = (e: Entry) => e.power ?? power.checked;
   let entry: Entry | undefined;
   let unlock: ReturnType<typeof app.audio> | undefined;
-  go.onclick = () => { unlock = app.audio(); }; // start sound inside the tap: iOS Safari allows it only there
+  go.onclick = () => { (unlock = app.audio()).catch(() => {}); }; // start sound inside the tap (iOS Safari allows it only there); send() reports a failure
 
   grid.onclick = (ev) => {
     const b = (ev.target as HTMLElement).closest<HTMLButtonElement>('button[data-code]');
@@ -97,9 +97,7 @@ export function mountReport(root: HTMLElement) {
       if (!keys) throw new Error('you left the family. Join it again on the Family tab.');
       const bytes = await encode(keys, { type: m.type, minute: Math.floor(Date.now() / 60000), nonce: app.nonce(), hops: 3, payload: m.payload });
       sent.textContent = `⏳ Sending ${what}… keep the phone still.`;
-      // A blocked audio context never resumes: give up instead of saying "Sending" forever.
-      const ok = await Promise.race([(unlock ?? app.audio()).then(() => true), new Promise((r) => setTimeout(r, 5000, false))]);
-      if (!ok) throw new Error('sound is blocked. Tap Send again.');
+      await (unlock ?? app.audio()); // rejects after 5 s if sound is blocked
       await app.send(bytes);
       if (e.power !== undefined) power.checked = e.power; // the box shows what this phone last reported
       sent.textContent = `✔ Sent ${what} at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`;

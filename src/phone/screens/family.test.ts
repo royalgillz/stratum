@@ -47,5 +47,8 @@ describe('says', () => {
     expect(says(with_(1, 0x10))).toBe('■ RED: medicine request (danger sign)'); // a breath code, not the REPORT code 0x10
     expect(says(with_(1, 0x11, 52))).toBe('▲ AMBER: medicine request, 52 breaths per minute');
     expect(says(with_(5, 0))).toBe('Save water');
+    expect(says(with_(1, 0x20, 5))).toBe('Needs help: Medicine (5 people)'); // the count from the Report dialog
+    expect(says(with_(2, 0x15, 1))).toBe('Report: People coughing or sick (1 person)');
+    expect(says(with_(2, 0x13, 9))).toBe('Report: Flooding or route blocked'); // a code with no count ignores the value
   });
 });

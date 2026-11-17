@@ -12,6 +12,7 @@ button[aria-pressed=true] { font-weight: 700; box-shadow: 0 0 0 3px var(--accent
 @media (forced-colors: active) {
   button[aria-pressed=true] { outline: 3px solid ButtonText; outline-offset: -6px; }
   button[aria-pressed=true]:focus-visible { outline-offset: 3px; border: 3px solid ButtonText; }
+  .key { forced-color-adjust: none; } /* the swatches keep the fixed colours the map keeps */
 }
 button:disabled { opacity: 0.6; }
 .act { font-size: 1.15rem; font-weight: 600; margin: 12px 0 0; }
@@ -20,7 +21,7 @@ button:disabled { opacity: 0.6; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
 @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 
-#map { display: block; width: 100%; height: auto; max-height: min(62vh, calc(100vh - 340px)); /* all six levels above the fold on a 1366 x 768 laptop: the map starts about 300 px down, more with Linux fonts */ font: 13px system-ui, sans-serif; }
+#map { display: block; width: 100%; height: auto; max-height: max(22rem, min(62vh, calc(100vh - 340px))); /* all six levels above the fold on a 1366 x 768 laptop: the map starts about 300 px down, more with Linux fonts; on short screens (200% zoom) it scrolls instead of shrinking */ font: 13px system-ui, sans-serif; }
 #map text { fill: currentColor; }
 #map .axis { fill: var(--muted); font-weight: 700; }
 #map .marks { font-weight: 700; letter-spacing: 0.08em; }
@@ -61,4 +62,4 @@ tbody th { font-weight: 400; }
 /* Values wrap between number and unit, so a long figure never widens a narrow screen. */
 .card td, #metrics td { white-space: normal; }
 /* Wider fonts (Linux CI) can make one long word wider than a 369 px column: let it break there. */
-@media (max-width: 480px) { th, td { overflow-wrap: anywhere; hyphens: auto; } }
+@media (max-width: 480px) { tbody th, tbody td { overflow-wrap: anywhere; hyphens: auto; } } /* column heads are single words */

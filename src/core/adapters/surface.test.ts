@@ -208,6 +208,17 @@ describe('p14 pioneers', () => {
     expect(sum(s.alloc.trialSlots)).toBe(64);
   });
 
+  // @spec ADAPT-SURFACE-007
+  it('STRATUM: a plan that proves no option reads NO_PROOF, not 0', () => {
+    const closed = camp(0, { co: 0, o3: 2000, so2: 0, falsified: 0 }); // above every option's factor
+    const w = world();
+    const p14 = createP14('stratum', script([closed]));
+    const k = run([createP13('stratum', script([closed])), p14], w, 24 * H);
+    expect(p14.plan()).not.toBeNull();
+    expect(p14.plan()!.verified).toBe(0);
+    expect(k.metrics().p14!.value).toBe(NO_PROOF);
+  });
+
   // @spec ADAPT-SURFACE-005
   it('STRATUM: keeps its plan while the band is unknown, replans when the known band changes', () => {
     const w = world();

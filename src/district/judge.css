@@ -14,7 +14,8 @@ h3 { font-size: 0.95rem; margin: 12px 0 4px; }
 /* One visible focus outline in both themes: the default ring is faint on the light-blue dark-theme button. */
 :focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
 button { font: inherit; min-height: 44px; padding: 0 16px; margin: 4px 8px 4px 0; }
-button.primary { font-weight: 700; background: var(--accent); color: var(--bg); border: 0; border-radius: 6px; }
+button.primary { font-weight: 700; background: var(--accent); color: var(--bg); border: 2px solid transparent; border-radius: 6px; } /* the border shows in forced colours */
+a.go { display: inline-block; min-height: 44px; line-height: 44px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }
 .small { font-size: 0.9rem; font-variant-numeric: tabular-nums; }

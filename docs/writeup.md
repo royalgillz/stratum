@@ -10,7 +10,7 @@ A citizen toolkit for the Hollow, built around one loop: **hear** what is really
 
 ## Inspiration
 
-The Directorate controls the network, the breakers and the numbers. It does not control the hum in the walls. Every powered machine hums at the grid frequency, and the pitch sags before supply runs out. A phone can hear that. A phone can pass a short, authenticated message by sound to a laptop (tested) or another phone (test pending). And once people can see who gets cut, they can ask for a fairer rule. STRATUM starts from what a resident already carries: a phone with a microphone and a speaker.
+The Directorate controls the network, the breakers and the numbers. It does not control the hum in the walls. Every powered machine hums at the grid frequency, and the pitch sags before supply runs out. A phone can hear that. A phone can pass 25 bytes by sound to a laptop (tested with spike code); the signed v3 packet between devices is pending the run sheet. And once people can see who gets cut, they can ask for a fairer rule. STRATUM starts from what a resident already carries: a phone with a microphone and a speaker.
 
 ## What it is
 
@@ -19,7 +19,7 @@ One loop, three engines, one test rig.
 | Engine | What it does | What is real |
 | --- | --- | --- |
 | **Witness** | One change detector and one hash-chained ledger. Every disputed number is stored twice: what residents measured and what the Directorate announced | The hum tracker on the phone, scored on real recordings (REPLAY). The detector, scored on real drinking-water data (REPLAY). Residents' reports arrive as real packets |
-| **Mesh** | One 25-byte authenticated packet, carried by sound from phone to phone, stored and passed on | Real packets between real devices with real cryptography (HMAC-SHA-256, HKDF, six generated family words) |
+| **Mesh** | One 25-byte authenticated packet, carried by sound from phone to phone, stored and passed on | ggwave carried 25 bytes phone to laptop 20/20; HKDF and HMAC run in both browsers; the full v3 packet with family words is not yet device-tested |
 | **Fair Share** | One allocation rule for every scarce thing: life floors first, then raise the worst-off, rotate what cannot be split | The rule is real code. The supplies it shares are simulated |
 
 **District 7** (6 levels by 4 sectors) is a simulated test rig: coupled power, heat, air, water, sewage, disease, light, food and the surface. It exists to produce the signals the engines hear and to measure what changes when they act. It is labelled SIMULATED everywhere.
@@ -34,7 +34,7 @@ Every number on screen and in this write-up carries one of three labels:
 - **REPLAY**: real public recordings run through the same code the phone uses.
 - **SIMULATED**: District 7, or judge mode's drawn phone (which runs the real tracker and codec on a simulated hum, marked LOOPBACK).
 
-Each problem also carries a tier, from `docs/coverage.md`: **Live** (runs on a real phone), **Modelled** (an algorithm in District 7, measured against the Directorate's rule), **Thin** (one rule or chart on assumed parameters), **Roadmap** (write-up only). No problem is Thin or Roadmap at the time of writing.
+Each problem also carries a tier, from `docs/coverage.md`: **Live** (runs on a real phone), **Modelled** (an algorithm in District 7, measured against the Directorate's rule), **Thin** (one rule or chart on assumed parameters), **Roadmap** (write-up only). Only the air half of problem 1 is Roadmap: no rule warns before an air cut. No problem is Thin.
 
 Device status: spikes T1 to T3 passed on one Android phone and a laptop (`docs/spikes.md`). The full app's run sheet on a real phone (`docs/rung-test.md`: tiers, relay hop, family board, Breath Count, the phone's OK reaching District 7) is pending. No iPhone was tested.
 
@@ -44,7 +44,7 @@ Every problem has a mechanism, a metric and a place on screen, with its tier pri
 
 | # | Problem | Mechanism | Tier | Headline result |
 | --- | --- | --- | --- | --- |
-| 1 | Warn before power or air cuts | Tone bank on the 800 Hz hum, 30 s calibration, GREEN / AMBER / RED tiers; Shed Ledger gives cut odds per level from neighbours' reports | Live (power), Modelled (air) | Tracker on 129 of 130 ENF-WHU clips: median per-clip error 31.2 mHz (REPLAY). Cuts warned 10 min ahead, 7-day: D 0.00, S 0.40; stress: D 0.00, S 0.00 (SIMULATED) |
+| 1 | Warn before power or air cuts | Tone bank on the 800 Hz hum, 30 s calibration, GREEN / AMBER / RED tiers; Shed Ledger gives cut odds per level from neighbours' reports | Live (power); air: Roadmap | Tracker on 129 of 130 ENF-WHU clips: median per-clip error 31.2 mHz (REPLAY). Cuts warned 10 min ahead, 7-day: D 0.00, S 0.40; stress: D 0.00, S 0.00 (SIMULATED) |
 | 2 | Share power, water, food fairly | Fair Share: floors, then water-filling, debt rotates feeder cuts | Modelled; phone sends real reports | Worst-decile served fraction, 7-day: D 0.66, S 0.85; stress: D 0.50, S 0.63 (SIMULATED) |
 | 3 | Keep lower levels livable | Fair Share steers cooling to where it removes most person-hours over the limit; refuge rooms | Modelled | Person-hours above 27.5 C wet-bulb, 7-day: D 64,904, S 9,336; stress: D 178,050, S 138,670 (SIMULATED) |
 | 4 | Catch bad water before people drink it | Witness detector on recycler sensors; the level's water is held before bad water reaches the taps | Modelled; real data; phone sends real reports | GECCO 2018, six sensors: 22/22 held-out events, precision 0.017; 21/29 on the first half (REPLAY). Person-hours of unsafe water drunk, 7-day: D 23,280, S 0 (SIMULATED) |
@@ -141,7 +141,7 @@ The full list is in `docs/limits.md`. The ones that matter most:
 - District 7 is a simulation. Its heat, water, sewage, disease, food and surface values are model outputs.
 - The hum says when the grid is stressed, not which level will be cut; the cut odds come from neighbours' reports, and anyone can send public reports.
 - The tracker needs to be close to the hum: about 30 cm in a quiet room.
-- Sound carries a few metres. The live demo proves one hop; multi-hop reach is simulated.
+- Sound carries a few metres. The live demo is meant to show one hop (pending the run sheet); multi-hop reach is simulated.
 - Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or no hum at all.
 - Breath Count is a decision aid that follows published thresholds for children under five. It is not a medical device. It asks five of the chart's eleven danger signs.
 - The ledger digest packet for the surface verdict (13) is not sent by any phone yet. Case reports for the outbreak (9) are not designed yet. Reports sent from the phone are not analysed in District 7 yet.

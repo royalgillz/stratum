@@ -10,7 +10,7 @@ export const devText = (mHz: number, label: string) => `${Math.abs(mHz).toFixed(
 
 // The same tracker on real recorded grids (npm run score:enf). The evidence file asks for both medians together.
 const w = enf.withHum, c = w.clipMedians;
-export const REPLAY_TEXT = `In a replay of ${c.clips} recordings of a real 50 Hz grid, the tracker was typically ${Math.round(c.medianMHz)} mHz off; ${Math.round((100 * c.over500) / c.clips)}% followed another hum instead · REPLAY`;
+export const REPLAY_TEXT = `In a replay of ${w.clips} recordings of a real 50 Hz grid, the tracker was typically ${Math.round(c.medianMHz)} mHz off; ${Math.round((100 * c.over500) / c.clips)}% of the ${c.clips} scored followed another hum instead · REPLAY`;
 export const REPLAY_DETAILS = `The tracker replayed ${w.clips} recordings of a real 50 Hz grid (ENF-WHU) and was checked against the grid's own record. ` +
   `Median of each recording's median error: ${c.medianMHz} mHz (${c.clips} recordings; ${w.clips - c.clips} gave no reading). ` +
   `Median over all ${w.scored.toLocaleString('en-US')} readings pooled: ${w.medianMHz} mHz, lower because clean recordings give more readings. ` +

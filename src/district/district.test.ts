@@ -35,7 +35,7 @@ describe('gateway toMessage', () => {
     const theirs = await ok(stranger);
     expect(toMessage(await decode(theirs, now), theirs)).toEqual({ note: 'Rejected: not this family (or damaged)' });
     const bad = (await ok(family, 9)).map((b, i) => (i === 20 ? b ^ 1 : b));
-    expect(toMessage(await decode(bad, now), bad)).toEqual({ note: 'Rejected: mac' });
+    expect(toMessage(await decode(bad, now), bad)).toEqual({ note: 'Rejected: damaged or not a STRATUM packet' });
     const alert = await ok(pub, 11, TYPES.GRID_ALERT);
     const r = toMessage(await decode(alert, now), alert);
     expect(r.message).toBeUndefined();
@@ -132,12 +132,16 @@ describe('problems: shown values and who did better', () => {
   });
 
   it('names the missing event instead of a placeholder zero', () => {
-    expect(noEvent('p08', sevenDay.events, 0)).toBe('no separations yet');
+    expect(noEvent('p08', sevenDay.events, 0)).toBe('not started');
+    expect(noEvent('p08', sevenDay.events, 60)).toBe('no separations yet');
+    expect(noEvent('p01', sevenDay.events, 29 * 3600)).toBe('no power cuts yet');
+    expect(noEvent('p01', sevenDay.events, 30 * 3600)).toBeNull();
+    expect(noEvent('p12', sevenDay.events, 3600)).toBe('no farm cut-off yet');
     expect(noEvent('p08', sevenDay.events, 2 * 3600)).toBeNull();
     expect(noEvent('p08', stressWeek.events, 7 * 86400)).toBe('no separations in this script');
     expect(noEvent('p13', sevenDay.events, 119 * 3600)).toBe('no surface readings yet');
-    expect(noEvent('p15', sevenDay.events, 0)).toBe('no plan yet');
+    expect(noEvent('p15', sevenDay.events, 0)).toBe('not started');
     expect(noEvent('p15', sevenDay.events, 60)).toBeNull();
-    expect(noEvent('p03', stressWeek.events, 0)).toBeNull();
+    expect(noEvent('p03', stressWeek.events, 60)).toBeNull();
   });
 });

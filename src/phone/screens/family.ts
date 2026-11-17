@@ -21,7 +21,9 @@ export function careAlert(d: Decoded) {
 /** A message in plain words, shared by the board and the inbox. */
 export function says(d: Decoded) {
   const e = CODEBOOK.find((x) => TYPES[x.type] === d.type && x.code === d.payload.code);
-  return careAlert(d)?.text ?? (d.type === TYPES.OK ? KIND[d.type] : e ? `${KIND[d.type]}: ${e.label}` : KIND[d.type] ?? `Message type ${d.type}`);
+  const n = e?.count ? d.payload.value : 0; // 0 = count not given
+  const people = n ? ` (${n} ${n === 1 ? 'person' : 'people'})` : '';
+  return careAlert(d)?.text ?? (d.type === TYPES.OK ? KIND[d.type] : e ? `${KIND[d.type]}: ${e.label}${people}` : KIND[d.type] ?? `Message type ${d.type}`);
 }
 
 /** " · power on" or off: power is a field of OK and REPORT only, so a need shows none rather than a value that is not a reading. */
@@ -49,13 +51,13 @@ const nickKey = (member: number) => `stratum.nick.${member}`;
 export function mountFamily(root: HTMLElement) {
   root.innerHTML = `
     <h2>Family</h2>
-    <div id="family"></div>
+    <div id="familyBox"></div>
     <h2>Family board</h2>
     <div id="board"></div>
     <h2>Inbox</h2>
-    <p class="muted">Times shown are when each message was sent, not when it arrived. Messages arrive only while the Listen tab is on.</p>
-    <ul id="inbox" class="list" role="log" aria-live="polite"></ul>`;
-  const box = $('#family', root), board = $('#board', root), inbox = $('#inbox', root);
+    <p class="muted">Times shown are when each message was sent, not when it arrived. Messages arrive only while this phone is listening (tap Start listening on the Listen tab once; it keeps listening on every tab).</p>
+    <ul id="inbox" class="list" role="log" aria-live="polite"><li class="muted empty">Nothing heard yet.</li></ul>`;
+  const box = $('#familyBox', root), board = $('#board', root), inbox = $('#inbox', root);
   let heard: Decoded[] = []; // latest per member only, kept small by boardRows
 
   function render() {
@@ -107,11 +109,11 @@ export function mountFamily(root: HTMLElement) {
     const focused = board.contains(document.activeElement) ? document.activeElement?.getAttribute('aria-label') : null;
     board.replaceChildren(el('p', `You are member ${app.member}.`));
     if (!app.family) {
-      board.append(el('p', 'Create or join a family above first. Then messages from family phones appear here while the Listen tab is on.', 'muted'));
+      board.append(el('p', 'Create or join a family above first. Then messages from family phones appear here while this phone is listening (Start listening on the Listen tab).', 'muted'));
       return;
     }
     if (!rows.length) {
-      board.append(el('p', 'Nothing heard from your family yet. Messages arrive only while the Listen tab is on: open it, tap Start listening, and keep this phone near the others.', 'muted'));
+      board.append(el('p', 'Nothing heard from your family yet. Messages arrive only while this phone is listening (tap Start listening on the Listen tab once; it keeps listening on every tab). Keep this phone near the others.', 'muted'));
       return;
     }
     const others = rows.filter((r) => r.d.payload.member !== app.member);
@@ -125,8 +127,9 @@ export function mountFamily(root: HTMLElement) {
       const text = el('div', '');
       text.append(
         el('strong', who),
-        alert ? el('div', alert.text, `alert ${alert.tier}`)
-          : el('div', stale ? `⚠ Not heard for over ${STALE_MIN} min` : '✓ Heard recently', stale ? 'stale' : ''),
+        ...(alert ? [el('div', alert.text, `alert ${alert.tier}`)] : []),
+        // an old danger request must not look current: stale shows beside it
+        ...(stale || !alert ? [el('div', stale ? `⚠ Not heard for over ${STALE_MIN} min` : '✓ Heard recently', stale ? 'stale' : '')] : []),
         el('div', `LIVE · ${alert ? KIND[d.type] : says(d)}, sent ${clock(d.minute)}, ${ago === 0 ? 'just now' : `${ago} min ago`} · level ${p.level}, sector ${String.fromCharCode(65 + p.sector)}${power(d)}`, 'muted'),
       );
       li.append(text);
@@ -156,6 +159,7 @@ export function mountFamily(root: HTMLElement) {
     // A repeat (relayed copy) updates its row instead of adding a second one.
     const key = `${r.keySet}:${r.minute}:${r.type}:${p.member}:${p.code}`;
     const old = r.duplicate ? [...inbox.children].find((li) => (li as HTMLElement).dataset.key === key) : undefined;
+    inbox.querySelector('.empty')?.remove();
     if (old) old.textContent = text;
     else {
       const li = el('li', text);

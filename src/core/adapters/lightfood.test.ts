@@ -124,6 +124,19 @@ describe('p11 light', () => {
     expect(Object.values(debt).some((d) => d > 0)).toBe(true); // someone was passed over and carries debt
   });
 
+  // @spec ADAPT-LIGHTFOOD-002
+  it('STRATUM: a whole n / w_s never floors one short (30 tracked members, n = 250 gives 15 member-units)', () => {
+    const w = world();
+    w.households = w.households.filter((h) => h.sector !== 0).concat(Array.from({ length: 10 }, (_, i) => ({ id: `t${i}`, members: 3, level: 1, sector: 0, shift: 0 })));
+    const f = 0.717; // sessions(lampKWh(500) x f) + growSessions(f) = 179 + 71 = 250; 250 / (500 / 30) is 14.999999999999998 in floats
+    expect(sessions(lampKWh(PEOPLE) * f) + growSessions(f)).toBe(250);
+    const k = createKernel(w, [supplyStub((s) => (s === 0 ? f : 1)), createP11('stratum', quietScript())], { check: true });
+    k.run(DAY);
+    k.step();
+    const share = 250 / PEOPLE; // 5 households of 3 win, standing for (500 / 30) x 15 = 250 people
+    expect(w.sectors[0].lightDose).toBeCloseTo(share * dose(BRIGHT_H) + (1 - share) * dose(0), 9);
+  });
+
   // @spec ADAPT-LIGHTFOOD-003
   it('names its metric, 0 before the first day ends, about 0.2 under the Directorate over a week', () => {
     const w = world();

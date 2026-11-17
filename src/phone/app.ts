@@ -26,10 +26,13 @@ class App extends EventTarget {
   familyWords: string | null = null;
   member = Number(store.get('stratum.member') ?? (store.set('stratum.member', String(random(1)[0])), store.get('stratum.member') ?? random(1)[0]));
   listening = false;
+  /** The place chosen on the Report tab, kept here so it works without storage; storage only carries it across reloads. */
+  place = { level: store.get('stratum.level') ?? '', sector: store.get('stratum.sector') ?? '' };
   lastReading: Reading | null = null;
   private ctx: AudioContext | null = null;
   private modem: Promise<Awaited<ReturnType<typeof createModem>>> | null = null; // shared, so a second caller waits for the first load
   private decode: ReturnType<typeof createDecoder> | null = null;
+  private air: Promise<unknown> = Promise.resolve(); // one packet on air at a time: sends and relays queue here
   private quietUntil = 0; // tracker readings are ignored while this phone transmits
   /** Pass on packets heard for others (problems 7 and 8); the Listen screen toggles it. */
   relaying = store.get('stratum.relay') !== 'off';
@@ -70,7 +73,8 @@ class App extends EventTarget {
       this.modem = createModem(this.ctx.sampleRate);
     }
     const modem = await this.modem!;
-    await this.ctx.resume();
+    // A blocked audio context never resumes: give up instead of waiting forever.
+    await Promise.race([this.ctx.resume(), new Promise((_, no) => setTimeout(no, 5000, new Error('sound is blocked. Tap Send again.')))]);
     return { ctx: this.ctx, modem };
   }
 
@@ -109,12 +113,20 @@ class App extends EventTarget {
       }, a.atMs - Date.now()));
     }
     if ('reject' in r) return; // not for us, damaged or replayed: say nothing
+    // A valid packet can still carry an impossible place (the codec allows 0..15): show nothing, as the shed ledger does.
+    if (r.payload.level < 1 || r.payload.level > 6 || r.payload.sector > 3) return;
     this.emit('packet', { decoded: r, bytes, at: Date.now() });
   }
 
-  /** Plays packet bytes as sound; resolves when playback ends. */
-  async send(bytes: Uint8Array) {
+  /** Plays packet bytes as sound after any packet already on air; resolves when playback ends. */
+  send(bytes: Uint8Array) {
     this.relay.own(bytes); // its echo is never relayed back
+    const run = this.air.then(() => this.play(bytes));
+    this.air = run.catch(() => {});
+    return run;
+  }
+
+  private async play(bytes: Uint8Array) {
     const { ctx, modem } = await this.audio();
     const x = modem.encode(bytes);
     const buf = ctx.createBuffer(1, x.length, ctx.sampleRate);

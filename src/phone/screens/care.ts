@@ -2,7 +2,7 @@
 // src/core/care/breath.ts; this screen only collects the inputs and shows the result.
 import { classify, DISCLAIMER, needRequest, type BreathResult, type DangerSigns } from '../../core/care/breath.ts';
 import { encode, TYPES } from '../../core/packet/codec.ts';
-import { $, app, store } from '../app.ts';
+import { $, app } from '../app.ts';
 
 const SIGNS: [keyof DangerSigns, string][] = [
   ['chestIndrawing', 'Chest indrawing (the lower chest pulls in when the child breathes in)'],
@@ -79,8 +79,10 @@ export function mountCare(root: HTMLElement) {
   const counter = $('#counter', root);
   let result: BreathResult | null = null;
   let count: { tapsMs: number[]; elapsedMs: number } | null = null; // the last finished count, null while counting
+  let stopCount = () => {}; // ends a running count and discards its taps
+  let quiet = false; // finish() moves focus to the card, which reads it: the live region stays silent
   // The place chosen on the Report tab; none chosen sends nothing (a guessed level would be a false location).
-  const lv = () => store.get('stratum.level') || '', sc = () => store.get('stratum.sector') || '';
+  const lv = () => app.place.level, sc = () => app.place.sector;
   const where = () => `level ${lv()}, sector ${String.fromCharCode(65 + Number(sc()))}`;
   const NO_PLACE = 'Choose your level and sector on the Report tab first.';
   const showWhere = () => ($('#careWhere', root).textContent = lv() && sc() ? `Sends for ${where()} (change on the Report tab).` : NO_PLACE);
@@ -103,7 +105,7 @@ export function mountCare(root: HTMLElement) {
     showWhere();
     $('#careSent', root).textContent = $('#careSent', root).className = '';
     $('#careFamily', root).hidden = true;
-    announce.textContent = `${HEAD[String(r.classification)]}. ${r.card}`;
+    if (!quiet) announce.textContent = `${HEAD[String(r.classification)]}. ${r.card}`;
   }
 
   // The card shows as soon as the core can answer without a count: an age out of range, a danger sign
@@ -111,6 +113,7 @@ export function mountCare(root: HTMLElement) {
   const update = () => {
     const age = ageMonths(), s = signs();
     const inRange = age !== null && age >= 2 && age < 60;
+    if (!counter.hidden && (!inRange || cough() !== 'yes')) stopCount(); // the count no longer applies
     $('#steps', root).hidden = !inRange;
     months.closest('label')!.hidden = years.value === '5'; // months change nothing at five or older
     months.options[0].text = years.value === '' || years.value === '0' ? 'Choose' : 'Optional';
@@ -149,13 +152,18 @@ export function mountCare(root: HTMLElement) {
       }
       if (left === 0) finish();
     };
-    const finish = () => {
+    stopCount = () => {
       clearInterval(timer);
-      count = { tapsMs: taps, elapsedMs: performance.now() - t0 };
       counter.hidden = true;
       start.hidden = false;
+    };
+    const finish = () => {
+      stopCount();
+      count = { tapsMs: taps, elapsedMs: performance.now() - t0 };
       start.textContent = 'Count again';
+      quiet = true;
       update();
+      quiet = false;
       // The focused tap button is now hidden: move focus to the result, or back to Start.
       const box = $('#result', root);
       (box.hidden ? start : box).focus();
@@ -184,6 +192,7 @@ export function mountCare(root: HTMLElement) {
       sent.textContent = NO_PLACE;
       return;
     }
+    app.audio().catch(() => {}); // start sound inside the tap: iOS Safari allows it only there; app.send reports a failure
     btn.disabled = true;
     sent.className = '';
     try {
@@ -203,6 +212,8 @@ export function mountCare(root: HTMLElement) {
       sent.textContent = 'Not sent: sound could not play on this phone. Tap Request medicine again, or tell your family in person.';
     } finally {
       btn.disabled = false;
+      // Disabling the button dropped keyboard focus to the page; put it back.
+      if (document.activeElement === document.body) btn.focus();
     }
   };
 }

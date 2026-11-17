@@ -8,13 +8,18 @@ export async function openMic(ctx: AudioContext, onBlock: (x: Float32Array) => v
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
   });
-  // The worklet file is fetched only now; if it is gone (this tab runs a build that has since been replaced), only a reload helps.
-  await ctx.audioWorklet.addModule(tapUrl).catch(() => { throw new DOMException('STRATUM was updated: reload the page to listen.', 'ReloadError'); });
-  await ctx.resume();
-  const node = new AudioWorkletNode(ctx, 'tap');
-  node.port.onmessage = (e) => onBlock(e.data);
-  ctx.createMediaStreamSource(stream).connect(node).connect(ctx.destination); // node outputs silence
-  return stream.getAudioTracks()[0].getSettings();
+  try {
+    // The worklet file is fetched only now; if it is gone (this tab runs a build that has since been replaced), only a reload helps.
+    await ctx.audioWorklet.addModule(tapUrl).catch(() => { throw new DOMException('STRATUM was updated: reload the page to listen.', 'ReloadError'); });
+    await ctx.resume();
+    const node = new AudioWorkletNode(ctx, 'tap');
+    node.port.onmessage = (e) => onBlock(e.data);
+    ctx.createMediaStreamSource(stream).connect(node).connect(ctx.destination); // node outputs silence
+    return stream.getAudioTracks()[0].getSettings();
+  } catch (e) {
+    stream.getTracks().forEach((t) => t.stop()); // a failed open must not leave the microphone live
+    throw e;
+  }
 }
 
 /**

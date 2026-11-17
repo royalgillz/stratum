@@ -4,7 +4,7 @@ import type { Evidence, Summary } from '../../harness/summary.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
 import type { Script } from '../core/scenario/types.ts';
-import { badges, noEvent, PROBLEMS, show, winner, type Problem } from './problems.ts';
+import { badges, noEvent, NOISE, PROBLEMS, show, winner, type Problem } from './problems.ts';
 
 const SCRIPTS: Record<string, Script> = { 'seven-day': sevenDay, 'stress-week': stressWeek };
 const timedOut: string[] = [];
@@ -34,14 +34,17 @@ function results(name: string, e: Evidence | null, p: Problem, note = ''): strin
   const d = e.policies.directorate?.[p.id], s = e.policies.stratum?.[p.id];
   const better = d && s ? winner(p.better, d.final.mean, s.final.mean) : null;
   const verdict = note || (better ? (better === 'tie' ? 'tie' : `${better} better`) : '');
-  return `<tr>${head}<br><span class="muted">${verdict}</span></th><td>${figure(d)}</td><td>${figure(s)}</td></tr>`;
+  // The figures the designs report beside the metric (often its cost), one row each under the run.
+  const beside = Object.entries(d?.beside ?? {}).map(([k, b]) => `<tr class="beside"><th scope="row" class="muted">beside it: ${b.name}</th>`
+    + `<td>${show(b.mean, b.unit)}</td><td>${s?.beside?.[k] ? show(s.beside[k].mean, b.unit) : 'not yet run'}</td></tr>`).join('');
+  return `<tr>${head}<br><span class="muted">${verdict}</span></th><td>${figure(d)}</td><td>${figure(s)}</td></tr>${beside}`;
 }
 
-// p09: the seven-day outbreak is small, so its result comes from the 30-day run (evidence design, "p09: outbreak").
-const NOISE = 'small outbreak: noise';
+// p12 in the stress week: STRATUM's floor holds longer on the cut-off levels, but every level breaches (docs/coverage.md row 12).
+const STRESS_NOTE: Partial<Record<Problem['id'], string>> = { p09: NOISE, p12: 'against STRATUM: every level breaches' };
 function rows(p: Problem): string {
   const week = results('Seven-day week', seven, p, p.id === 'p09' ? NOISE : '') || '<tr><th scope="row">Seven-day week</th><td>not yet run</td><td>not yet run</td></tr>';
-  return (p.id === 'p09' ? results('30-day run', thirty, p) : '') + week + results('Stress week', stress, p, p.id === 'p09' ? NOISE : '');
+  return (p.id === 'p09' ? results('30-day run', thirty, p) : '') + week + results('Stress week', stress, p, STRESS_NOTE[p.id]);
 }
 
 function replay(id: string, enf: Enf | null, gecco: Gecco | null): string {

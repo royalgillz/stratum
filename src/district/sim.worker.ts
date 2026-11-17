@@ -1,5 +1,7 @@
 // District 7 simulation worker: both policies side by side from one seed, ticked by real elapsed time,
 // so the page's policy switch is instant and both always show the same world time (scenario design, "The switch").
+import type { MeshMessage } from '../core/contracts.ts';
+import { TYPES } from '../core/packet/codec.ts';
 import { createRun, type Run } from '../core/scenario/run.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
@@ -11,17 +13,26 @@ const MAX_TICK_S = 1; // a backgrounded tab resumes with at most 1 s of real tim
 const SCRIPTS = { 'seven-day': sevenDay, 'stress-week': stressWeek };
 let script: ScriptName = 'seven-day', seed = 1, playing = false, speed = 1, last = performance.now();
 let runs: [Run, Run], clocks: (AudioClock | null)[] = [null, null];
+const live: MeshMessage[] = []; // packets heard in the room: they outlive a restart or a script switch
 
 // Check mode off: the write guard costs several times the step time, and the core tests run every adapter checked.
 const restart = (s: number, name: ScriptName = script) => {
   const sc = SCRIPTS[(script = name)];
   runs = [createRun(sc, (seed = s), 'directorate', { check: false }), createRun(sc, s, 'stratum', { check: false })];
   clocks = [null, null];
+  for (const m of live) runs.forEach((r) => r.inject(m));
 };
 
 function post() {
   const [d, s] = runs;
-  postMessage({ seed, script, playing, done: d.done(), act: d.act(), views: { directorate: view(d, sevenDay.demo.id, clocks[0]), stratum: view(s, sevenDay.demo.id, clocks[1]) /* both scripts share the demo household */ } } satisfies Snapshot);
+  const views = { directorate: view(d, sevenDay.demo.id, clocks[0]), stratum: view(s, sevenDay.demo.id, clocks[1]) }; // both scripts share the demo household
+  // A LIVE OK is delivered at once under both policies (family design), but a run takes it from its inbox only on its
+  // next 60 s step, which never comes while paused or after the week: put it on the board now. Only LIVE packets reach the demo board.
+  for (const { heard: h, at } of live) {
+    if (h?.type !== TYPES.OK) continue;
+    for (const v of Object.values(views)) v.board[h.payload.member] = { at, minute: h.minute, level: h.payload.level, sector: h.payload.sector, label: 'LIVE' };
+  }
+  postMessage({ seed, script, playing, done: d.done(), act: d.act(), views } satisfies Snapshot);
 }
 
 onmessage = (e: MessageEvent<ToWorker>) => {
@@ -30,7 +41,10 @@ onmessage = (e: MessageEvent<ToWorker>) => {
   else if (m.type === 'pause') playing = false;
   else if (m.type === 'restart') restart(m.seed, m.script);
   else if (m.type === 'speed') speed = m.n;
-  else runs.forEach((r) => r.inject(m.message)); // a live packet goes into both runs
+  else {
+    runs.forEach((r) => r.inject(m.message)); // a live packet goes into both runs
+    live.push(m.message);
+  }
   post();
 };
 

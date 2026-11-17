@@ -15,7 +15,7 @@
   <div class="row">
   <div class="row" role="group" aria-label="Run">
     <button id="play" class="primary">Play</button>
-    <label class="row seed">Seed <input id="seed" type="number" min="1" step="1" value="1" inputmode="numeric" /></label>
+    <label class="row seed">Seed <input id="seed" type="number" min="1" max="4294967295" step="1" value="1" inputmode="numeric" /></label>
     <button id="restart">Restart</button>
     <button id="sound">Sound: off</button>
   </div>
@@ -54,6 +54,7 @@
         <h2 id="metricsTitle">Results so far, fifteen problems <span class="tag">SIMULATED</span></h2>
         <p id="scriptNote" class="small"></p>
         <p class="small muted">One seed, this run so far. Tier badges as in the coverage matrix; read each row by which way is better.</p>
+        <p class="small">Directorate rule: how the district's authority runs things today (fixed cuts, daily bulletins, no mesh). STRATUM rule: the same supply run by STRATUM's real allocator and mesh code. Where the Directorate has no such tool its figure is 0 by rule, not measured.</p>
         <table>
           <thead><tr><th scope="col">Problem</th><th scope="col" id="shownHead">Directorate</th><th scope="col" id="otherHead">STRATUM</th></tr></thead>
           <tbody id="metrics"></tbody>

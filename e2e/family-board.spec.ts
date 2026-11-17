@@ -33,14 +33,14 @@ test.describe('family board', () => {
     await page.goto('/src/phone/#family', { waitUntil: 'domcontentloaded' });
   });
 
-  test('empty board asks for a family first, then says messages arrive only while the Listen tab is on', async ({ page }) => {
+  test('empty board asks for a family first, then says messages arrive only while this phone is listening', async ({ page }) => {
     const board = page.locator('#board');
     await expect(board).toContainText('You are member 7.');
     await expect(board).toContainText('Create or join a family above first.');
     await expect(board).not.toContainText('Nothing heard from your family yet');
     await expectSoundLayout(page);
     await page.getByRole('button', { name: 'Create a family' }).click();
-    await expect(board).toContainText('Messages arrive only while the Listen tab is on');
+    await expect(board).toContainText('Messages arrive only while this phone is listening');
     await expectSoundLayout(page);
   });
 

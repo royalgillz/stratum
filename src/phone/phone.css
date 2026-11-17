@@ -26,6 +26,11 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 8px 0 0; position: sticky; top: 0; background: var(--bg); z-index: 1; }
 .tabs [role=tab] { flex: 1 1 0; min-width: 0; margin: 0; padding: 0 4px; border: 0; border-bottom: 3px solid transparent; background: none; color: var(--fg); }
 .tabs [role=tab][aria-selected=true] { border-bottom-color: var(--accent); font-weight: 700; }
+/* Forced colours paint transparent borders: only the selected tab keeps its underline. */
+@media (forced-colors: active) {
+  .tabs [role=tab] { border-bottom-color: Canvas; }
+  .tabs [role=tab][aria-selected=true] { border-bottom-color: Highlight; }
+}
 
 /* Listen */
 #tier { font-size: 2.2rem; font-weight: 700; margin: 8px 0 0; overflow-wrap: anywhere; }
@@ -51,7 +56,7 @@ label { display: inline-flex; align-items: center; gap: 6px; margin: 4px 12px 4p
 #confirm::backdrop { background: rgb(0 0 0 / 0.6); } /* the default is invisible on the dark background */
 #confirm h3 { margin-top: 0; }
 #confirm label:has(input:disabled) { color: var(--muted); }
-#go { background: var(--accent); color: var(--bg); border: 0; }
+#go { background: var(--accent); color: var(--bg); border: 2px solid transparent; } /* drawn in forced colours */
 /* The send status stays on screen while it has text: the grid can push it below the fold. */
 #sent:not(:empty) { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--line); padding: 8px 0; margin: 0; font-weight: 600; }
 #confirm fieldset { border: 1px solid var(--line); margin: 8px 0; }

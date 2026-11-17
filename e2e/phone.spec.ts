@@ -84,7 +84,7 @@ test.describe('phone page', () => {
       await page.emulateMedia({ colorScheme: scheme });
       const line = page.locator('#replay');
       await expect(line).toBeVisible();
-      await expect(line).toHaveText(`In a replay of ${cm.clips} recordings of a real 50 Hz grid, the tracker was typically ${Math.round(cm.medianMHz)} mHz off; ${Math.round((100 * cm.over500) / cm.clips)}% followed another hum instead · REPLAY`);
+      await expect(line).toHaveText(`In a replay of ${enf.clips} recordings of a real 50 Hz grid, the tracker was typically ${Math.round(cm.medianMHz)} mHz off; ${Math.round((100 * cm.over500) / cm.clips)}% of the ${cm.clips} scored followed another hum instead · REPLAY`);
       const s = await line.evaluate((e) => {
         const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
         return { size: parseFloat(cs.fontSize), right: r.right, color: cs.color, bg: getComputedStyle(document.body).backgroundColor, tier: parseFloat(getComputedStyle(document.getElementById('tier')!).fontSize) };
