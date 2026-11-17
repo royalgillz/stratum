@@ -15,6 +15,17 @@ test.describe('judge mode', () => {
     await expectSoundLayout(page);
   });
 
+  test('the drawn phone shows the REPLAY error line in the dark theme too', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto('/src/district/judge.html?speed=10', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Play the 90-second story' }).click();
+    const line = page.locator('#replay');
+    await expect(line).toBeVisible();
+    await expect(line).toContainText('· REPLAY');
+    expect(await line.evaluate((e) => getComputedStyle(e).color)).not.toBe(await page.evaluate(() => getComputedStyle(document.querySelector('.phone')!).backgroundColor));
+    await expectSoundLayout(page);
+  });
+
   test('the story runs the real tracker through CALIBRATING, GREEN, AMBER, RED, NO HUM and delivers an OK', async ({ page }) => {
     test.setTimeout(60_000);
     // speed=10 shortens the 90 s timeline to 9 s for this test only; the page labels it.
@@ -42,6 +53,7 @@ test.describe('judge mode', () => {
     };
     await inView('#caption');
     await inView('#tier');
+    await expect(page.locator('#replay')).toHaveText(/^In a replay of \d+ recordings of a real 50 Hz grid, .* · REPLAY$/); // the Listen tab's REPLAY line
     await expect(page.getByText('LOOPBACK · SIMULATED')).toBeVisible();
     await expect(page.locator('#caption')).not.toBeEmpty();
     await expect(page.locator('#seq li').first()).toHaveText(/CALIBRATING/, { timeout: 10_000 });

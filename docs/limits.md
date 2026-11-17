@@ -105,6 +105,7 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
   and wakes the microphone only in short bursts to catch messages.
 - Phone charging is treated as a small guaranteed minimum in the fair-share rule.
 - Battery relay boxes in stairwells are roadmap, not built.
+- Offline works only after one visit with network, and an update is picked up on the next visit with network; a page whose network takes more than 3 s to answer opens the saved copy instead.
 
 ## Sound messages
 

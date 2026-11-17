@@ -4,7 +4,7 @@ import { createTracker, type Reading } from '../core/tracker/tracker.ts';
 import { createDecoder, encode, TYPES } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys, type KeySet } from '../core/packet/keys.ts';
 import { rng } from '../core/rng.ts';
-import { CALIBRATING_TEXT, devText, TIER_TEXT } from '../phone/tiers.ts';
+import { CALIBRATING_TEXT, devText, REPLAY_TEXT, TIER_TEXT } from '../phone/tiers.ts';
 
 const SR = 8000, END = 90, CUT = 80, OK_AT = 85;
 const DEMO_WORDS = 'abandon ability able about above absent'; // a fixed demo family
@@ -38,6 +38,7 @@ type Shown = keyof typeof SHOW;
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const play = $<HTMLButtonElement>('play'), mute = $<HTMLButtonElement>('mute');
+$('replay').textContent = REPLAY_TEXT; // the same REPLAY line as the phone's Listen tab
 
 if (speed !== 1) {
   $('speedNote').hidden = false;

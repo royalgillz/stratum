@@ -171,7 +171,7 @@ $('listen').onclick = async () => {
     put(status, 'Listening. Hold a phone within about 1 m and send OK from its Report tab. Sound only: nothing is recorded.');
   } catch (e) {
     btn.disabled = false;
-    put(status, `Not listening. ${(e as Error).name === 'NotAllowedError' ? 'Microphone permission was refused: allow it for this page, then try again.' : 'The microphone could not be opened (it needs https and a free microphone).'}`);
+    put(status, `Not listening. ${(e as Error).name === 'ReloadError' ? (e as Error).message : (e as Error).name === 'NotAllowedError' ? 'Microphone permission was refused: allow it for this page, then try again.' : 'The microphone could not be opened (it needs https and a free microphone).'}`);
   }
 };
 

@@ -1,6 +1,6 @@
 import type { Reading } from '../../core/tracker/tracker.ts';
 import { $, app, store } from '../app.ts';
-import { CALIBRATING_TEXT, devText, TIER_TEXT } from '../tiers.ts';
+import { CALIBRATING_TEXT, devText, REPLAY_DETAILS, REPLAY_TEXT, TIER_TEXT } from '../tiers.ts';
 
 /** Writes only on change: #tier is a live region, and rewriting the same text makes screen readers say it again. */
 const put = (el: HTMLElement, s: string) => { if (el.textContent !== s) el.textContent = s; };
@@ -8,6 +8,7 @@ const put = (el: HTMLElement, s: string) => { if (el.textContent !== s) el.textC
 /** The browser's microphone error, in plain words with a next step. */
 function micError(e: unknown) {
   if (!navigator.mediaDevices) return 'This page must be opened over https to use the microphone.';
+  if ((e as Error).name === 'ReloadError') return (e as Error).message;
   if ((e as Error).name === 'NotAllowedError') return 'Microphone permission was refused. Allow the microphone for this page in the browser settings, then tap Start listening again.';
   return 'The microphone could not be opened. Close other apps using it and try again.';
 }
@@ -19,6 +20,8 @@ export function mountListen(root: HTMLElement) {
     <button id="listen">Start listening</button>
     <p id="tier" class="idle" role="status" aria-live="polite">Not listening yet</p>
     <p id="dev"></p>
+    <p id="replay" class="muted">${REPLAY_TEXT}</p>
+    <details id="replayMore"><summary>How sure is this?</summary><p class="muted">${REPLAY_DETAILS}</p></details>
     <p id="micinfo" class="muted"></p>
     <label class="check"><input type="checkbox" id="relayOn" /> Pass on messages for others</label>
     <p id="relayCount" role="status" aria-live="polite">Relaying starts when you tap Start listening.</p>

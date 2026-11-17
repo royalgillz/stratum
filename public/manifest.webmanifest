@@ -1,0 +1,14 @@
+{
+  "name": "STRATUM",
+  "short_name": "STRATUM",
+  "description": "Hear the grid weaken before a power cut, and pass short family messages by sound.",
+  "start_url": "/src/phone/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#1a4fa0",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

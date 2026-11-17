@@ -1,6 +1,6 @@
 # Rung test: rungs 1 to 4
 
-One Android phone and one laptop, in a quiet room. About 45 minutes. Each part says which rung it
+One Android phone and one laptop, in a quiet room. About 50 minutes. Each part says which rung it
 checks. Do them in order: later parts reuse the setup of earlier ones.
 
 Site: `https://stratum-nine-swart.vercel.app` (all links below start with it).
@@ -106,6 +106,14 @@ cut off and the page does not scroll sideways).
    row is the 30-day run. At least one stress-week row says **Directorate better**. At the bottom:
    **Results against us**.
 
+## Part H (should list): offline and install on the phone
+
+1. Phone, with network: open `/src/phone/`, wait until the page has loaded, then reload it once.
+2. Chrome menu (three dots): tap **Add to Home screen** (or **Install app**), then **Install**. A STRATUM icon (blue square, white bars) appears on the home screen.
+3. Turn on **Airplane mode** (Wi-Fi and mobile data off).
+4. Tap the STRATUM icon. Expected: the app opens with no network and shows the five tabs. Tap **Listen**, then **Start listening**: it calibrates as in Part A. Under the reading, a REPLAY line says how the tracker did on real grid recordings.
+5. Turn Airplane mode off.
+
 ## Results to send back
 
 Copy this table into the chat with your results. Paste the laptop's gateway log text under it.
@@ -131,5 +139,7 @@ Copy this table into the chat with your results. Paste the laptop's gateway log 
 | G | Stress week caption and losses | | | |
 | G | Coverage matrix, fifteen cards | | | |
 | G | Same pages on the phone, no sideways scroll | | | |
+| H | Installed to the home screen | | | |
+| H | Opens and listens in Airplane mode | | | |
 
 Phone model and Chrome version:

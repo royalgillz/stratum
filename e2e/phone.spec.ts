@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { expectSoundLayout } from './layout.ts';
 
@@ -8,6 +9,9 @@ const VISIBLE_TABS = [
   ['Ledger', 'Odds of a power cut'],
   ['Care', 'Breath Count'],
 ] as const;
+
+// The committed REPLAY figures (npm run score:enf), read from disk so the screen is checked against the evidence, not against itself.
+const enf = JSON.parse(readFileSync('public/evidence/enf-whu.json', 'utf8')).withHum, cm = enf.clipMedians;
 
 test.describe('phone page', () => {
   test.beforeEach(async ({ page }) => {
@@ -75,9 +79,37 @@ test.describe('phone page', () => {
     await expectSoundLayout(page);
   });
 
+  for (const scheme of ['light', 'dark'] as const) {
+    test(`Listen shows the tracker's REPLAY error on real recordings, small and readable (${scheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      const line = page.locator('#replay');
+      await expect(line).toBeVisible();
+      await expect(line).toHaveText(`In a replay of ${cm.clips} recordings of a real 50 Hz grid, the tracker was typically ${Math.round(cm.medianMHz)} mHz off; ${Math.round((100 * cm.over500) / cm.clips)}% followed another hum instead · REPLAY`);
+      const s = await line.evaluate((e) => {
+        const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
+        return { size: parseFloat(cs.fontSize), right: r.right, color: cs.color, bg: getComputedStyle(document.body).backgroundColor, tier: parseFloat(getComputedStyle(document.getElementById('tier')!).fontSize) };
+      });
+      expect(s.size).toBeGreaterThanOrEqual(14); // readable on the fold cover
+      expect(s.size).toBeLessThanOrEqual(s.tier); // the tier stays the main thing
+      expect(s.right).toBeLessThanOrEqual(page.viewportSize()!.width);
+      expect(s.color).not.toBe(s.bg);
+      // Both medians the evidence file asks for, with their clip counts, one tap away.
+      await page.getByText('How sure is this?').click();
+      const more = page.locator('#replayMore p');
+      await expect(more).toBeVisible();
+      await expect(more).toContainText(`replayed ${enf.clips} recordings of a real 50 Hz grid`);
+      await expect(more).toContainText(`each recording's median error: ${cm.medianMHz} mHz (${cm.clips} recordings; ${enf.clips - cm.clips} gave no reading)`);
+      await expect(more).toContainText(`all ${enf.scored.toLocaleString('en-US')} readings pooled: ${enf.medianMHz} mHz`);
+      await expect(more).toContainText(`${cm.over500} of the ${cm.clips} recordings were off by over 500 mHz`);
+      await expect(more).toContainText('The grid here runs at 400 Hz, not 50 Hz, so take these figures as a guide · REPLAY');
+      await expectSoundLayout(page);
+    });
+  }
+
   for (const [name, setup, says] of [
     ['refused', () => { navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('Permission denied', 'NotAllowedError')); }, 'Microphone permission was refused'],
     ['not https', () => { Object.defineProperty(navigator, 'mediaDevices', { value: undefined }); }, 'must be opened over https'],
+    ['worklet gone after an update', () => { AudioWorklet.prototype.addModule = () => Promise.reject(new DOMException('Unable to load a worklet', 'AbortError')); }, 'STRATUM was updated: reload the page to listen.'],
   ] as const) {
     test(`a microphone that will not open (${name}) says why in plain words`, async ({ page }) => {
       await page.addInitScript(setup);

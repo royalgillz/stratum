@@ -8,7 +8,8 @@ export async function openMic(ctx: AudioContext, onBlock: (x: Float32Array) => v
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
   });
-  await ctx.audioWorklet.addModule(tapUrl);
+  // The worklet file is fetched only now; if it is gone (this tab runs a build that has since been replaced), only a reload helps.
+  await ctx.audioWorklet.addModule(tapUrl).catch(() => { throw new DOMException('STRATUM was updated: reload the page to listen.', 'ReloadError'); });
   await ctx.resume();
   const node = new AudioWorkletNode(ctx, 'tap');
   node.port.onmessage = (e) => onBlock(e.data);

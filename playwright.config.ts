@@ -22,6 +22,7 @@ export default defineConfig({
     launchOptions: { args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] },
     trace: 'retain-on-failure',
     navigationTimeout: 20_000,
+    serviceWorkers: 'block', // route mocks do not see requests a service worker answers; e2e/offline.spec.ts allows it
   },
   projects: [
     { name: 'desktop', use: { viewport: { width: 1920, height: 1080 } } },
