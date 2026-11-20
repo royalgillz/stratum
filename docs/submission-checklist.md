@@ -27,4 +27,4 @@ Status as of Fri Nov 20. `[x]` done, `[ ]` not yet.
 - Live site (demo URL): https://stratum-nine-swart.vercel.app/ (judge mode: `/src/district/judge.html`)
 - Repo: https://github.com/royalgillz/stratum
 - Write-up: `docs/writeup.md` in the repo
-- Video: (pending: upload video/stratum-video-v3.mp4, the 2:54 v3 cut, not v1 or v2)
+- Video: (pending: upload video/stratum-video-v4.mp4, the 2:54 v4 cut, not v1 to v3)
