@@ -7,11 +7,11 @@ const worldT = async (page: Page) => Number(await page.locator('#clock').getAttr
 const shownMetrics = (page: Page) => page.locator('#metrics td:nth-child(2)').allTextContents();
 
 /** A real-codec OK, made here in Node as a phone makes it, under the given six words. */
-async function okBytes(words: string, member: number) {
+async function okBytes(words: string, member: number, type: number = TYPES.OK, code = 0) {
   const keys = (await deriveKeys(words, 'family')) as KeySet;
   const bytes = await encode(keys, {
-    type: TYPES.OK, minute: Math.floor(Date.now() / 60000), nonce: member * 1000, hops: 3,
-    payload: { member, code: 0, level: 5, sector: 1, flags: 1, value: 0 },
+    type, minute: Math.floor(Date.now() / 60000), nonce: member * 1000 + code, hops: 3,
+    payload: { member, code, level: 5, sector: 1, flags: 1, value: 0 },
   });
   return [...bytes];
 }
@@ -29,7 +29,7 @@ test.describe('District 7 page', () => {
     await expect(page.locator('#map')).toHaveAttribute('aria-label', /SIMULATED/);
     await expect(page.locator('#metrics tr')).toHaveCount(15); // one row per adapter, p01 to p15
     for (const row of await page.locator('#metrics th').allTextContents()) expect(row).toContain('SIMULATED');
-    await expect(page.locator('#board')).toContainText('No OK heard from this family yet');
+    await expect(page.locator('#board')).toContainText('Nothing heard from this family yet');
     await expectSoundLayout(page);
 
     await page.getByRole('button', { name: 'Play' }).click();
@@ -182,6 +182,11 @@ test.describe('District 7 page', () => {
     await page.getByRole('button', { name: 'STRATUM rule' }).click();
     await expect(board).toContainText('Member 42: I am OK, sent');
     await expect(board).toContainText('LIVE');
+    // A Breath Count RED request from the same member: listed on the board too, while paused
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await hear(await okBytes('abandon ability able about above absent', 42, TYPES.NEED, 0x10));
+    await expect(log).toContainText('Verified NEED from member 42 · LIVE');
+    await expect(board).toContainText('Member 42: Medicine request: Breath Count RED (danger sign), sent');
     await expectSoundLayout(page);
   });
 

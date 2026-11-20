@@ -1,13 +1,13 @@
 // District 7 page (docs/plan.md "Architecture"): the SIMULATED week from the worker, a policy switch, the hum
 // emitter, and the gateway that turns a real phone's OK, heard by the microphone, into a LIVE board entry.
 // Outside LID scope.
-import { createDecoder } from '../core/packet/codec.ts';
+import { createDecoder, TYPES } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys } from '../core/packet/keys.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
 import { openMic } from '../audio/mic.ts';
 import { createModem } from '../audio/modem.ts';
-import { toMessage } from './gateway.ts';
+import { needText, toMessage } from './gateway.ts';
 import { badges, NOISE, PROBLEMS, show } from './problems.ts';
 import type { ScriptName, Snapshot, ToWorker, View } from './snapshot.ts';
 import { STOCK_DAYS } from '../core/world/lightfood/lightfood.ts';
@@ -112,7 +112,9 @@ function render(s: Snapshot) {
     const when = e.label === 'LIVE' ? new Date(e.minute * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : worldTime(e.minute * 60);
     return `<li><strong>Member ${member}</strong>: I am OK, sent ${when} · level ${e.level}, sector ${letter(e.sector)} · <span class="tag">${e.label}</span></li>`;
   });
-  const board = $('board'), html = rows.join('') || '<li class="muted">No OK heard from this family yet. Listen for phones below.</li>';
+  // Requests (NEED) heard by the gateway: the runs give them no board row, so the page lists them under the OKs.
+  for (const [member, n] of needs) rows.push(`<li><strong>Member ${member}</strong>: ${n.text}, sent ${new Date(n.minute * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · level ${n.level}, sector ${letter(n.sector)} · <span class="tag">LIVE</span></li>`);
+  const board = $('board'), html = rows.join('') || '<li class="muted">Nothing heard from this family yet. Listen for phones below.</li>';
   if (board.innerHTML !== html) board.innerHTML = html;
 
   hum?.set(v.f, soundOn && v.cells[DEMO_S].served > 0); // a dark level hears no hum
@@ -151,6 +153,7 @@ $('sound').onclick = () => {
 
 // Gateway: the demo family's keys, the real codec, and both runs.
 let decode: ReturnType<typeof createDecoder> | null = null;
+const needs = new Map<number, { text: string; minute: number; level: number; sector: number }>(); // latest request per member
 async function useWords() {
   const k = await deriveKeys($<HTMLInputElement>('words').value, DEMO.id); // the key set id is the household id, so an OK lands on its board
   decode = 'error' in k ? null : createDecoder([k], await publicKeys());
@@ -172,6 +175,8 @@ async function heard(bytes: Uint8Array) {
   if (!decode) return log('Rejected: set six family words first');
   const r = toMessage(await decode(bytes, Date.now()), bytes);
   if (r.message) send({ type: 'inject', message: r.message });
+  const h = r.message?.heard;
+  if (h?.type === TYPES.NEED) needs.set(h.payload.member, { text: needText(h.payload), minute: h.minute, level: h.payload.level, sector: h.payload.sector });
   log(r.note);
 }
 

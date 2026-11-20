@@ -1,4 +1,4 @@
-> **DRAFT.** Numbers are copied from `public/evidence/*.json` and `docs/coverage.md` on the rung 4 code. Lines marked "pending" wait for the phone run sheet (`docs/rung-test.md`).
+> **DRAFT.** Numbers are copied from `public/evidence/*.json` and `docs/coverage.md` on the rung 4 code. Device results from the phone run sheet (`docs/rung-test.md`) are in `docs/device-results.md`.
 
 # STRATUM
 
@@ -10,7 +10,7 @@ A citizen toolkit for the Hollow, built around one loop: **hear** what is really
 
 ## Inspiration
 
-The Directorate controls the network, the breakers and the numbers. It does not control the hum in the walls. Every powered machine hums at the grid frequency, and the pitch sags before supply runs out. A phone can hear that. A phone can pass 25 bytes by sound to a laptop (tested with spike code); the signed v3 packet between devices is pending the run sheet. And once people can see who gets cut, they can ask for a fairer rule. STRATUM starts from what a resident already carries: a phone with a microphone and a speaker.
+The Directorate controls the network, the breakers and the numbers. It does not control the hum in the walls. Every powered machine hums at the grid frequency, and the pitch sags before supply runs out. A phone can hear that. A phone can pass a signed 25-byte packet by sound to a laptop 3 m away (device test, `docs/device-results.md`). And once people can see who gets cut, they can ask for a fairer rule. STRATUM starts from what a resident already carries: a phone with a microphone and a speaker.
 
 ## What it is
 
@@ -19,7 +19,7 @@ One loop, three engines, one test rig.
 | Engine | What it does | What is real |
 | --- | --- | --- |
 | **Witness** | One change detector and one hash-chained ledger. Every disputed number is stored twice: what residents measured and what the Directorate announced | The hum tracker on the phone, scored on real recordings (REPLAY). The detector, scored on real drinking-water data (REPLAY). Residents' reports arrive as real packets |
-| **Mesh** | One 25-byte authenticated packet, carried by sound from phone to phone, stored and passed on | ggwave carried 25 bytes phone to laptop 20/20; HKDF and HMAC run in both browsers; the full v3 packet with family words is not yet device-tested |
+| **Mesh** | One 25-byte authenticated packet, carried by sound from phone to phone, stored and passed on | The signed v3 packet with family words, from the shipped codec, verified phone to laptop at 30 cm, 1 m and 3 m (LIVE). Earlier, spike code carried 25 bytes phone to laptop 20/20 |
 | **Fair Share** | One allocation rule for every scarce thing: life floors first, then raise the worst-off, rotate what cannot be split | The rule is real code. The supplies it shares are simulated |
 
 **District 7** (6 levels by 4 sectors) is a simulated test rig: coupled power, heat, air, water, sewage, disease, light, food and the surface. It exists to produce the signals the engines hear and to measure what changes when they act. It is labelled SIMULATED everywhere.
@@ -36,7 +36,7 @@ Every number on screen and in this write-up carries one of three labels:
 
 Each problem also carries a tier, from `docs/coverage.md`: **Live** (runs on a real phone), **Modelled** (an algorithm in District 7, measured against the Directorate's rule), **Thin** (one rule or chart on assumed parameters), **Roadmap** (write-up only). Only the air half of problem 1 is Roadmap: no rule warns before an air cut. No problem is Thin.
 
-Device status: spikes T1 to T3 passed on one Android phone and a laptop (`docs/spikes.md`). The full app's run sheet on a real phone (`docs/rung-test.md`: tiers, relay hop, family board, Breath Count, the phone's OK reaching District 7) is pending. No iPhone was tested.
+Device status (`docs/device-results.md`): the run sheet ran on a Samsung Galaxy Z Fold 7 (Android 17, Chrome 158) and a Windows laptop. Passed: the hum tiers at 30 cm, the phone's family OK verified by District 7 at 30 cm, 1 m and 3 m, a laptop tab's family OK on the phone's board, judge mode, District 7 and the coverage matrix. Also passed: the phone passing a report on (one relay hop), install to the home screen and use in Airplane mode, and on the phone a danger-sign RED whose medicine request the District 7 gateway verified. The 60-second tap count passed in a laptop browser. Earlier, spikes T1 to T3 passed on one Android phone and a laptop (`docs/spikes.md`). No iPhone was tested.
 
 ## The fifteen problems
 
@@ -50,10 +50,10 @@ Every problem has a mechanism, a metric and a place on screen, with its tier pri
 | 4 | Catch bad water before people drink it | Witness detector on recycler sensors; the level's water is held before bad water reaches the taps | Modelled; real data; phone sends real reports | GECCO 2018, six sensors: 22/22 held-out events, precision 0.017; 21/29 on the first half (REPLAY). Person-hours of unsafe water drunk, 7-day: D 23,280, S 0 (SIMULATED) |
 | 5 | Keep tunnels safe to live in and move through | Pump power first to the sections whose flooding would cut people off from the hub | Modelled; phone sends real reports | Stranded person-hours, 7-day: D 6,082, S 0; stress: D 28,750, S 20,530 (SIMULATED) |
 | 6 | Find, make or share space | Shift-shared sleeping space, families together, good shift rotated | Modelled | Sleeping m2 per sleeper (busiest shift), 7-day: D 2.00, S 5.39; cost: households per space D 1.00, S 3.00 (SIMULATED) |
-| 7 | Organize without the network | 25-byte authenticated packets by sound; codebook; relay at most once, at most 4 hops | Live | T2: 20/20 packets at 1 m and at 3 m; T3: 20/20 with the hum playing (LIVE, spike). Delivered within 60 min, 7-day: D 0.00, S 0.48 (SIMULATED) |
-| 8 | Reconnect families | OK beacons under a family key to a family board with the packet's own time | Live (device test pending) | Mean hours until status known, 7-day: D 3.9 h, S 2.2 h (SIMULATED) |
+| 7 | Organize without the network | 25-byte authenticated packets by sound; codebook; relay at most once, at most 4 hops | Live | Signed packets phone to laptop verified at 30 cm, 1 m and 3 m (LIVE, device test). Earlier, spike code: T2 20/20 at 1 m and 3 m, T3 20/20 with the hum playing. Delivered within 60 min, 7-day: D 0.00, S 0.48 (SIMULATED) |
+| 8 | Reconnect families | OK beacons under a family key to a family board with the packet's own time | Live | The phone's OK verified by District 7 at 30 cm, 1 m and 3 m (LIVE, device test). Mean hours until status known, 7-day: D 3.9 h, S 2.2 h (SIMULATED) |
 | 9 | Track the real outbreak, route supplies | Capture-recapture (Chapman) between residents' reports and the clinic list; medicine follows the estimate | Modelled; no case-report format yet | Case-count relative error, 30-day: D 0.80, S 0.08 (SIMULATED); the seven-day outbreak is too small to score |
-| 10 | Basic care for people who cannot reach a clinic | Breath Count: 60 s tap count against WHO thresholds, five danger signs, medicine request as a packet; couriers by triage | Live (aid and request, device test pending), Modelled (delivery) | Median hours to first care (RED), 7-day: D 17.1 h, S 0.58 h; stress: D 22.5 h, S 1.20 h (SIMULATED) |
+| 10 | Basic care for people who cannot reach a clinic | Breath Count: 60 s tap count against WHO thresholds, five danger signs, medicine request as a packet; couriers by triage | Live (danger-sign RED and medicine request tested on the phone), Modelled (delivery) | Median hours to first care (RED), 7-day: D 17.1 h, S 0.58 h; stress: D 22.5 h, S 1.20 h (SIMULATED) |
 | 11 | Track and treat life without sunlight | Lamp-hours rationed by Fair Share with rotation. Treat only: no tracking of sleep, mood or health yet; one 4 h session at 250 lux melanopic counts as met (weaker than the recommendation) | Modelled | Share of person-days with 4 h of daytime light, 7-day: D 0.19, S 0.65; stress: D 0.17, S 0.57 (SIMULATED) |
 | 12 | Grow and share neighbourhood food | Ration with a floor; transfers between levels stand for OFFER and NEED packets | Modelled; phone sends real requests | Days the food floor held after a farm cut-off, 7-day: D 3.00, S 5.55; stress: every level breaches after 5.00 days under S (SIMULATED) |
 | 13 | Prove whether the surface is safe, tell everyone | Independent crews' readings, hash-chained in the ledger, quorum median, verdict as an exposure band (the simulation does not sign readings) | Modelled (real digest packet not built) | Wrong-band rate, 7-day: D 1.00, S 0.00; stress: D 0.00, S 1.00 (SIMULATED) |
@@ -82,9 +82,17 @@ The full matrix, with 95% intervals, the cost shown beside each metric, and whic
 - **Against us:** that same set caught only 7 of 29 events on the first half it was chosen on, so its recall depends heavily on which events come up.
 - On the first half, which the detector was also not tuned on, the six sensors caught 21 of 29 events (precision 0.019).
 
-### Real devices (LIVE, spikes)
+### Real devices (LIVE)
 
-One Android phone (Chrome) and one laptop (Edge), `docs/spikes.md`:
+Device test of the shipped code on the live site, `docs/device-results.md`: a Samsung Galaxy Z Fold 7 (Android 17, Chrome 158) and a Windows laptop (Chrome):
+
+- Hum tiers at 30 cm: the phone went CALIBRATING, GREEN, AMBER, RED and NO HUM as the laptop played judge mode's story.
+- Signed family OK, phone to laptop: verified by the District 7 gateway at 30 cm, 1 m and 3 m and shown LIVE on the family board.
+- Laptop to phone: a family OK reached the phone's family board, and public power-cut reports reached its inbox. The phone passed one report on (one relay hop).
+- Breath Count: on the phone a danger sign gave RED and its medicine request by sound was verified by the District 7 gateway; in a laptop browser, at age 1, 50 taps in 60 s gave AMBER.
+- Offline: installed to the home screen, then opened and listened in Airplane mode.
+
+Earlier spikes, with spike code, not the shipped tracker or codec: one Android phone (Chrome) and one laptop (Edge), `docs/spikes.md`:
 
 - T1 hum tracking at 30 cm: slow ramp followed with 0.6 mHz typical error, 4 mHz worst after a 5-reading median; a 100 mHz step half-way after 2.7 s. **Against us:** at 1 m with people moving, echoes made the reading wander by about 15 mHz.
 - T2 sound packets, phone to laptop: 20/20 at 1 m and 20/20 at 3 m. Key derivation works in both browsers.
@@ -141,13 +149,13 @@ The full list is in `docs/limits.md`. The ones that matter most:
 - District 7 is a simulation. Its heat, water, sewage, disease, food and surface values are model outputs.
 - The hum says when the grid is stressed, not which level will be cut; the cut odds come from neighbours' reports, and anyone can send public reports.
 - The tracker needs to be close to the hum: about 30 cm in a quiet room.
-- Sound carries a few metres. The live demo is meant to show one hop (pending the run sheet); multi-hop reach is simulated.
+- Sound carries a few metres. The device test showed one hop, phone to a laptop gateway, at up to 3 m, and one relay hop through the phone. Multi-hop reach is simulated.
 - Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or no hum at all.
 - Breath Count is a decision aid that follows published thresholds for children under five. It is not a medical device. It asks five of the chart's eleven danger signs.
 - The ledger digest packet for the surface verdict (13) is not sent by any phone yet. Case reports for the outbreak (9) are not designed yet. Reports sent from the phone are not analysed in District 7 yet.
 - The STRATUM rule needs to be adopted, or applied by levels to the loads they control. The Directorate holds the breakers.
 - Android only. No iPhone was tested.
-- Offline install works only after one visit with network; an update arrives on the next visit with network, and a page whose network takes more than 3 s opens the saved copy. Tested in Chromium with Playwright, not yet on a phone.
+- Offline install works only after one visit with network; an update arrives on the next visit with network, and a page whose network takes more than 3 s opens the saved copy. Tested on a Galaxy Z Fold 7: installed to the home screen, then opened and listened in Airplane mode.
 
 ## Prior art and licences
 

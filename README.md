@@ -13,24 +13,24 @@ Live: https://stratum-nine-swart.vercel.app
 3. **Coverage matrix** (`/src/district/coverage.html`): each problem's tier, mechanism, 20-seed results and the results against us.
 4. **Phone page** (`/src/phone/`, Android Chrome): Listen, Report, Family, Ledger, Care.
 
-Works offline: open the phone page once with network and it then opens and runs with none, and Chrome on Android can install it to the home screen (Add to Home screen) (tested in Chromium with Playwright, not yet on a phone). An update arrives on the next visit with network.
+Works offline: open the phone page once with network and it then opens and runs with none, and Chrome on Android can install it to the home screen (Add to Home screen) (tested on a Galaxy Z Fold 7: installed to the home screen, then opened and listened in Airplane mode). An update arrives on the next visit with network.
 
 The Listen screen shows how the same hum tracker did on real grid recordings (ENF-WHU, REPLAY): typically 31 mHz off, with 16% of the 129 recordings locked onto another tone. Tap "How sure is this?" for the per-clip and pooled medians.
 
-On a real phone and laptop, follow the run sheet [docs/rung-test.md](docs/rung-test.md) (about 45 minutes).
+On a real phone and laptop, follow the run sheet [docs/rung-test.md](docs/rung-test.md) (about 45 minutes). Our results: [docs/device-results.md](docs/device-results.md).
 
 ## What is real
 
 Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real public recordings) or **SIMULATED** (District 7, and judge mode's drawn phone).
 
 - Real code: the hum tracker, the 25-byte sound packets and their cryptography, the relay, the ledger and the allocator.
-- Tested on a real phone so far: the hum tracker and 25 bytes by sound from phone to laptop (spikes T1 to T3 on one Android phone and a laptop, spike code, not the shipped tracker or codec, [docs/spikes.md](docs/spikes.md)); the full app's run sheet is pending. No iPhone was tested.
+- Tested on a real phone (Galaxy Z Fold 7, Chrome 158, results in [docs/device-results.md](docs/device-results.md)): the shipped hum tracker went GREEN, AMBER, RED and NO HUM at 30 cm; the phone's signed family OK was verified by the District 7 gateway on a laptop at 30 cm, 1 m and 3 m; a laptop tab's family OK reached the phone's family board. Earlier spikes T1 to T3 (spike code, [docs/spikes.md](docs/spikes.md)) measured the tracker's error and 20/20 packets at 1 m and 3 m. The phone passed a laptop tab's report on (one relay hop), installed to the home screen and opened and listened in Airplane mode. On the phone, a Breath Count danger sign gave RED and its medicine request by sound was verified by the District 7 gateway; the 60-second tap count was tested in a laptop browser. No iPhone was tested.
 - Scored on real data (REPLAY): the tracker on 130 ENF-WHU grid recordings, the water detector on GECCO 2018.
 - Simulated: District 7 and everything in it.
 
 | Tier | Problems |
 | --- | --- |
-| Live (a part runs on a real phone) | 1 (power warning), 7 (messages without the network), 8 (families, device test pending), 10 (Breath Count and the medicine request, device test pending) |
+| Live (a part runs on a real phone) | 1 (power warning), 7 (messages without the network), 8 (families), 10 (Breath Count and the medicine request) |
 | Modelled (algorithm in District 7 against the Directorate's rule) | 2, 3, 4, 5, 6, 9, 10 (delivery), 11, 12, 13, 14, 15 |
 | Thin or Roadmap | 1 (air warning: no rule warns before an air cut) |
 

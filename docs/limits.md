@@ -109,7 +109,7 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 
 ## Sound messages
 
-- Sound carries a few metres in one room. The live demo is meant to show one hop (pending the run sheet); multi-hop reach is simulated.
+- Sound carries a few metres in one room. The device test showed one hop, phone to a laptop gateway, at up to 3 m (`docs/device-results.md`). The phone also passed a laptop tab's report on (one relay hop). Multi-hop reach is simulated.
 - A packet takes about 2 to 3 seconds. This is for status and short codes, not chat.
 - Phones relay other families' messages without being able to check them, so well-formed junk can cost air time. Each phone relays any one message at most once and at most 4 hops, but an attacker can make endless new messages, and phones carry each one up to 4 hops of rooms beyond the attacker's speaker.
 - Anyone who hears a message can replay it marked "no hops left", so phones that hear the replay first never pass the real message on.

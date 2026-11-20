@@ -26,9 +26,9 @@ export const PROBLEMS: Problem[] = [
   p('p05', 'Keep tunnels safe to live in and move through', 'Modelled, real reports', 'Fair Share pump power with full floors for tunnels whose loss strands a neighbourhood', 'person-hours stranded by floods', 'lower', 'LIVE (reports); SIMULATED (district)'),
   p('p06', 'Find, make or share space', 'Modelled', 'Rooms pooled per sector and slept in by shift; the night shift rotated by debt, households whole', 'sleeping floor per sleeper on the busiest shift', 'higher', 'SIMULATED (district)'),
   p('p07', 'Organize without the network', 'Live', '25-byte signed packets carried by sound, relayed sector to sector (at most 4 hops)', 'share of messages delivered within 60 min', 'higher', 'LIVE (phone); SIMULATED (district)'),
-  p('p08', 'Reconnect families', 'Live (device test pending)', 'OK beacons under a family key, relayed by strangers\' phones, shown on a family board', 'mean hours until a separated member\'s status is known', 'lower', 'LIVE (phone); SIMULATED (district)'),
+  p('p08', 'Reconnect families', 'Live', 'OK beacons under a family key, relayed by strangers\' phones, shown on a family board', 'mean hours until a separated member\'s status is known', 'lower', 'LIVE (phone); SIMULATED (district)'),
   p('p09', 'Track the real outbreak, route supplies', 'Modelled, real reports', 'Chapman estimate from the clinic list and residents\' reports; medicine follows the estimate', 'relative error of the case count acted on', 'lower', 'LIVE (reports); SIMULATED (district)'),
-  p('p10', 'Basic care for people who cannot reach a clinic', 'Live (aid and request, device test pending), Modelled (delivery)', 'Breath Count on the phone; requests over the mesh to two pop-up care points, RED before AMBER', 'median hours from a RED request to first care', 'lower', 'LIVE (aid); SIMULATED (district)'),
+  p('p10', 'Basic care for people who cannot reach a clinic', 'Live (danger-sign RED and medicine request tested on the phone), Modelled (delivery)', 'Breath Count on the phone; requests over the mesh to two pop-up care points, RED before AMBER', 'median hours from a RED request to first care', 'lower', 'LIVE (aid); SIMULATED (district)'),
   p('p11', 'Track and treat life without sunlight', 'Modelled', 'Whole 4 h bright-light sessions rotated by debt; grow rooms count as bright rooms', 'share of person-days with 4 h of daytime light', 'higher', 'SIMULATED (district)'),
   p('p12', 'Grow and share neighbourhood food', 'Modelled, real requests', 'Farm deliveries shared over every level, a cut-off one included; stores top up to the floor only', 'days the food floor held after a farm cut-off', 'higher', 'LIVE (requests); SIMULATED (district)'),
   p('p13', 'Prove whether the surface is safe, tell everyone', 'Modelled (real digest packet not built)', 'Witness quorum over independent crews\' readings gives an exposure band, beside the official verdict', 'share of reading rounds with the wrong band', 'lower', 'SIMULATED (district)'),
@@ -45,7 +45,8 @@ export function show(value: number, unit: string): string {
   if (unit === 'share' || unit === 'ratio') return `${Math.round(value * 100)}%`;
   // U+2011, a non-breaking hyphen: a narrow cell never splits the unit
   const units: Record<string, string> = { 'person-h': ' person\u2011h', h: ' h', days: ' days', m2: ' m²', count: '' };
-  return `${Number(value.toPrecision(3)).toLocaleString('en-US')}${units[unit] ?? ` ${unit}`}`;
+  const n = Number(value.toPrecision(3)).toLocaleString('en-US'), u = units[unit] ?? ` ${unit}`;
+  return n + (n === '1' ? u.replace(/s$/, '') : u); // 1 household, 1 day
 }
 
 /** Which policy did better on one metric, read by its direction. */

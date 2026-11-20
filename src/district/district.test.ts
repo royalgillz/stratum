@@ -4,7 +4,7 @@ import { createDecoder, encode, TYPES } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys, type KeySet } from '../core/packet/keys.ts';
 import { createRun } from '../core/scenario/run.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
-import { toMessage } from './gateway.ts';
+import { needText, toMessage } from './gateway.ts';
 import { badges, noEvent, PROBLEMS, show, winner } from './problems.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
 import { audioClock, view, type AudioClock } from './snapshot.ts';
@@ -13,6 +13,16 @@ const WORDS = 'abandon ability able about above absent';
 const now = Date.UTC(2026, 10, 16, 12, 0);
 const payload = { member: 42, code: 0, level: 5, sector: 1, flags: 1, value: 0 };
 const ok = (k: KeySet, nonce = 7, type: number = TYPES.OK) => encode(k, { type, minute: Math.floor(now / 60000), nonce, hops: 3, payload });
+
+describe('gateway needText', () => {
+  it('names Breath Count requests and codebook needs, with the count when given', () => {
+    expect(needText({ code: 0x10, value: 0 })).toBe('Medicine request: Breath Count RED (danger sign)');
+    expect(needText({ code: 0x11, value: 52 })).toBe('Medicine request: Breath Count AMBER (fast breathing, 52 a minute)');
+    expect(needText({ code: 0x20, value: 3 })).toBe('Needs help: Medicine (3 people)');
+    expect(needText({ code: 0x21, value: 1 })).toBe('Needs help: Clean water (1 person)');
+    expect(needText({ code: 0x99, value: 0 })).toBe('Needs help: code 153');
+  });
+});
 
 describe('gateway toMessage', () => {
   it('turns a verified family OK into a LIVE message for the demo household, once', async () => {
@@ -124,6 +134,9 @@ describe('problems: shown values and who did better', () => {
     expect(show(22941.7, 'person-h')).toBe('22,900 person\u2011h');
     expect(show(100000, 'APF')).toBe('none proven');
     expect(show(10000, 'APF')).toBe('APF 10,000');
+    expect(show(1, 'households')).toBe('1 household');
+    expect(show(2, 'households')).toBe('2 households');
+    expect(show(1, 'days')).toBe('1 day');
     expect(winner('higher', 0, 0.25)).toBe('STRATUM');
     expect(winner('lower', 0, 500)).toBe('Directorate');
     expect(winner('lower', 3, 3)).toBe('tie');
