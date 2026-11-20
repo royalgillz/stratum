@@ -1,13 +1,14 @@
 // District 7 page (docs/plan.md "Architecture"): the SIMULATED week from the worker, a policy switch, the hum
 // emitter, and the gateway that turns a real phone's OK, heard by the microphone, into a LIVE board entry.
 // Outside LID scope.
-import { createDecoder, digestPayload, encode, TYPES } from '../core/packet/codec.ts';
+import { createDecoder, digestPayload, encode, TYPES, type Decoded } from '../core/packet/codec.ts';
+import { tally } from '../core/tally/tally.ts';
 import { deriveKeys, publicKeys } from '../core/packet/keys.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
 import { openMic } from '../audio/mic.ts';
 import { createModem } from '../audio/modem.ts';
-import { needText, toMessage } from './gateway.ts';
+import { needText, reportText, toMessage } from './gateway.ts';
 import { badges, NOISE, PROBLEMS, show, ZERO_BY_RULE } from './problems.ts';
 import type { LedgerRow, ScriptName, Snapshot, ToWorker, View } from './snapshot.ts';
 import { BANDS } from '../core/adapters/p13.ts';
@@ -204,11 +205,27 @@ function log(text: string) {
   while ($('heard').children.length > 20) $('heard').lastElementChild!.remove();
 }
 
+// Heard by sound: every report and public alert, tallied by src/core/tally; this page only renders the rows.
+const reports: Decoded[] = [];
+const hm = (minute: number) => new Date(minute * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function renderReports(d: Decoded) {
+  reports.push(d);
+  if (reports.length > 2000) reports.shift(); // shortcut: a long session forgets its oldest packets, raise if a drill hears more
+  const el = (tag: string, text: string, cls = '') => Object.assign(document.createElement(tag), { textContent: text, className: cls });
+  const rows = tally(reports).map((t) => {
+    const x = reportText(t, hm(t.newest)), li = el('li', '');
+    li.append(el('strong', x.what), ` · ${x.detail} · `, el('span', 'LIVE', 'tag'), ...(x.cases ? [el('div', x.cases, 'cases')] : []));
+    return li;
+  });
+  if (rows.length) $('reports').replaceChildren(...rows);
+}
+
 /** The one path every heard packet takes, from the microphone or the test seam. */
 async function heard(bytes: Uint8Array) {
   await ready;
   if (!decode) return log('Rejected: set six family words first');
-  const r = toMessage(await decode(bytes, Date.now()), bytes);
+  const d = await decode(bytes, Date.now()), r = toMessage(d, bytes);
+  if (!('reject' in d) && !d.duplicate) renderReports(d);
   if (r.message) send({ type: 'inject', message: r.message });
   const h = r.message?.heard;
   if (h?.type === TYPES.NEED) needs.set(h.payload.member, { text: needText(h.payload), minute: h.minute, level: h.payload.level, sector: h.payload.sector });

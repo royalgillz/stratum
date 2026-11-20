@@ -100,7 +100,8 @@ Stated plainly, so nobody finds them for us.
 - The tracker needs to be close to the hum. With the phone 30 cm from the source it followed a slow
   ramp within 4 mHz. At 1 m in a room where people moved, echoes made the reading wander by
   ±15 mHz even after smoothing, so the warning levels sit well above that.
-- The replay on real recordings scores frequency error only. How often a steady real grid would show a false AMBER or RED was not measured.
+- On real recordings (ENF-WHU, REPLAY) the tiers show AMBER or RED on 9.1% of readings while the real grid is GREEN: 37.3 false warnings an hour. They come from 40 of the 68 recordings compared, and eight of those give just over half.
+- A hum-quality gate is not shipped. It is a harness experiment (`npm run score:enf`, field `gateExperiment` in `public/evidence/enf-whu.json`): a reading may change the shown tier only when its SNR is at least 18 dB and its frequency moved at most 30 mHz since the previous reading, otherwise the last tier is held. Thresholds were chosen on the odd-numbered recordings and scored on the even-numbered ones (7 of them with a real sag). There it cut false warnings from 34.4 to 20.6 an hour, but the false share only from 8.7% to 7.7% of GREEN readings, raised the miss share from 6.3% to 7.5%, and held the shown tier on 19% of readings. It would need a device retest before it could ship.
 
 ## Air watch (fan-stop alert)
 
@@ -127,6 +128,7 @@ Stated plainly, so nobody finds them for us.
 - Anyone who hears a message can replay it marked "no hops left", so phones that hear the replay first never pass the real message on.
 - Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or hears no hum at all, so during a cut, or far from any hum, a forged alert still travels.
 - Any phone can send a public HOLD WATER ("hold, do not drink") or ROUTE ("tunnel blocked") alert. Phones relay it with no check, up to its hop count, and show it from a single sender. The inbox counts the different member numbers that sent the same alert at the same place and marks it unconfirmed below three, but one attacker can claim several member numbers, so the count is a hint, not proof.
+- Public reports are not signed either. District 7's **Heard by sound** panel counts the different member numbers behind each report at each place and marks it unconfirmed below three, the same rule as the inbox, so it inherits the same weakness: one phone can pose as several senders. The reverse can happen too: each phone picks its member number at random (1 in 256 per pair), so two real phones can share one and count as a single sender. Its "cases heard by sound" figure adds each sender's latest people count, so two neighbours reporting the same sick people count them twice; it is an upper count, not a head count. A sender's latest report replaces its earlier one even when the latest gives no count, so a sender who resends without a count adds 0 people, and the row can say "no count given" although a count was heard; "from M senders" counts every sender, including those who gave no count. No outbreak estimate is made from it: a Chapman estimate needs a clinic list for the same place and the people on both lists, and the page has neither live.
 - A public ledger digest names no sender: anyone can send one. The phone shows it only to compare with the District 7 screen.
 - Messages carry their send time from the sender's clock. A receiver whose clock runs more than
   2 minutes behind the sender rejects fresh messages as from the future. Phones underground have no
@@ -156,14 +158,20 @@ Stated plainly, so nobody finds them for us.
 
 - The app must be installed once while the network is up. Spreading it phone to phone with no network is not built.
 - Family words must be agreed in person before a split, like a meeting place.
-- Tiers show a shape as well as colour (● GREEN, ▲ AMBER, ■ RED), and sound transfer needs no hearing from the user, but the app was not tested with deaf, blind or non-reading users.
+- Tiers show a shape as well as colour (● GREEN, ▲ AMBER, ■ RED), and sound transfer needs no hearing from the user.
+  In Chrome on Android the phone also vibrates while the page is on screen (not with the screen off; not yet tried
+  on a phone, run sheet Part N): once at AMBER, three times at RED, once for a fan stop, a family need or the first
+  public water or route alert at a place (**Vibrate on alerts** on the Listen tab). A screen reader announces the
+  same events on any tab, a public alert with its sender count (`src/phone/alerts.ts`). iPhone browsers and Firefox
+  for Android have no web vibration. The app was not tested with
+  deaf, blind or non-reading users.
 - People without a phone depend on a neighbour's phone or a shared laptop gateway.
 - Sending is audible: anyone within a few metres hears that someone sent a message. A family message's
   contents and sender are encrypted and its group tag changes every minute, but its type (OK, NEED and
   so on) and send time are in the clear, and public alerts are readable by anyone.
 - The family words are stored on the phone. Anyone holding the unlocked phone can read and send as the
   family; **Leave family** deletes them (`src/phone/app.ts`, `leave()`).
-- The app is in English only. It was not translated or tested with non-English readers.
+- The app is in English only, announcements included. It was not translated or tested with non-English readers.
 
 ## Results that go against us
 

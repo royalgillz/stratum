@@ -313,6 +313,38 @@ Pass: 67% on the Ledger tab and the same figure on the Listen line at AMBER and 
 
 At the end of Part L: phone, **Listen**, tick **Pass on messages for others** again.
 
+## Part M (optional, about 4 minutes): reports heard by District 7
+
+District 7 tallies every report it hears by type and place, with the number of different senders. Phone 30 cm from the
+laptop, as in Part F.
+
+1. Laptop: open `/src/district/` and press **Ctrl+Shift+R** once. Scroll down to **Gateway: phones in this room** and click
+   **Listen for phones** (click **Allow** if Chrome asks). The line under it says "Listening". Just below the gateway, the
+   panel **Heard by sound: reports** reads "No reports heard yet."
+2. Phone: tap **Report**. Set **Level** to `2` and **Sector** to `A`.
+3. Phone: tap **🤒 People coughing or sick**. In the dialog tap **Everyone nearby**, type `3` in **How many people?**, tap
+   **Send now**. Keep the phone still while it chirps (about 3 s).
+4. Laptop, within about 5 s: under **Heard**, a line `Public REPORT from member N: not a family message, not added to the board · LIVE`,
+   and in **Heard by sound: reports** a row:
+   **People coughing or sick · level 2, sector A: 1 report from 1 sender, unconfirmed (fewer than 3 senders), newest sent HH:MM · LIVE**,
+   with the line **Cases heard by sound: 3 people from 1 sender.** under it.
+5. Phone: tap **🌡️ Fan stopped or air hot**, **Everyone nearby**, **Send now**.
+6. Laptop: a new row at the top of the panel:
+   **Fan stopped or air hot · level 2, sector A: 1 report from 1 sender, unconfirmed (fewer than 3 senders), newest sent HH:MM · LIVE**. The sick row is still there, second.
+
+Pass: both rows appear, each says 1 sender and unconfirmed, and the sick row says 3 people.
+
+## Part N (stretch, 2 minutes): the phone buzzes at AMBER and RED
+
+1. Phone: **Listen**. Below the relay lines, check that **Vibrate on alerts** is ticked. Keep the screen on with
+   this page in front (Chrome buzzes only for a visible page you have tapped).
+2. Phone: tap **Start listening** if it is not listening already, then hold the phone in your hand, 30 cm from the laptop speaker.
+3. Laptop: open `/src/district/judge.html`, **Play the 90-second story** with **Sound: on**. Do not press Skip.
+4. Expected: one buzz when the phone shows **▲ AMBER** (about 63 s), three short buzzes at **■ RED**
+   (about 75 s), and no buzz while a tier stays the same.
+
+Pass: one buzz at AMBER and three at RED. If there is no buzz at all, turn Do Not Disturb off and play again; note it. (An iPhone has no web vibration: skip Part N on one.)
+
 ## Results to send back
 
 Copy this table into the chat with your results. Paste the laptop's gateway log text under it.
@@ -360,3 +392,6 @@ Copy this table into the chat with your results. Paste the laptop's gateway log 
 | L3 | ROUTE: 1 sender, unconfirmed | 30 cm | | |
 | L4 | Ledger digest: phone shows the same 12 characters | 30 cm | | digest = |
 | L5 | Optional: 67% on Ledger and on the Listen line | 30 cm | | |
+| M | Optional: sick report row, 3 people from 1 sender | 30 cm | | |
+| M | Optional: fan stopped row, 1 sender, unconfirmed | 30 cm | | |
+| N | Buzz once at AMBER, three times at RED | 30 cm | | |

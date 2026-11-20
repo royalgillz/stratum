@@ -46,7 +46,7 @@ Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real
 | Modelled (algorithm in District 7 against the Directorate's rule) | 2, 3, 4, 5, 6, 9, 10 (delivery), 11, 12, 13, 14, 15 |
 | Thin or Roadmap | none. The air half of problem 1 is a fan-stop alert on the phone, built, phone test pending |
 
-The phone sends real reports for 2, 4, 5, 9 and 12, but District 7 does not analyse them yet. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md).
+The phone sends real reports for 2, 4, 5, 9 and 12. District 7 tallies the reports it hears for 2, 4, 5 and 9 by type and place, with the number of different senders (LIVE; tested in a browser, not yet on a device); food requests (12) are NEED messages, which the tally does not count. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md).
 
 Headline (SIMULATED, seven-day week, 20 seeds): cuts warned 10 min ahead, Directorate 0.00, STRATUM 0.40 (the Directorate's rule issues no warnings, so its 0.00 is by rule; with Fair Share off, STRATUM warns 0.15); worst-decile served fraction, Directorate 0.66, STRATUM 0.85. Against us: in the stress week the warning gain is gone (0.00 under both), and from 3 lying surface crews in 5 the quorum carries the wrong band.
 
@@ -58,7 +58,7 @@ The main ones (full list: [docs/limits.md](docs/limits.md)):
 - Sound carries a few metres. Devices showed one hop at up to 3 m and one relay hop; multi-hop reach is simulated.
 - Public alerts are not signed, and one sender can pose as several.
 - Android only; no iPhone was tested. The fan alert's phone test is pending, and District 7 scores air warnings only on scripted fan stops and an assumed share of listening phones.
-- No case-report format yet; the 60 s grid step cannot show the first seconds after a trip, so the grid-inertia sweep moves nothing; no on-device sound model (such as cough counting) is shipped.
+- Case reports heard by sound are counted, not turned into an outbreak estimate (that needs a clinic list); the 60 s grid step cannot show the first seconds after a trip, so the grid-inertia sweep moves nothing; no on-device sound model (such as cough counting) is shipped.
 
 ## Run it
 

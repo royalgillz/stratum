@@ -75,7 +75,8 @@ const [seven, thirty, stress, enf, gecco, ablations, sweeps] = await Promise.all
   get<Ablations>('ablations.json'), get<Sweeps>('sweeps.json'),
 ]);
 
-// At a glance: the cards' own verdicts, counted. The seven-day wins, then every stress-week row STRATUM does not win.
+// At a glance: the cards' own verdicts, counted. The seven-day wins, then every stress-week row STRATUM does not win,
+// each as a list of the same form (card: Directorate, STRATUM; verdict), so the wins and the losses carry the same weight.
 const verdict = (e: Evidence, p: Problem, note = '') => {
   const d = e.policies.directorate?.[p.id], s = e.policies.stratum?.[p.id];
   if (note || !d || !s || noEvent(p.id, SCRIPTS[e.script]?.events ?? [], e.days * 86400)) return { note, d, s, w: null };
@@ -88,7 +89,11 @@ if (seven?.policies) {
   const rest = scored.filter((x) => x.w !== 'STRATUM').map((x) => `${card(x.p)}: ${x.w === 'tie' ? 'a tie' : 'Directorate better'}`);
   const vs = (id: Problem['id'], what: string) => { const x = scored.find((y) => y.p.id === id); return x ? [`${what} (STRATUM ${show(x.s!.final.mean, x.s!.unit)} vs Directorate ${show(x.d!.final.mean, x.d!.unit)})`] : []; };
   const wins = [...vs('p01', 'power cuts warned at least 10 min ahead'), ...vs('p02', 'need met for the worst-off tenth')];
-  glance.push(`Seven-day week, ${seven.seeds.length} seeds, <strong>SIMULATED</strong>: STRATUM better on <strong>${scored.filter((x) => x.w === 'STRATUM').length} of the ${scored.length}</strong> problems the week can score${rest.length ? ` (${rest.join('; ')})` : ''}${wins.length ? `, including ${wins.join(' and ')}` : ''}. Problem 9's outbreak is too small to score in a week: see its 30-day run.`);
+  const won = scored.filter((x) => x.w === 'STRATUM').map((x) => {
+    const rule = x.d!.final.mean === 0 && ZERO_BY_RULE[x.p.id] ? ` (${ZERO_BY_RULE[x.p.id]})` : '';
+    return `<li>${card(x.p)}: Directorate ${show(x.d!.final.mean, x.d!.unit)}${rule}, STRATUM ${show(x.s!.final.mean, x.s!.unit)}; STRATUM better</li>`;
+  });
+  glance.push(`<li class="wins"><p class="lead">Seven-day week, ${seven.seeds.length} seeds, <span class="tag">SIMULATED</span>: STRATUM better on <strong>${scored.filter((x) => x.w === 'STRATUM').length} of the ${scored.length}</strong> problems the week can score${rest.length ? ` (${rest.join('; ')})` : ''}${wins.length ? `, including ${wins.join(' and ')}` : ''}. Problem 9's outbreak is too small to score in a week: see its 30-day run.</p>${won.length ? `<ul class="list">${won.join('')}</ul>` : ''}</li>`);
 }
 // What each stress-week loss means, in words the cards do not print.
 const AGAINST: Partial<Record<Problem['id'], string>> = { p01: 'the warning gain is gone', p13: "STRATUM's verdict is in the wrong band in every round (wrong-band rate, lower is better)", p14: 'nothing lighter proven' };
@@ -111,11 +116,11 @@ if (stress?.policies) {
       const b = x.s!.beside?.breaches?.mean; // p14: the planned trial's breaches, the cost the tie hides
       return `<li>${card(x.p)}: Directorate ${show(x.d!.final.mean, x.d!.unit)}, STRATUM ${show(x.s!.final.mean, x.s!.unit)}; ${x.note || (x.w === 'tie' ? 'a tie' : 'Directorate better')}${AGAINST[x.p.id] ? `, ${AGAINST[x.p.id]}` : ''}${b ? `, ${b} breaches in the planned trial under STRATUM (Directorate ${x.d!.beside?.breaches?.mean ?? 0})` : ''}</li>`;
     });
-  if (lost.length) glance.push(`Stress week, ${stress.seeds.length} seeds, <strong>SIMULATED</strong>, against us:<ul class="list">${lost.join('')}</ul>`);
+  if (lost.length) glance.push(`<li class="losses"><p class="lead">Stress week, ${stress.seeds.length} seeds, <span class="tag">SIMULATED</span>, against us:</p><ul class="list">${lost.join('')}</ul></li>`);
 }
-glance.push('What each engine adds, and how the results move under a harder stress: <a href="#enginesTitle">What each engine contributes</a>, <a href="#sweepsTitle">Sweeps</a>.');
-glance.push('Limits of the model and the plan: <a href="#againstTitle">Results against us</a>.');
-document.getElementById('glance')!.innerHTML = glance.map((g) => `<li>${g}</li>`).join('');
+glance.push('<li>What each engine adds, and how the results move under a harder stress: <a href="#enginesTitle">What each engine contributes</a>, <a href="#sweepsTitle">Sweeps</a>.</li>');
+glance.push('<li>Limits of the model and the plan: <a href="#againstTitle">Results against us</a>.</li>');
+document.getElementById('glance')!.innerHTML = glance.join('');
 
 // The seven-day week as one dumbbell row per problem; a problem the week cannot score says why instead.
 document.getElementById('dumbbells')!.innerHTML = PROBLEMS.map((p) => {

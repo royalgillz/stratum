@@ -52,6 +52,7 @@ flowchart LR
   T --> S[shed<br/>cut odds per level]
   P --> S
   P --> RL[relay<br/>store and forward, one hop live]
+  P --> TL[tally<br/>heard reports by type and place]
   T --> RL
   B[breath<br/>WHO breath count aid] --> P
   K --> A[adapters p01..p15<br/>reads, writes, metric]
@@ -77,6 +78,7 @@ flowchart LR
 | shed | `src/core/shed` | SHED | 1, 2 |
 | breath | `src/core/care` | BREATH | 10 |
 | air watch (fan stop) | `src/core/air` | AIR-FAN | 1 |
+| tally (heard reports) | `src/core/tally` | TALLY | 2, 4, 5, 9 |
 | world models (sub-HLD: grid, air and heat, water, tunnels, epidemic, light and food, space, care delivery, surface and return) | `src/core/world` | WORLD | 1 to 7, 9 to 15 |
 | adapters (sub-HLD: policy, power, livable, evidence, family, space and care, light and food, surface) | `src/core/adapters` | ADAPT | 1 to 15 |
 | scenario and runner (with the scripts leaf: seed variation, the Level 5 act, the stress week) | `src/core/scenario` | SCEN | all modelled problems |

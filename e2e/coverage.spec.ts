@@ -58,7 +58,11 @@ for (const scheme of ['light', 'dark'] as const) {
       const glance = page.locator('#glance');
       expect((await glance.boundingBox())!.y).toBeLessThan((await cards(page).first().boundingBox())!.y);
       await expect(glance).toContainText('Seven-day week, 20 seeds, SIMULATED: STRATUM better on 14 of the 14 problems the week can score, including power cuts warned at least 10 min ahead (STRATUM 40% vs Directorate 0%) and need met for the worst-off tenth (STRATUM 85% vs Directorate 66%).');
-      const lost = glance.locator('li li');
+      // The wins as a list of the same form as the losses, each from the evidence, the Directorate's zero by rule marked
+      const won = glance.locator('.wins li');
+      await expect(won).toHaveCount(14);
+      await expect(won.first()).toHaveText(`1. Warn before power or air cuts: Directorate 0% (no tool, by rule), STRATUM ${show(seven.policies.stratum.p01.final.mean, 'share')}; STRATUM better`);
+      const lost = glance.locator('.losses li');
       await expect(lost).toHaveText([
         /^1\. Warn before power or air cuts: Directorate 0%, STRATUM 0%; a tie, the warning gain is gone$/,
         // docs/coverage.md marks rows 3 and 5 against STRATUM too: a win that lost most of its lead, or its zero
@@ -69,7 +73,7 @@ for (const scheme of ['light', 'dark'] as const) {
         /^14\. .*; a tie, nothing lighter proven, 4 breaches in the planned trial under STRATUM \(Directorate 0\)$/,
       ]);
       for (const n of [12, 13]) {
-        await expect(glance.locator(`a[href="#problem-${n}"]`)).toHaveText(new RegExp(`^${n}\. `));
+        await expect(glance.locator(`.losses a[href="#problem-${n}"]`)).toHaveText(new RegExp(`^${n}\. `));
         await expect(page.locator(`#problem-${n} h2`)).toHaveText(new RegExp(`^${n}\. `));
       }
       await expect(glance.getByRole('link', { name: 'Results against us' })).toHaveAttribute('href', '#againstTitle');
@@ -160,17 +164,17 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.locator('#engines section.engine').first()).toBeHidden();
       await expectSoundLayout(page);
       // A glance link opens the folded card it points to
-      await page.locator('#glance a[href="#problem-12"]').click();
+      await page.locator('#glance .losses a[href="#problem-12"]').click();
       await expect(p12.locator('details')).toHaveAttribute('open', '');
       await expect(p12.locator('tbody tr', { hasText: 'Stress week' })).toBeVisible();
       // Closed by the reader, the same link opens it again (the hash does not change, so no hashchange)
       await p12.locator('summary').click();
       await expect(p12.locator('details')).not.toHaveAttribute('open', '');
-      await page.locator('#glance a[href="#problem-12"]').click();
+      await page.locator('#glance .losses a[href="#problem-12"]').click();
       await expect(p12.locator('details')).toHaveAttribute('open', '');
       // The stress-week losses are set at the same size as the win above them
       const size = (sel: string) => page.locator(sel).evaluate((e) => getComputedStyle(e).fontSize);
-      expect(await size('#glance > li:has(> ul)')).toBe(await size('#glance > li:first-child'));
+      expect(await size('#glance > li.losses')).toBe(await size('#glance > li.wins'));
       // So does arriving on a card's address
       await page.goto('/src/district/coverage.html#problem-13', { waitUntil: 'domcontentloaded' });
       await expect(page.locator('#problem-13 details')).toHaveAttribute('open', '', { timeout: 15_000 });
@@ -213,7 +217,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(loss).toContainText('95%: 400 person\u2011h to 600 person\u2011h'); // non-breaking hyphen
       // The glance counts what the files hold: p15 missing from the week, p03 lost in the stress week
       await expect(page.locator('#glance')).toContainText('STRATUM better on 13 of the 13 problems the week can score');
-      await expect(page.locator('#glance li li', { hasText: '3. Keep lower levels livable' })).toContainText('Directorate 0 person\u2011h, STRATUM 500 person\u2011h; Directorate better');
+      await expect(page.locator('#glance .losses li', { hasText: '3. Keep lower levels livable' })).toContainText('Directorate 0 person\u2011h, STRATUM 500 person\u2011h; Directorate better');
       await expectSoundLayout(page);
     });
 

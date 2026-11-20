@@ -4,6 +4,7 @@ dist
 .vercel
 docs/audit.md
 /.*/
+/.*/
 test-results/
 playwright-report/
 

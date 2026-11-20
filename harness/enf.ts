@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname } from 'node:path';
 import { parseArgs } from 'node:util';
 import { createTracker, type Reading } from '../src/core/tracker/tracker.ts';
-import { errorsMHz, parseWav, percentile, refHzAt, round1, tiersOf } from './enf-score.ts';
+import { alert, countTiers, errorsMHz, gateExperimentOf, gateScore, parseWav, percentile, refHzAt, round1, tiersOf, type Counts, type GateClip } from './enf-score.ts';
 
 const USAGE = 'usage: npm run score:enf -- [--data <dir>] [--h <1|2|3>] [--out <path>]';
 let args: { data: string; h: string; out: string };
@@ -54,21 +54,11 @@ const tierRows: ({ id: string } & Record<keyof typeof MAPPINGS, Counts>)[] = [];
 // threshold times 50/400, the same fraction of nominal (AMBER at -6.25 mHz). The reference gets NO HUM wherever the
 // tracker had none, so both skip, calibrate and reset on the same readings and only the frequency estimate differs.
 const MAPPINGS = { absolute: 1, scaled: F0 / 400 } as const;
-type Counts = { compared: number; refGreen: number; falseAlarm: number; refAlert: number; missed: number; trackerEntries: number; falseEntries: number; refOwnAlert: number };
-const alert = (t: string | undefined) => t === 'AMBER' || t === 'RED';
+const refMasked = (trackerFs: (number | undefined)[], refFs: (number | undefined)[], scale: number) => tiersOf(trackerFs.map((f, i) => (f === undefined ? undefined : refFs[i])), scale);
 function tierCounts(trackerFs: (number | undefined)[], refFs: (number | undefined)[], scale: number): Counts {
-  const tk = tiersOf(trackerFs, scale), rm = tiersOf(trackerFs.map((f, i) => (f === undefined ? undefined : refFs[i])), scale);
-  const c: Counts = { compared: 0, refGreen: 0, falseAlarm: 0, refAlert: 0, missed: 0, trackerEntries: 0, falseEntries: 0, refOwnAlert: tiersOf(refFs, scale).filter(alert).length };
-  tk.forEach((t, i) => {
-    if (alert(t) && tk[i - 1] === 'GREEN') { c.trackerEntries++; if (rm[i] === 'GREEN') c.falseEntries++; }
-    if (t === undefined || rm[i] === undefined) return;
-    c.compared++;
-    if (rm[i] === 'GREEN') { c.refGreen++; if (alert(t)) c.falseAlarm++; }
-    else { c.refAlert++; if (t === 'GREEN') c.missed++; }
-  });
-  return c;
+  return countTiers(tiersOf(trackerFs, scale), refMasked(trackerFs, refFs, scale), tiersOf(refFs, scale).filter(alert).length);
 }
-
+const gateClips: GateClip[] = [];
 const withHum = wavs('H1').map((f) => {
   const id = f.slice(0, -4);
   const clip = track(`${dir}/H1/${f}`);
@@ -78,6 +68,7 @@ const withHum = wavs('H1').map((f) => {
   if (own >= 0) throw new Error(`tiersOf disagrees with the tracker on ${id} at reading ${own}`);
   const refFs = clip.readings.map((r) => refHzAt(r.t, ref.x, ref.sampleRate, WIN_S, F0));
   tierRows.push({ id, absolute: tierCounts(trackerFs, refFs, MAPPINGS.absolute), scaled: tierCounts(trackerFs, refFs, MAPPINGS.scaled) });
+  gateClips.push({ id, fs: trackerFs, snr: clip.readings.map((r) => r.snrDb), tk: clip.readings.map((r) => r.tier), rm: refMasked(trackerFs, refFs, 1) });
   const e = errorsMHz(clip.readings, ref.x, ref.sampleRate, WIN_S, F0);
   const n = noHumOf(clip.readings);
   all.push(...e);
@@ -116,6 +107,10 @@ const pooled = (k: keyof typeof MAPPINGS) => {
     clipsRefAlert: tierRows.filter((r) => r[k].refOwnAlert > 0).length,
   };
 };
+
+const gateExperiment = gateExperimentOf(gateClips, HOP_S);
+const gateCheck = gateScore(gateClips, -Infinity, Infinity, HOP_S);
+if (gateCheck.falseAlarm !== pooled('absolute').falseAlarm || gateCheck.missed !== pooled('absolute').missed) throw new Error('an open gate does not reproduce the shipped tiers');
 
 const clipMedians = withHum.flatMap((c) => (c.medianMHz === null ? [] : [c.medianMHz]));
 
@@ -157,6 +152,7 @@ const evidence = {
     crops: group(noGrid.filter((c) => !c.id.startsWith('O'))),
     perClip: noGrid.map(({ noHum, ...c }) => ({ ...c, noHumShare: share(noHum, c.readings) })),
   },
+  gateExperiment,
 };
 console.log(JSON.stringify({ ...evidence, withHum: { ...evidence.withHum, perClip: undefined }, tiers: { ...evidence.tiers, perClip: undefined }, noGrid: { ...evidence.noGrid, perClip: undefined } }, null, 1));
 // Runtime goes to the console only, so the evidence file stays byte-identical across reruns.

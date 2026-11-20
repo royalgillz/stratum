@@ -1,5 +1,6 @@
 // Phone page shell: tabs and routing. Each screen lives in src/phone/screens and talks to the
 // others only through `app` events (src/phone/app.ts). Outside LID scope (src/phone).
+import { mountAlerts } from './alerts.ts';
 import { $, app, store } from './app.ts';
 import { mountCare } from './screens/care.ts';
 import { mountFamily } from './screens/family.ts';
@@ -15,6 +16,7 @@ const screens: Record<string, (root: HTMLElement) => void> = {
   care: mountCare,
 };
 for (const [name, mount] of Object.entries(screens)) mount($(`#screen-${name}`));
+mountAlerts();
 
 const tabs = [...document.querySelectorAll<HTMLButtonElement>('[role=tab]')];
 

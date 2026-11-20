@@ -30,6 +30,9 @@
     <section role="tabpanel" id="screen-care" aria-labelledby="tab-care" hidden></section>
     <section role="tabpanel" id="screen-ledger" aria-labelledby="tab-ledger" hidden></section>
   </main>
+  <!-- Alerts announced on any tab (src/phone/alerts.ts): RED and fan stop interrupt, the rest wait. -->
+  <p id="alertNow" class="sr-only" aria-live="assertive"></p>
+  <p id="alertSoon" class="sr-only" aria-live="polite"></p>
 
   <script src="/vendor/ggwave/ggwave.js"></script>
   <script type="module" src="./phone.ts"></script>

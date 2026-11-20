@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createTracker, type Reading } from '../src/core/tracker/tracker.ts';
-import { errorsMHz, parseWav, percentile, refHzAt, tiersOf, zeroCrossingHz } from './enf-score.ts';
+import { errorsMHz, gateTiers, parseWav, percentile, refHzAt, tiersOf, zeroCrossingHz } from './enf-score.ts';
 
 const wav = (samples: number[], sr: number, channels = 1, bits = 16) => {
   const b = new Uint8Array(44 + 2 * samples.length);
@@ -91,6 +91,17 @@ describe('ENF-WHU scoring', () => {
     expect(refHzAt(1, ref, 400, 2, 50)).toBeUndefined();
     expect(refHzAt(11, ref, 400, 2, 50)).toBeUndefined();
     expect(refHzAt(4, tone(10, 400, () => 48.5), 400, 2, 50)).toBeUndefined();
+  });
+
+  it('gates the shown tier on hum quality: holds the last tier on a weak or jumpy reading, clears on a gap', () => {
+    const tiers = [undefined, 'GREEN', 'AMBER', 'AMBER', 'RED', undefined, 'AMBER', 'GREEN'] as const;
+    const snr = [0, 30, 15, 30, 30, 0, 15, 30];
+    const fs = [undefined, 50, 50, 50, 50.1, undefined, 50, 50];
+    // Reading 2 is weak (15 dB < 20): GREEN held. Reading 4 jumps 100 mHz (> 20): AMBER held. After the gap, reading 6 is
+    // weak with nothing shown since the gap, so it shows no tier rather than an old one.
+    expect(gateTiers([...tiers], snr, fs, 20, 20)).toEqual({ tiers: [undefined, 'GREEN', 'GREEN', 'AMBER', 'AMBER', undefined, undefined, 'GREEN'], held: 3 });
+    // An open gate gives back the shipped tiers, including where the previous frequency is unknown.
+    expect(gateTiers([...tiers], snr, fs, -Infinity, Infinity)).toEqual({ tiers: [...tiers], held: 0 });
   });
 
   it('takes nearest-rank percentiles', () => {

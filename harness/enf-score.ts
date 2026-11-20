@@ -111,6 +111,93 @@ export function tiersOf(fs: (number | undefined)[], scale = 1): (Tier | undefine
   });
 }
 
+/**
+ * Hum-quality gate on the shown tier (an experiment for harness/enf.ts, not in the phone): a reading may change the shown
+ * tier only when its SNR is at least minSnrDb and its frequency moved at most maxStepMHz since the previous reading (an
+ * unknown step passes); otherwise the last shown tier is held. A gap (undefined tier) clears it, so nothing is held across
+ * NO HUM, and a closed gate before any tier is shown shows none. held counts readings with a tier whose update was withheld.
+ */
+export function gateTiers(tiers: (Tier | undefined)[], snrDb: number[], fs: (number | undefined)[], minSnrDb: number, maxStepMHz: number): { tiers: (Tier | undefined)[]; held: number } {
+  let shown: Tier | undefined, held = 0;
+  const out = tiers.map((t, i) => {
+    if (t === undefined) return (shown = undefined);
+    const step = Math.abs(((fs[i] ?? NaN) - (fs[i - 1] ?? NaN)) * 1000);
+    if (snrDb[i] >= minSnrDb && !(step > maxStepMHz)) return (shown = t);
+    held++;
+    return shown;
+  });
+  return { tiers: out, held };
+}
+
+/** Tier comparison counts for harness/enf.ts; see the comment on its `tiers` evidence field. */
+export type Counts = { compared: number; refGreen: number; falseAlarm: number; refAlert: number; missed: number; trackerEntries: number; falseEntries: number; refOwnAlert: number };
+export const alert = (t: string | undefined) => t === 'AMBER' || t === 'RED';
+export function countTiers(tk: (Tier | undefined)[], rm: (Tier | undefined)[], refOwnAlert = 0): Counts {
+  const c: Counts = { compared: 0, refGreen: 0, falseAlarm: 0, refAlert: 0, missed: 0, trackerEntries: 0, falseEntries: 0, refOwnAlert };
+  tk.forEach((t, i) => {
+    if (alert(t) && tk[i - 1] === 'GREEN') { c.trackerEntries++; if (rm[i] === 'GREEN') c.falseEntries++; }
+    if (t === undefined || rm[i] === undefined) return;
+    c.compared++;
+    if (rm[i] === 'GREEN') { c.refGreen++; if (alert(t)) c.falseAlarm++; }
+    else { c.refAlert++; if (t === 'GREEN') c.missed++; }
+  });
+  return c;
+}
+
+/** One recording for the gate experiment: tracker frequencies and SNR, the shipped tiers, and the reference's tiers. */
+export type GateClip = { id: string; fs: (number | undefined)[]; snr: number[]; tk: (Tier | undefined)[]; rm: (Tier | undefined)[] };
+const share3 = (part: number, whole: number) => Math.round((part / whole) * 1000) / 1000;
+
+/**
+ * Shipped tiers (open gate: minSnrDb -Infinity, maxStepMHz Infinity) or gated tiers scored against the reference. A reading
+ * where the tracker had a tier but the gate shows none counts as no warning (GREEN), so shipped and gated are scored on
+ * the same readings and a sag the gate hides counts as missed.
+ */
+export function gateScore(clips: GateClip[], minSnrDb: number, maxStepMHz: number, hopS: number) {
+  let held = 0, withTier = 0;
+  const cs = clips.map((c) => {
+    const g = gateTiers(c.tk, c.snr, c.fs, minSnrDb, maxStepMHz);
+    held += g.held;
+    withTier += c.tk.filter((t) => t !== undefined).length;
+    return countTiers(g.tiers.map((t, i) => (c.tk[i] === undefined ? undefined : (t ?? 'GREEN'))), c.rm);
+  });
+  const sum = (f: keyof Counts) => cs.reduce((s, r) => s + r[f], 0);
+  const hours = (sum('compared') * hopS) / 3600;
+  return {
+    compared: sum('compared'), comparedHours: Math.round(hours * 100) / 100,
+    refGreen: sum('refGreen'), falseAlarm: sum('falseAlarm'), falseAlarmShare: share3(sum('falseAlarm'), sum('refGreen')),
+    refAlert: sum('refAlert'), missed: sum('missed'), missShare: sum('refAlert') ? share3(sum('missed'), sum('refAlert')) : null,
+    falseEntries: sum('falseEntries'), falseEntriesPerHour: round1(sum('falseEntries') / hours),
+    withTier, held, heldShare: share3(held, withTier),
+    clipsRefAlertCompared: cs.filter((c) => c.refAlert > 0).length,
+  };
+}
+
+/**
+ * The gate experiment (not shipped): thresholds chosen on odd-numbered recordings, reported on even-numbered ones.
+ * Selection: lowest false warnings an hour on the odd half with its miss share at most 2 points above the shipped
+ * tracker's there, ties to fewer readings held. 13 dB is the tracker's own NO HUM floor, so 13 means no SNR gate;
+ * maxStepMHz Infinity (null in JSON) means no step limit.
+ */
+export function gateExperimentOf(clips: GateClip[], hopS: number) {
+  const GATE_SNR = Array.from({ length: 28 }, (_, i) => 13 + i), GATE_STEP = [Infinity, 50, 30, 20, 12, 8, 5, 3, 2];
+  const train = clips.filter((c) => Number(c.id) % 2 === 1), test = clips.filter((c) => Number(c.id) % 2 === 0);
+  const trainShipped = gateScore(train, -Infinity, Infinity, hopS);
+  const chosen = GATE_SNR.flatMap((minSnrDb) => GATE_STEP.map((maxStepMHz) => ({ minSnrDb, maxStepMHz, train: gateScore(train, minSnrDb, maxStepMHz, hopS) })))
+    .filter((g) => (g.train.missShare ?? 0) <= (trainShipped.missShare ?? 0) + 0.02)
+    .sort((a, b) => a.train.falseEntriesPerHour! - b.train.falseEntriesPerHour! || a.train.heldShare - b.train.heldShare)[0];
+  return {
+    shipped: false,
+    rule: 'a reading may change the shown tier only if its SNR is at least minSnrDb and its frequency moved at most maxStepMHz since the previous reading; otherwise the last shown tier is held (NO HUM gaps clear it). A reading the gate leaves with no tier is scored as no warning',
+    split: { train: 'odd recording ids', test: 'even recording ids', trainClips: train.length, testClips: test.length },
+    grid: { minSnrDb: GATE_SNR, maxStepMHz: GATE_STEP },
+    selection: 'lowest false warnings an hour on the train half, with its miss share at most 0.02 above the shipped tracker on the train half; ties to fewer readings held',
+    chosen: { minSnrDb: chosen.minSnrDb, maxStepMHz: chosen.maxStepMHz },
+    train: { shipped: trainShipped, gated: chosen.train },
+    test: { shipped: gateScore(test, -Infinity, Infinity, hopS), gated: gateScore(test, chosen.minSnrDb, chosen.maxStepMHz, hopS) },
+  };
+}
+
 /** Nearest-rank percentile (p in (0, 1]); null for no values. */
 export function percentile(xs: number[], p: number): number | null {
   if (!xs.length) return null;

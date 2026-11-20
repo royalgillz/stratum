@@ -223,6 +223,46 @@ test.describe('District 7 page', () => {
     await expectSoundLayout(page);
   });
 
+  test('Heard by sound: public reports and alerts are tallied by type and place with distinct senders, newest first, LIVE', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.goto('/src/district/?test', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => 'districtTest' in window);
+    const panel = page.locator('#reports');
+    await expect(page.getByRole('heading', { name: 'Heard by sound: reports LIVE' })).toBeVisible();
+    await expect(panel).toContainText('No reports heard yet.');
+    const hear = (b: number[]) => page.evaluate((b) => (window as unknown as { districtTest: { hear(b: number[]): Promise<void> } }).districtTest.hear(b), b);
+    const now = Math.floor(Date.now() / 60000);
+    /** A public report as the phone's Report tab sends it, made here in Node with the real codec. */
+    const report = async (member: number, code: number, o: { type?: number; level?: number; sector?: number; value?: number; ago?: number } = {}) =>
+      [...await encode(await publicKeys(), {
+        type: o.type ?? TYPES.REPORT, minute: now - (o.ago ?? 0), nonce: member * 1000 + code * 7 + (o.ago ?? 0), hops: 3,
+        payload: { member, code, level: o.level ?? 4, sector: o.sector ?? 2, flags: 0, value: o.value ?? 0 },
+      })];
+    // Fan stopped on L4 C from three different phones, one of them twice: 4 reports, 3 senders, confirmed.
+    for (const [m, ago] of [[1, 5], [2, 5], [3, 5], [3, 4]] as const) await hear(await report(m, 0x14, { ago }));
+    const again = await report(2, 0x14, { ago: 5 });
+    await hear(again); // the same packet heard again (a relay): not counted twice
+    // People sick on L2 A from two phones: 3 and 4 people, newest.
+    await hear(await report(7, 0x15, { level: 2, sector: 0, value: 3, ago: 1 }));
+    await hear(await report(8, 0x15, { level: 2, sector: 0, value: 4 }));
+    // A public ROUTE alert on L6 D, the oldest.
+    await hear(await report(9, 0x31, { type: TYPES.ROUTE, level: 6, sector: 3, ago: 9 }));
+    // A family OK is not a report.
+    await hear(await okBytes('abandon ability able about above absent', 42));
+
+    const rows = panel.locator('li');
+    await expect(rows).toHaveCount(3);
+    await expect(rows.nth(0)).toContainText('People coughing or sick · level 2, sector A: 2 reports from 2 senders, unconfirmed (fewer than 3 senders), newest sent');
+    await expect(rows.nth(0)).toContainText('Cases heard by sound: 7 people from 2 senders.');
+    await expect(rows.nth(0)).toContainText('needs a clinic list for this sector');
+    await expect(rows.nth(1)).toContainText('Fan stopped or air hot · level 4, sector C: 4 reports from 3 senders, confirmed (3 or more senders), newest sent');
+    await expect(rows.nth(1)).not.toContainText('Cases heard');
+    await expect(rows.nth(2)).toContainText('Public alert: Tunnel flooded or blocked here · level 6, sector D: 1 report from 1 sender, unconfirmed');
+    for (const r of await rows.all()) await expect(r.locator('.tag')).toHaveText('LIVE');
+    await expect(panel).not.toContainText('Member 42');
+    await expectSoundLayout(page);
+  });
+
   test('the ledger shows measured beside official as SIMULATED with its digest, and Send ledger digest plays a LEDGER_HEAD the phone shows', async ({ page, context }) => {
     test.setTimeout(60_000);
     await page.goto('/src/district/?test&speed=10', { waitUntil: 'domcontentloaded' });

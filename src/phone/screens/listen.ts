@@ -1,5 +1,6 @@
 import type { FanReading } from '../../core/air/fan.ts';
 import type { Reading } from '../../core/tracker/tracker.ts';
+import { VIBRATE_KEY } from '../alerts.ts';
 import { $, app, store } from '../app.ts';
 import { shared } from './ledger.ts';
 import { CALIBRATING_TEXT, devText, REPLAY_DETAILS, REPLAY_SUMMARY, REPLAY_TEXT, TIER_TEXT } from '../tiers.ts';
@@ -41,7 +42,9 @@ export function mountListen(root: HTMLElement) {
     </details>
     <label class="check"><input type="checkbox" id="relayOn" /> Pass on messages for others</label>
     <p id="relayCount" role="status" aria-live="polite">Relaying starts when you tap Start listening.</p>
-    <p class="muted">With no network, phones carry each other's messages a few metres at a time; this phone never decodes other families' messages, it only repeats them.</p>`;
+    <p class="muted">With no network, phones carry each other's messages a few metres at a time; this phone never decodes other families' messages, it only repeats them.</p>
+    <label class="check"><input type="checkbox" id="vibrateOn" /> Vibrate on alerts</label>
+    <p class="muted">Buzzes once at AMBER, three times at RED, and once for a fan stop, a family need or a public water or route alert. Phones without a vibration motor (and iPhones) skip it; the alert still shows and is read out by a screen reader.</p>`;
   const btn = $<HTMLButtonElement>('#listenBtn', root);
 
   const relayOn = $<HTMLInputElement>('#relayOn', root);
@@ -50,6 +53,9 @@ export function mountListen(root: HTMLElement) {
     app.relaying = relayOn.checked;
     store.set('stratum.relay', relayOn.checked ? null : 'off');
   };
+  const vibrateOn = $<HTMLInputElement>('#vibrateOn', root);
+  vibrateOn.checked = store.get(VIBRATE_KEY) !== 'off';
+  vibrateOn.onchange = () => store.set(VIBRATE_KEY, vibrateOn.checked ? null : 'off');
   let relayed = 0;
   // Relaying runs only while the microphone is open, so the count appears only from then on.
   const showRelayed = () => ($('#relayCount', root).textContent = `Passed on ${relayed} message${relayed === 1 ? '' : 's'} this session · LIVE`);
@@ -80,7 +86,6 @@ export function mountListen(root: HTMLElement) {
       put(fan, 'Fan: no sound from the microphone. Check that it is not muted or in use by a call. · LIVE');
       return;
     }
-    if (r.state === 'STOPPED' && fan.className !== 'STOPPED') navigator.vibrate?.(200);
     if (fan.className !== r.state) fan.className = r.state;
     put(fan, `${FAN_TEXT[r.state]} · ${r.label}`);
     fanLog.push([new Date().toISOString(), r.t.toFixed(2), r.levelDb.toFixed(1), r.baselineDb.toFixed(1), r.floorDb.toFixed(1), r.runningDb?.toFixed(1) ?? '', r.steady, r.state].join(','));

@@ -1,6 +1,7 @@
 import { payloadDigest, TYPES, type Decoded } from '../../core/packet/codec.ts';
 import { NEED_CODES } from '../../core/care/breath.ts';
 import { generateWords } from '../../core/packet/keys.ts';
+import { CONFIRM } from '../../core/tally/tally.ts';
 import { $, app, clock, random, store, type Heard } from '../app.ts';
 import { CODEBOOK } from '../codebook.ts';
 
@@ -38,7 +39,7 @@ export function senders(seen: Map<string, Set<number>>, d: Decoded): string {
   if (d.type !== TYPES.HOLD_WATER && d.type !== TYPES.ROUTE) return '';
   const p = d.payload, key = `${d.type}:${p.code}:${p.level}:${p.sector}`, set = seen.get(key) ?? new Set<number>();
   seen.set(key, set.add(p.member));
-  return ` · ${set.size} sender${set.size === 1 ? '' : 's'}${set.size < 3 ? ', unconfirmed' : ''}`;
+  return ` · ${set.size} sender${set.size === 1 ? '' : 's'}${set.size < CONFIRM ? ', unconfirmed' : ''}`;
 }
 
 /** " · power on" or off: power is a field of OK and REPORT only, so a need shows none rather than a value that is not a reading. */

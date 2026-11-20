@@ -1,29 +1,46 @@
+/* The shared design tokens for Home, judge mode, District 7 and the coverage matrix (district.css imports this sheet).
+   Text colours meet WCAG AA (4.5:1) on --bg and --surface in both themes; --accent and --bg are pinned by the specs. */
 :root {
   color-scheme: light dark; /* native buttons follow the theme, as on the phone page */
-  --fg: #111; --bg: #fff; --muted: #5f5f5f; --line: #ddd; --accent: #1a4fa0; --case: #222; --screen: #f6f6f4;
+  --fg: #111; --bg: #fff; --surface: #f5f6f8; --muted: #5a5a5a; --line: #d9dbe0; --accent: #1a4fa0; --link: #1a4fa0; --case: #222; --screen: #f6f6f4;
   --green: #1b7a3a; --amber: #8a5a00; --red: #b3261e;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --step--1: 0.9rem; --step-1: 1.2rem; --step-2: 1.4rem; --step-3: 1.9rem; /* body text is 1rem */
+  --measure: 70ch; --gap: 16px; --section: 40px; --radius: 8px;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --fg: #eee; --bg: #121212; --muted: #aaa; --line: #333; --accent: #8ab4ff; --case: #6b6b6b; --screen: #1d1d1d; --green: #6fdc8c; --amber: #ffc94d; --red: #ff8a80; }
+  :root { --fg: #eee; --bg: #121212; --surface: #1d1e21; --muted: #adadad; --line: #3a3b40; --accent: #8ab4ff; --link: #8ab4ff; --case: #6b6b6b; --screen: #1d1d1d; --green: #6fdc8c; --amber: #ffc94d; --red: #ff8a80; }
 }
 * { box-sizing: border-box; }
-body { font-family: system-ui, sans-serif; margin: 0 auto; padding: 0 16px 32px; max-width: 60rem; color: var(--fg); background: var(--bg); line-height: 1.45; }
-h1 { font-size: 1.4rem; margin: 16px 0 4px; }
-h2 { font-size: 1.1rem; margin: 24px 0 8px; }
-h3 { font-size: 0.95rem; margin: 12px 0 4px; }
+body { font-family: var(--font); margin: 0 auto; padding: 0 16px 48px; max-width: 60rem; color: var(--fg); background: var(--bg); line-height: 1.5; }
+h1, h2, h3 { line-height: 1.25; text-wrap: balance; }
+h1 { font-size: var(--step-2); margin: 16px 0 4px; letter-spacing: -0.01em; }
+h2 { font-size: var(--step-1); margin: var(--section) 0 12px; }
+h3 { font-size: 1rem; margin: 20px 0 6px; }
+/* Prose at a readable measure; tables, charts and the map keep the full width. */
+:where(header, main, section, details, .side) > p, :where(main, section) > ul:not([class]), .list { max-width: var(--measure); }
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 0.2em; text-decoration-color: color-mix(in srgb, currentColor 50%, transparent); }
+a:hover { text-decoration-color: currentColor; text-decoration-thickness: 2px; }
+/* The page links: bold, underlined only on hover. */
+a.go { font-weight: 600; text-decoration: none; }
+a.go:hover { text-decoration: underline; }
+/* LIVE, REPLAY, SIMULATED and LOOPBACK labels beside a number: a small outlined badge. */
+span.tag { display: inline-block; padding: 0 7px; border: 1px solid currentColor; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; line-height: 1.5; color: var(--muted); vertical-align: 0.1em; white-space: nowrap; }
 /* One visible focus outline in both themes: the default ring is faint on the light-blue dark-theme button. */
 :focus-visible { outline: 3px solid var(--fg); outline-offset: 3px; }
-button { font: inherit; min-height: 44px; padding: 0 16px; margin: 4px 8px 4px 0; }
-button.primary { font-weight: 700; background: var(--accent); color: var(--bg); border: 2px solid transparent; border-radius: 6px; } /* the border shows in forced colours */
+button { font: inherit; min-height: 44px; padding: 0 16px; margin: 4px 8px 4px 0; color: var(--fg); background: var(--surface); border: 1px solid var(--muted); border-radius: var(--radius); cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--fg); }
+button.primary { font-weight: 700; background: var(--accent); color: var(--bg); border: 2px solid transparent; } /* the border shows in forced colours */
 a.go { display: inline-block; min-height: 44px; line-height: 44px; }
+header > p:has(> a.go) { margin: 8px 0; } /* the nav row */
 /* A link that looks like the primary button: the start of the story on Home, the next step when it ends. */
-a.cta { display: inline-flex; align-items: center; min-height: 48px; padding: 8px 20px; font-weight: 700; text-decoration: none; background: var(--accent); color: var(--bg); border: 2px solid transparent; border-radius: 6px; }
+a.cta { display: inline-flex; align-items: center; min-height: 48px; padding: 8px 20px; font-weight: 700; text-decoration: none; background: var(--accent); color: var(--bg); border: 2px solid transparent; border-radius: var(--radius); }
 a.cta:hover { text-decoration: underline; }
 .row { display: flex; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }
-.lede { font-size: 1.15rem; }
-.small { font-size: 0.9rem; font-variant-numeric: tabular-nums; }
-.note { border: 2px dashed var(--amber); padding: 8px; font-weight: 600; }
+.lede { font-size: var(--step-1); line-height: 1.4; }
+.small { font-size: var(--step--1); font-variant-numeric: tabular-nums; }
+.note { border: 2px dashed var(--amber); border-radius: var(--radius); padding: 8px 12px; font-weight: 600; }
 code { overflow-wrap: anywhere; }
 #addr { display: block; padding: 12px 0; user-select: all; } /* easy to select by touch when copying fails */
 /* QR code to the live phone page: dark on white in both themes (a camera needs the contrast), the address beside it. */
