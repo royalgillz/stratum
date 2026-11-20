@@ -72,49 +72,76 @@ Leave the phone listening from Part A (Listen tab, **Pass on messages for others
 
 ## Part F (rung 3, district): the phone's OK reaches District 7
 
-1. Phone: tap **Report**. Set **Level** to `5` and **Sector** to `B`.
-2. Laptop: open `/src/district/` and click **Play**. The caption starts with "The network is down"
-   and the world time runs.
-3. Laptop: scroll to **Gateway: phones in this room**. Leave the family words as they are. Click
-   **Listen for phones**, then **Allow** for the microphone.
-4. Phone: on **Report**, tap **I am OK**, choose **Family only**, then **Send now**.
-5. Laptop, within about 5 s of the chirps ending:
-   - the gateway log shows a line starting with `Verified OK from member`
-   - **Family board: the demo family** shows a row for that member, labelled LIVE
-6. Click **STRATUM rule**, then **Directorate rule**. The same LIVE row stays under both rules.
-7. Send OK twice more (steps 4 and 5), at 1 m and then 3 m from the laptop.
+Close the laptop tab that played the second phone, so only the real phone sends.
 
-If the log says `Rejected: not this family`, the six words on the phone differ from the laptop's.
+1. Laptop: open `/src/district/` and press **Ctrl+Shift+R** once, so the newest version loads.
+2. Laptop: scroll down to **Gateway: phones in this room**. In the **Family words** box, delete what is there and type
+   the six words shown on the phone's **Family** tab (for example `marine artist crucial donate census craft`).
+3. Laptop: click **Listen for phones**. If Chrome asks, click **Allow** for the microphone. The button greys out and the
+   line under it says "Listening".
+4. Phone: tap **Report**. Set **Level** to `5` and **Sector** to `B`.
+5. Phone, 30 cm from the laptop: tap **I am OK**. In the dialog tap **Family only**, then **Send now**. Keep the phone
+   still while it chirps (about 3 s).
+6. Laptop, within about 5 s, two things (you do not need to press Play):
+   - under **Heard**, a line `Verified OK from member <number> · LIVE`
+   - under **Family board: the demo family** (just above the gateway), a row for that member marked LIVE
+7. Laptop: scroll to the top and click **STRATUM rule**, scroll back down: the LIVE row is still on the board. Scroll up,
+   click **Directorate rule**: still there. Click **Play**, wait 10 s: still there. Click **Pause**.
+
+If the log says `Rejected: not this family`, the words in the laptop box differ from the phone's.
 
 ## Part G (rung 4, all fifteen): District 7 and the coverage matrix
 
-On the laptop first, then repeat steps 1 to 3 on the phone (its screen is narrow: check nothing is
-cut off and the page does not scroll sideways).
+Laptop first (about 10 minutes), then a short pass on the phone.
 
-1. `/src/district/`: the results table has fifteen numbered rows, **1.** to **15.**, each with
-   "higher is better" or "lower is better", a tier badge and SIMULATED. Before Play every value reads
-   "not started"; once the week runs, each row shows a value for both rules (a few say "no outbreak" or
-   similar until their event).
-   Click **Play** and let it run to the end of the week (about 3 minutes; the real-time act
-   "Level 5 goes dark: deepest first" plays at real pace).
-2. On the cross-section: a thin food store bar along the bottom of each sector, and a **Surface:**
-   line above level 1 ("no reading yet" until the first surface reading).
-3. Click **Stress week**. The run restarts, and the caption says **Stress week: built so STRATUM also
-   loses.** Let it run. Expected: on problem 13 (surface truth) STRATUM is worse, and on 14 the two
-   rules tie.
-4. Open `/src/district/coverage.html` (or **Coverage matrix** from the home page). Expected: fifteen
-   cards, each with tier badges, mechanism, metric, the 20-seed result for both rules, and which rule
-   did better. Card 1 and card 4 also show REPLAY figures (ENF-WHU and GECCO 2018). Card 9's first
-   row is the 30-day run. At least one stress-week row says **Directorate better**. At the bottom:
-   **Results against us**.
+1. Laptop: on `/src/district/`, click **Restart** and scroll to **Results so far, fifteen problems**.
+   - Fifteen rows numbered **1.** to **15.**
+   - Under each title: "higher is better" or "lower is better", then "figure: SIMULATED · Tier:" and one or more badges
+     (Live, Modelled, Roadmap).
+   - The two value columns, **Directorate (shown)** and **STRATUM**, read "not started" before Play.
+2. Scroll to the top and click **Play**. The clock line ("World time day 1, ...") starts running. Leave it about
+   3 minutes, until the **Play** button reads **Week ended**. While it runs:
+   - map cells change colour (yellow: power on; olive: trimmed; black: cut). Level 6 sectors C and D go black on day 2
+   - for about a minute the caption reads **Level 5 goes dark: deepest first · REAL TIME**
+   - each cell has a thin bar along its bottom edge (food store), and the **Surface:** line above L1 changes from
+     "no reading yet" to a band
+   - the table fills with numbers or words such as "no outbreak"
+3. At the end: the caption reads **Week ended · press Restart to replay** and the clock **end of day 7**. Click
+   **STRATUM rule**: the map and the table show the same week under STRATUM.
+4. Click **Stress week**. The caption starts **Stress week: built so STRATUM also loses.** Click **Play** and wait for
+   **Week ended** (about 3 minutes). Check in the table:
+   - row **13**: STRATUM's value is worse than the Directorate's
+   - row **14**: the two values are the same
+5. Scroll to the top and click the **coverage matrix** link in the first paragraph (or open
+   `/src/district/coverage.html`). Check:
+   - fifteen cards, numbered 1 to 15, each with badges, **Mechanism:**, **Metric:** and a small table
+   - the table rows are "Seven-day week, 20 seeds" and "Stress week, 20 seeds", each with a verdict under the name
+     ("Directorate better", "STRATUM better" or "tie") and a value per rule; some have grey "beside it:" rows
+   - cards **1** and **4** have a **REPLAY** paragraph (ENF-WHU and GECCO 2018)
+   - card **9**'s first row is "30-day run, 20 seeds"
+   - card **13**'s stress-week row says **Directorate better**
+   - at the bottom of the page: **Results against us**
+6. Phone: open `/src/district/` in Chrome. Scroll the whole page top to bottom. On the results table, put a finger on it
+   and swipe left: the page must not slide sideways, and no text may be cut off at the right edge. Tap **Play**, watch
+   20 s, tap **Pause**. Then open `/src/district/coverage.html` and do the same swipe test on two or three cards.
 
 ## Part H (should list): offline and install on the phone
 
-1. Phone, with network: open `/src/phone/`, wait until the page has loaded, then reload it once.
-2. Chrome menu (three dots): tap **Add to Home screen** (or **Install app**), then **Install**. A STRATUM icon (blue square, white bars) appears on the home screen.
-3. Turn on **Airplane mode** (Wi-Fi and mobile data off).
-4. Tap the STRATUM icon. Expected: the app opens with no network and shows the five tabs. Tap **Listen**, then **Start listening**: it calibrates as in Part A. Under the reading, a REPLAY line says how the tracker did on real grid recordings.
-5. Turn Airplane mode off.
+1. Phone, with Wi-Fi or data on: open `/src/phone/` in Chrome. Wait 5 s, then pull down to reload, and reload once more.
+   (The first visit saves the app on the phone; the reloads make sure the newest version is the one saved.)
+2. Chrome's three-dot menu (top right): tap **Add to Home screen** or **Install app**. In the box that opens tap
+   **Install** (or **Add**, then **Add** again). Go to the home screen: a STRATUM icon (blue square, white bars) is there.
+3. Swipe down from the top of the screen and tap **Airplane mode**. Check that the Wi-Fi icon is off too (some phones
+   keep Wi-Fi on in airplane mode: tap Wi-Fi off if so).
+4. Tap the STRATUM icon on the home screen. Expected: the app opens with no address bar and shows the five tabs
+   (Listen, Report, Family, Ledger, Care). It must not show Chrome's "No internet" dinosaur page.
+5. Tap **Listen**, then **Start listening** (allow the microphone if asked). Expected: CALIBRATING, then NO HUM in a
+   quiet room. Under it a grey line: "In a replay of 130 recordings of a real 50 Hz grid...". For a full check, play the
+   judge story with sound on the laptop (Part A setup) and watch the tiers.
+6. Tap **Family**: your family words and board are still there.
+7. Turn Airplane mode off.
+
+Phone model and Chrome version: Chrome three-dot menu, **Settings**, **About Chrome**.
 
 ## Results to send back
 
@@ -143,5 +170,3 @@ Copy this table into the chat with your results. Paste the laptop's gateway log 
 | G | Same pages on the phone, no sideways scroll | | | |
 | H | Installed to the home screen | | | |
 | H | Opens and listens in Airplane mode | | | |
-
-Phone model and Chrome version:
