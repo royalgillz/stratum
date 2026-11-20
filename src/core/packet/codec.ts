@@ -75,6 +75,18 @@ export async function encode(keys: KeySet, p: EncodeInput): Promise<Uint8Array> 
   return b;
 }
 
+/** A LEDGER_HEAD payload: the first 6 bytes of a hex digest (Witness's `digest()`), in payload order. */
+// @spec PKT-001
+export function digestPayload(digest: string): Payload {
+  if (!/^[0-9a-f]{12}/i.test(digest)) throw new RangeError('digest must start with 12 hex characters');
+  const b = [0, 1, 2, 3, 4, 5].map((i) => parseInt(digest.slice(2 * i, 2 * i + 2), 16));
+  return { member: b[0]!, code: b[1]!, level: b[2]! >> 4, sector: b[2]! & 15, flags: b[3]!, value: (b[4]! << 8) | b[5]! };
+}
+
+/** The 12 hex characters a LEDGER_HEAD payload carries. */
+export const payloadDigest = (p: Payload) =>
+  [p.member, p.code, (p.level << 4) | p.sector, p.flags, p.value >> 8, p.value & 255].map((x) => x.toString(16).padStart(2, '0')).join('');
+
 // @spec PKT-006, PKT-007, PKT-008, PKT-009, PKT-010, PKT-011, PKT-012
 export function createDecoder(families: KeySet[], publicSet: KeySet) {
   const sets = [...families, publicSet];

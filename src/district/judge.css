@@ -16,14 +16,23 @@ h3 { font-size: 0.95rem; margin: 12px 0 4px; }
 button { font: inherit; min-height: 44px; padding: 0 16px; margin: 4px 8px 4px 0; }
 button.primary { font-weight: 700; background: var(--accent); color: var(--bg); border: 2px solid transparent; border-radius: 6px; } /* the border shows in forced colours */
 a.go { display: inline-block; min-height: 44px; line-height: 44px; }
+/* A link that looks like the primary button: the start of the story on Home, the next step when it ends. */
+a.cta { display: inline-flex; align-items: center; min-height: 48px; padding: 8px 20px; font-weight: 700; text-decoration: none; background: var(--accent); color: var(--bg); border: 2px solid transparent; border-radius: 6px; }
+a.cta:hover { text-decoration: underline; }
 .row { display: flex; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }
 .small { font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .note { border: 2px dashed var(--amber); padding: 8px; font-weight: 600; }
 code { overflow-wrap: anywhere; }
 #addr { display: block; padding: 12px 0; user-select: all; } /* easy to select by touch when copying fails */
+/* QR code to the live phone page: dark on white in both themes (a camera needs the contrast), the address beside it. */
+.qr { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 12px 0; }
+.qr img { flex: none; width: 164px; height: 164px; background: #fff; }
+.qr p { margin: 0; flex: 1 1 12rem; }
 
 /* The story: drawn phone beside the captions, stacked on narrow screens. */
+/* Captions change length as the story plays: never let the browser scroll the page to compensate, or the caption slides off screen. */
+html { overflow-anchor: none; }
 .stage { display: grid; grid-template-columns: 260px 1fr; gap: 24px; margin-top: 16px; align-items: start; }
 /* Phones: the caption above a compact phone, so the tier and the caption fit on one screen. */
 @media (max-width: 640px) { .stage { grid-template-columns: 1fr; } .phone { min-height: 0; max-width: none; } .side { order: -1; } #caption { min-height: 0; } }

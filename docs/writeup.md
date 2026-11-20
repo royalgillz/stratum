@@ -34,7 +34,7 @@ Every number on screen and in this write-up carries one of three labels:
 - **REPLAY**: real public recordings run through the same code the phone uses.
 - **SIMULATED**: District 7, or judge mode's drawn phone (which runs the real tracker and codec on a simulated hum, marked LOOPBACK).
 
-Each problem also carries a tier, from `docs/coverage.md`: **Live** (runs on a real phone), **Modelled** (an algorithm in District 7, measured against the Directorate's rule), **Thin** (one rule or chart on assumed parameters), **Roadmap** (write-up only). Only the air half of problem 1 is Roadmap: no rule warns before an air cut. No problem is Thin.
+Each problem also carries a tier, from `docs/coverage.md`: **Live** (runs on a real phone), **Modelled** (an algorithm in District 7, measured against the Directorate's rule), **Thin** (one rule or chart on assumed parameters), **Roadmap** (write-up only). No problem is Thin or Roadmap. The air half of problem 1 is a fan-stop alert on the phone: it hears the steady sound of a fan and warns when it stops, built and tested on recorded traces in the browser, with the phone test pending. District 7 does not score air warnings.
 
 Device status (`docs/device-results.md`): the run sheet ran on a Samsung Galaxy Z Fold 7 (Android 17, Chrome 158) and a Windows laptop. Passed: the hum tiers at 30 cm, the phone's family OK verified by District 7 at 30 cm, 1 m and 3 m, a laptop tab's family OK on the phone's board, judge mode, District 7 and the coverage matrix. Also passed: the phone passing a report on (one relay hop), install to the home screen and use in Airplane mode, and on the phone a danger-sign RED whose medicine request the District 7 gateway verified. The 60-second tap count passed in a laptop browser. Earlier, spikes T1 to T3 passed on one Android phone and a laptop (`docs/spikes.md`). No iPhone was tested.
 
@@ -44,7 +44,7 @@ Every problem has a mechanism, a metric and a place on screen, with its tier pri
 
 | # | Problem | Mechanism | Tier | Headline result |
 | --- | --- | --- | --- | --- |
-| 1 | Warn before power or air cuts | Tone bank on the 800 Hz hum, 30 s calibration, GREEN / AMBER / RED tiers; Shed Ledger gives cut odds per level from neighbours' reports | Live (power); air: Roadmap | Tracker on 129 of 130 ENF-WHU clips: median per-clip error 31.2 mHz (REPLAY). Cuts warned 10 min ahead, 7-day: D 0.00, S 0.40; stress: D 0.00, S 0.00 (SIMULATED) |
+| 1 | Warn before power or air cuts | Tone bank on the 800 Hz hum, 30 s calibration, GREEN / AMBER / RED tiers; Shed Ledger gives cut odds per level from neighbours' reports | Live (power); air: fan-stop alert built, phone test pending | Tracker on 129 of 130 ENF-WHU clips: median per-clip error 31.2 mHz (REPLAY). Cuts warned 10 min ahead, 7-day: D 0.00, S 0.40; stress: D 0.00, S 0.00 (SIMULATED) |
 | 2 | Share power, water, food fairly | Fair Share: floors, then water-filling, debt rotates feeder cuts | Modelled; phone sends real reports | Worst-decile served fraction, 7-day: D 0.66, S 0.85; stress: D 0.50, S 0.63 (SIMULATED) |
 | 3 | Keep lower levels livable | Fair Share steers cooling to where it removes most person-hours over the limit; refuge rooms | Modelled | Person-hours above 27.5 C wet-bulb, 7-day: D 64,904, S 9,336; stress: D 178,050, S 138,670 (SIMULATED) |
 | 4 | Catch bad water before people drink it | Witness detector on recycler sensors; the level's water is held before bad water reaches the taps | Modelled; real data; phone sends real reports | GECCO 2018, six sensors: 22/22 held-out events, precision 0.017; 21/29 on the first half (REPLAY). Person-hours of unsafe water drunk, 7-day: D 23,280, S 0 (SIMULATED) |
@@ -54,9 +54,9 @@ Every problem has a mechanism, a metric and a place on screen, with its tier pri
 | 8 | Reconnect families | OK beacons under a family key to a family board with the packet's own time | Live | The phone's OK verified by District 7 at 30 cm, 1 m and 3 m (LIVE, device test). Mean hours until status known, 7-day: D 3.9 h, S 2.2 h (SIMULATED) |
 | 9 | Track the real outbreak, route supplies | Capture-recapture (Chapman) between residents' reports and the clinic list; medicine follows the estimate | Modelled; no case-report format yet | Case-count relative error, 30-day: D 0.80, S 0.08 (SIMULATED); the seven-day outbreak is too small to score |
 | 10 | Basic care for people who cannot reach a clinic | Breath Count: 60 s tap count against WHO thresholds, five danger signs, medicine request as a packet; couriers by triage | Live (danger-sign RED and medicine request tested on the phone), Modelled (delivery) | Median hours to first care (RED), 7-day: D 17.1 h, S 0.58 h; stress: D 22.5 h, S 1.20 h (SIMULATED) |
-| 11 | Track and treat life without sunlight | Lamp-hours rationed by Fair Share with rotation. Treat only: no tracking of sleep, mood or health yet; one 4 h session at 250 lux melanopic counts as met (weaker than the recommendation) | Modelled | Share of person-days with 4 h of daytime light, 7-day: D 0.19, S 0.65; stress: D 0.17, S 0.57 (SIMULATED) |
+| 11 | Track and treat life without sunlight | Lamp-hours rationed by Fair Share with rotation. Treat only: no tracking of sleep, mood or health yet; one 4 h session at 250 lux melanopic counts as met (weaker than the recommendation) | Modelled | Share of person-days with 4 h of daytime light, 7-day: D 0.19, S 0.64; stress: D 0.17, S 0.57 (SIMULATED) |
 | 12 | Grow and share neighbourhood food | Ration with a floor; transfers between levels stand for OFFER and NEED packets | Modelled; phone sends real requests | Days the food floor held after a farm cut-off, 7-day: D 3.00, S 5.55; stress: every level breaches after 5.00 days under S (SIMULATED) |
-| 13 | Prove whether the surface is safe, tell everyone | Independent crews' readings, hash-chained in the ledger, quorum median, verdict as an exposure band (the simulation does not sign readings) | Modelled (real digest packet not built) | Wrong-band rate, 7-day: D 1.00, S 0.00; stress: D 0.00, S 1.00 (SIMULATED) |
+| 13 | Prove whether the surface is safe, tell everyone | Independent crews' readings, hash-chained in the ledger, quorum median, verdict as an exposure band (the simulation does not sign readings) | Modelled (digest packet built, not device-tested) | Wrong-band rate, 7-day: D 1.00, S 0.00; stress: D 0.00, S 1.00 (SIMULATED) |
 | 14 | Which option works, who goes first | Required protection = measured level over limit; staged trials with stop rules; volunteers by lottery | Modelled | Protection factor proven in the planned 30-day trial (worked out on paper, the same on every seed): D 10,000, S 10 (lower is better); stress: tie at 10,000, S has 4 trial breaches (SIMULATED) |
 | 15 | Plan the mass return | Slots = smaller of shaft throughput and surface reception; debt-weighted lottery, families together | Modelled | Worst level's mean wait, 7-day: D 22.8 days, S 14.4 days; levels 1 to 3 wait longer under S (SIMULATED) |
 
@@ -150,9 +150,9 @@ The full list is in `docs/limits.md`. The ones that matter most:
 - The hum says when the grid is stressed, not which level will be cut; the cut odds come from neighbours' reports, and anyone can send public reports.
 - The tracker needs to be close to the hum: about 30 cm in a quiet room.
 - Sound carries a few metres. The device test showed one hop, phone to a laptop gateway, at up to 3 m, and one relay hop through the phone. Multi-hop reach is simulated.
-- Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or no hum at all.
+- Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or no hum at all. Any phone can send a HOLD WATER or ROUTE alert; it is relayed with no check, and one sender's alert reaches the inbox, marked unconfirmed until three different member numbers send it (those numbers can be forged too).
 - Breath Count is a decision aid that follows published thresholds for children under five. It is not a medical device. It asks five of the chart's eleven danger signs.
-- The ledger digest packet for the surface verdict (13) is not sent by any phone yet. Case reports for the outbreak (9) are not designed yet. Reports sent from the phone are not analysed in District 7 yet.
+- The ledger digest (13) is sent by the District 7 page as one sound packet carrying its first 6 bytes, and the phone's inbox shows it; this is tested in a browser, not yet on a device. Case reports for the outbreak (9) are not designed yet. Reports sent from the phone are not analysed in District 7 yet.
 - The STRATUM rule needs to be adopted, or applied by levels to the loads they control. The Directorate holds the breakers.
 - Android only. No iPhone was tested.
 - Offline install works only after one visit with network; an update arrives on the next visit with network, and a page whose network takes more than 3 s opens the saved copy. Tested on a Galaxy Z Fold 7: installed to the home screen, then opened and listened in Airplane mode.
@@ -166,7 +166,7 @@ The full list is in `docs/limits.md`. The ones that matter most:
 
 ## What is next
 
-Cheap stairwell relay nodes so a message can cross levels, a real surface sniffer, case reports from Breath Count into the outbreak estimate, the ledger digest sent over the mesh, and a field test of the packets in a real tunnel.
+Cheap stairwell relay nodes so a message can cross levels, a real surface sniffer, case reports from Breath Count into the outbreak estimate, the ledger digest tested on devices and relayed over several hops, and a field test of the packets in a real tunnel.
 
 ## Try it
 

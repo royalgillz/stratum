@@ -14,17 +14,17 @@ async function hookApp(page: Page) {
   });
 }
 
-/** A heard family packet: type 0 (OK) unless given, e.g. type 1 code 0x10 is a Breath Count RED request. */
-const hear = (page: Page, member: number, minutesAgo: number, type = 0, code = 0, timesHeard = 1) =>
-  page.evaluate(([member, minutesAgo, type, code, timesHeard]) => {
+/** A heard family packet: type 0 (OK) unless given, e.g. type 1 code 0x10 is a Breath Count RED request; pub: heard under the public keys. */
+const hear = (page: Page, member: number, minutesAgo: number, type = 0, code = 0, timesHeard = 1, pub = false) =>
+  page.evaluate(([member, minutesAgo, type, code, timesHeard, pub]) => {
     const minute = Math.floor(Date.now() / 60000) - minutesAgo;
     const decoded = {
-      type, hops: 3, minute, keySet: 'family', public: false, duplicate: timesHeard > 1, timesHeard,
+      type, hops: 3, minute, keySet: pub ? 'public' : 'family', public: pub, duplicate: timesHeard > 1, timesHeard,
       payload: { member, code, level: 3, sector: 1, flags: 0, value: 0 },
     };
     (window as unknown as { testApp: EventTarget }).testApp
       .dispatchEvent(new CustomEvent('packet', { detail: { decoded, bytes: new Uint8Array(), at: Date.now() } }));
-  }, [member, minutesAgo, type, code, timesHeard]);
+  }, [member, minutesAgo, type, code, timesHeard, pub] as const);
 
 test.describe('family board', () => {
   test.beforeEach(async ({ page }) => {
@@ -109,6 +109,21 @@ test.describe('family board and inbox wording', () => {
     await expect(row).not.toContainText('power');
     expect(await row.locator('.alert').evaluate((e) => getComputedStyle(e).fontWeight)).toBe('700');
     await expect(page.locator('#inbox li').first()).toContainText('■ RED: medicine request (danger sign) from member 203');
+    await expectSoundLayout(page);
+  });
+
+  test('public HOLD WATER and ROUTE alerts show in the inbox in plain words with their sender count, not on the family board', async ({ page }) => {
+    await hear(page, 9, 0, 5, 0x30, 1, true);
+    await hear(page, 9, 0, 6, 0x31, 1, true);
+    const inbox = page.locator('#inbox li');
+    await expect(inbox.nth(0)).toHaveText(/^LIVE · .* · ⚠ Tunnel flooded or blocked here from member 9 · level 3, sector B · public · 1 sender, unconfirmed$/);
+    await expect(inbox.nth(1)).toHaveText(/^LIVE · .* · ⚠ Water looks or smells wrong: hold, do not drink from member 9 · level 3, sector B · public · 1 sender, unconfirmed$/);
+    // the same alert at the same place from two more members: confirmed at three different senders (plan, public claims)
+    await hear(page, 12, 0, 5, 0x30, 1, true);
+    await expect(inbox.nth(0)).toHaveText(/ from member 12 · level 3, sector B · public · 2 senders, unconfirmed$/);
+    await hear(page, 13, 0, 5, 0x30, 1, true);
+    await expect(inbox.nth(0)).toHaveText(/ from member 13 · level 3, sector B · public · 3 senders$/);
+    await expect(page.locator('#board li')).toHaveCount(0); // a stranger's alert is not a family member
     await expectSoundLayout(page);
   });
 

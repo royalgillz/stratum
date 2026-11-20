@@ -20,13 +20,15 @@ const offset = (t: number) =>
 // so a caption never claims a tier before the drawn phone shows it.
 const CAPTIONS: [number, string][] = [
   [0, 'Every powered machine hums at the grid frequency. In the Hollow the grid runs at 400 Hz, so the hum is 400 and 800 Hz. The phone listens and learns this grid\'s normal pitch: about 30 seconds of calibration.'],
-  [34, 'The phone finishes calibrating and shows GREEN: the grid is normal. It tracks the pitch to within a few thousandths of a hertz when held about 30 cm from the hum in a quiet room.'],
+  [10, 'Where: the Hollow, a city underground. The Directorate holds the breakers and the network, and the network is down. Power cuts come with no warning.'],
+  [22, 'Why sound: every phone has a microphone, and the hum reaches places a signal cannot. The phone is still calibrating.'],
+  [34, 'The phone finishes calibrating and shows GREEN: the grid is normal. In a real test on Nov 19 2026, a phone 30 cm from a laptop playing this story read these tiers · LIVE.'],
   [50, 'Demand outgrows supply. The generators slow and the hum starts to sag, 100 mHz over 20 seconds. Watch the phone: it smooths its reading, so it trails the truth by a few seconds.'],
   [63, 'The phone sees the sag and warns: AMBER, the grid is under strain.'],
   [70, 'The shortfall deepens to 200 mHz below normal: a cut is likely soon. The phone moves to RED within a few seconds. Fill water, save charge, move to the light.'],
   [CUT, 'Power cut. The hum stops, and within two seconds the phone shows NO HUM. The warning works before a cut, not during one.'],
   [OK_AT, 'A family member sends OK by sound. The phone decodes the 25-byte packet with the real codec and shows it in the inbox.'],
-  [END, 'End of the story. The tracker and the codec are the real code; the grid, the hum and the message are SIMULATED.'],
+  [END, "End of the story. The tracker and the codec are the real code; the grid, the hum and the message are SIMULATED. Across a whole district, over 20 seven-day weeks, STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED."],
 ];
 
 const SHOW = {
@@ -128,6 +130,7 @@ play.onclick = async () => {
   story.hidden = false;
   story.focus();
   story.scrollIntoView({ block: 'start' }); // on a phone the caption sits below the fold otherwise
+  $('next').hidden = true;
   $('seq').replaceChildren();
   $('inbox').innerHTML = '<li class="muted">No messages yet</li>';
   delete $('tier').dataset.tier;
@@ -167,6 +170,7 @@ play.onclick = async () => {
       sound.close();
       play.disabled = false;
       play.textContent = 'Play the story again';
+      $('next').hidden = false;
       if (story.contains(document.activeElement) || document.activeElement === document.body) play.focus();
     }
   };

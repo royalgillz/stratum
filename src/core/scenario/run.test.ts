@@ -169,6 +169,22 @@ describe('runHeadless', () => {
     expect(made.at(-1)).toEqual({ dt: 60, check: true });
   }, 60_000);
 
+  // @spec SCEN-004, SCEN-007
+  it('passes a per-adapter policy map through createRun to createAdapters', () => {
+    const per = { p13: 'directorate', p07: 'directorate' } as const;
+    const run = createRun(dayOne, 5, 'stratum', { per });
+    const k = createKernel(createWorld(5, run.script), createAdapters('stratum', run.script, per));
+    run.kernel.run(6 * H);
+    k.run(6 * H);
+    expect(run.kernel.world).toEqual(k.world);
+    expect(run.kernel.world.surface.band).not.toBe('unknown'); // p13 under the Directorate posts its verdict
+    const a = runHeadless(dayOne, 5, 'stratum', { per, check: false });
+    const b = runHeadless(dayOne, 5, 'stratum', { check: false });
+    expect(a.series.p07!.value).not.toEqual(b.series.p07!.value); // messages wait for the bulletin
+    expect(a.series.p02).toEqual(b.series.p02);
+    expect(() => runHeadless(dayOne, 5, 'stratum', { per: { p99: 'stratum' } as never })).toThrow(RangeError);
+  }, 60_000);
+
   // @spec SCEN-008
   it('returns identical series and worlds on every call, checked or not', () => {
     for (const p of ['directorate', 'stratum'] as const) {

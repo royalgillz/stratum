@@ -6,8 +6,9 @@ input { font: inherit; min-height: 44px; padding: 0 8px; color: var(--fg); backg
 #words { display: block; width: 100%; max-width: 32rem; margin: 4px 0; }
 .seed { margin-right: 8px; }
 [aria-label=Run] { margin-right: 16px; }
-/* Pressed is a ring on the button, focus an outline outside it, so a focused pressed button shows both. */
-button[aria-pressed=true] { font-weight: 700; box-shadow: 0 0 0 3px var(--accent); }
+/* Pressed is a filled button (a mode switch, not focus); focus is an outline outside it, so a focused pressed button shows both. */
+button[aria-pressed=true] { font-weight: 700; background: var(--accent); color: var(--bg); border: 2px solid transparent; border-radius: 6px; }
+.lbl { margin-right: 8px; font-weight: 600; }
 /* High Contrast drops box-shadow, so pressed becomes a frame inside the button; a box has one outline, so when focused it goes to focus and the frame moves to the border. */
 @media (forced-colors: active) {
   button[aria-pressed=true] { outline: 3px solid ButtonText; outline-offset: -6px; }
@@ -21,7 +22,7 @@ button:disabled { opacity: 0.6; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
 @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 
-#map { display: block; width: 100%; height: auto; max-height: max(22rem, min(62vh, calc(100vh - 340px))); /* all six levels above the fold on a 1366 x 768 laptop: the map starts about 300 px down, more with Linux fonts; on short screens (200% zoom) it scrolls instead of shrinking */ font: 13px system-ui, sans-serif; }
+#map { display: block; width: 100%; height: auto; max-height: max(20rem, min(62vh, calc(100vh - 420px))); /* all six levels above the fold on a 1366 x 768 laptop: the map starts about 390 px down (below the nav and the what-to-do line), more with Linux fonts; on short screens (200% zoom) it scrolls instead of shrinking */ font: 13px system-ui, sans-serif; }
 #map text { fill: currentColor; }
 #map .axis { fill: var(--muted); font-weight: 700; }
 #map .marks { font-weight: 700; letter-spacing: 0.08em; }
@@ -50,6 +51,11 @@ table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
 td { font-variant-numeric: tabular-nums; white-space: nowrap; }
 tbody th { font-weight: 400; }
+/* District 7: the columns stay put; the rule the map draws is tinted. */
+#results :is(th, td):not(:first-child) { padding-left: 6px; }
+#results[data-shown=directorate] :is(th, td):nth-child(2), #results[data-shown=stratum] :is(th, td):nth-child(3) { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+#ledgerTable td { white-space: normal; }
+#digest { overflow-wrap: anywhere; }
 .list { padding-left: 1.2em; margin: 0; }
 .list li { margin: 4px 0; overflow-wrap: anywhere; }
 
@@ -62,4 +68,51 @@ tbody th { font-weight: 400; }
 /* Values wrap between number and unit, so a long figure never widens a narrow screen. */
 .card td, #metrics td { white-space: normal; }
 /* Wider fonts (Linux CI) can make one long word wider than a 369 px column: let it break there. */
-@media (max-width: 480px) { tbody th, tbody td { overflow-wrap: anywhere; hyphens: auto; } } /* column heads are single words */
+@media (max-width: 480px) {
+  tbody th { overflow-wrap: anywhere; hyphens: none; } /* column heads are single words; a hyphen mid-word ("wa- ter") reads as a typo */
+  tbody td { overflow-wrap: break-word; } /* result cells widen to their longest word rather than split it with no hyphen */
+  #metrics .metric { font-size: .85rem; } /* every number keeps its metric on a phone too */
+  #metrics th b { hyphens: auto; hyphenate-limit-chars: 10 4 4; } /* only a long title word ("neighbourhood" at 344 px) breaks, at a real hyphen */
+  .lbl { width: 100%; } /* "Drawing:" and "Week:" on their own line, so each pair of buttons stays on one row */
+}
+/* The title and the page links share one line, so the map starts higher (all six levels above the fold on a 1366 x 768 laptop). */
+header { padding-top: 8px; }
+header > h1, header > nav { display: inline-block; vertical-align: middle; margin-right: 1rem; }
+
+/* Coverage charts: two validated series hues (dataviz reference palette, slots 1 and 2), stepped for each theme.
+   Shapes carry identity too: the Directorate a square, STRATUM a circle. */
+:root { --s-d: #eb6834; --s-s: #2a78d6; }
+@media (prefers-color-scheme: dark) { :root { --s-d: #d95926; --s-s: #3987e5; } }
+.mk { vertical-align: -2px; overflow: visible; margin-right: 4px; }
+.mk-d { fill: var(--s-d); stroke: var(--bg); stroke-width: 2; }
+.mk-s { fill: var(--s-s); stroke: var(--bg); stroke-width: 2; }
+.mk-best { fill: none; stroke: var(--fg); stroke-width: 2; }
+.db-list, .sw-charts { list-style: none; padding: 0; margin: 8px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 8px 24px; }
+.db { border-bottom: 1px solid var(--line); padding-bottom: 6px; min-width: 0; }
+.db-h { margin: 4px 0; font-size: 0.9rem; overflow-wrap: break-word; }
+.db-plot { padding: 0 10px; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.db-v { position: relative; display: block; width: max-content; max-width: 100%; }
+.db-svg { display: block; overflow: visible; }
+.db-track { stroke: var(--line); stroke-width: 1; }
+.db-bar { stroke: var(--muted); stroke-width: 2; }
+.engine h3, .sweep h3 { margin-top: 16px; }
+.engine li.cross { list-style-type: square; }
+.sw-chart { min-width: 0; }
+.sw-chart h4 { font-size: 0.9rem; font-weight: 400; margin: 8px 0 4px; }
+.sw-svg { display: block; width: 100%; max-width: 30rem; height: auto; font: 12px system-ui, sans-serif; }
+.sw-svg .grid { stroke: var(--line); stroke-width: 1; }
+.sw-svg .ax { fill: var(--muted); }
+.sw-svg polyline { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ln-d { stroke: var(--s-d); } .ln-s { stroke: var(--s-s); }
+.wh-d { stroke: var(--s-d); stroke-width: 1.5; } .wh-s { stroke: var(--s-s); stroke-width: 1.5; }
+.sw-svg .hit { fill: transparent; }
+.sw-chart td { white-space: normal; } /* a long 95% interval wraps at its spaces, so an open table fits its card */
+.sw-svg .tie { fill: none; stroke: var(--s-d); stroke-width: 2; }
+.sw-chart summary { min-height: 44px; line-height: 44px; cursor: pointer; } /* a 44 px touch target that keeps its disclosure triangle */
+/* High Contrast: the shapes keep identity in system colours, the Directorate's square hollow and its line dashed. */
+@media (forced-colors: active) {
+  .mk, .db-svg, .sw-svg { forced-color-adjust: none; }
+  .mk-d { fill: Canvas; stroke: CanvasText; } .mk-s { fill: CanvasText; stroke: Canvas; }
+  .mk-best, .db-bar, .ln-d, .ln-s, .wh-d, .wh-s, .sw-svg .tie { stroke: CanvasText; } .db-track, .sw-svg .grid { stroke: GrayText; }
+  .ln-d { stroke-dasharray: 6 3; } .sw-svg .ax { fill: CanvasText; }
+}

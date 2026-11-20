@@ -4,7 +4,8 @@ import type { Evidence, Summary } from '../../harness/summary.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
 import type { Script } from '../core/scenario/types.ts';
-import { badges, noEvent, NOISE, PROBLEMS, show, winner, type Problem } from './problems.ts';
+import { dumbbell, engines, sweep, type Ablations, type Sweeps } from './charts.ts';
+import { badges, noEvent, NOISE, PROBLEMS, show, winner, ZERO_BY_RULE, type Problem } from './problems.ts';
 
 const SCRIPTS: Record<string, Script> = { 'seven-day': sevenDay, 'stress-week': stressWeek };
 const timedOut: string[] = [];
@@ -19,10 +20,11 @@ interface Enf { withHum: { clips: number; noHumShare: number; clipMedians: { cli
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 
-function figure(s: Summary | undefined): string {
+/** `rule`: why a 0 is set by the Directorate's rule, printed beside it. */
+function figure(s: Summary | undefined, rule?: string): string {
   if (!s) return 'not yet run';
   const { mean, lo, hi } = s.final;
-  return show(mean, s.unit) + (show(lo, s.unit) !== show(hi, s.unit) ? `<br><span class="muted">95%: ${show(lo, s.unit)} to ${show(hi, s.unit)}</span>` : '');
+  return show(mean, s.unit) + (rule && mean === 0 ? ` (${rule})` : '') + (show(lo, s.unit) !== show(hi, s.unit) ? `<br><span class="muted">95%: ${show(lo, s.unit)} to ${show(hi, s.unit)}</span>` : '');
 }
 
 /** One run's row; `note` replaces the verdict when the run cannot settle it. */
@@ -37,11 +39,11 @@ function results(name: string, e: Evidence | null, p: Problem, note = ''): strin
   // The figures the designs report beside the metric (often its cost), one row each under the run.
   const beside = Object.entries(d?.beside ?? {}).map(([k, b]) => `<tr class="beside"><th scope="row" class="muted">beside it: ${b.name}</th>`
     + `<td>${show(b.mean, b.unit)}</td><td>${s?.beside?.[k] ? show(s.beside[k].mean, b.unit) : 'not yet run'}</td></tr>`).join('');
-  return `<tr>${head}<br><span class="muted">${verdict}</span></th><td>${figure(d)}</td><td>${figure(s)}</td></tr>${beside}`;
+  return `<tr>${head}<br><span class="muted">${verdict}</span></th><td>${figure(d, ZERO_BY_RULE[p.id])}</td><td>${figure(s)}</td></tr>${beside}`;
 }
 
 // p12 in the stress week: STRATUM's floor holds longer on the cut-off levels, but every level breaches (docs/coverage.md row 12).
-const STRESS_NOTE: Partial<Record<Problem['id'], string>> = { p09: NOISE, p12: 'against STRATUM: every level breaches' };
+const STRESS_NOTE: Partial<Record<Problem['id'], string>> = { p09: NOISE, p12: 'against STRATUM: the metric reads higher, but every level breaches the food floor' };
 function rows(p: Problem): string {
   const week = results('Seven-day week', seven, p, p.id === 'p09' ? NOISE : '') || '<tr><th scope="row">Seven-day week</th><td>not yet run</td><td>not yet run</td></tr>';
   return (p.id === 'p09' ? results('30-day run', thirty, p) : '') + week + results('Stress week', stress, p, STRESS_NOTE[p.id]);
@@ -57,16 +59,71 @@ function replay(id: string, enf: Enf | null, gecco: Gecco | null): string {
     const q = gecco?.results[gecco.headline], k = gecco?.results.picked;
     if (!q || !k) return '<p class="small"><span class="tag">REPLAY</span> GECCO 2018 score file not found.</p>';
     const h = q.heldOut, m = k.heldOut;
-    return `<p class="small"><span class="tag">REPLAY</span> GECCO 2018, held-out half, ${h.events} events, detector not tuned: the ${q.kinds.length} quality sensors catch ${h.caught}/${h.events} at precision ${h.precision.toFixed(3)} (${Math.round(h.falseAlarmsPerWeek)} false alarms a week); ${k.kinds.join(', ')}, chosen on the first half, catch ${m.caught}/${m.events} at precision ${m.precision.toFixed(2)} (${m.falseAlarmsPerWeek.toFixed(2)} false alarms a week) but caught only ${k.firstHalf.caught}/${k.firstHalf.events} on the first half.</p>`;
+    const kinds = k.kinds.map((x) => (x === 'Leit' ? 'conductivity' : x)).join(', '); // Leit: the dataset's German column name
+    return `<p class="small"><span class="tag">REPLAY</span> GECCO 2018, held-out half, ${h.events} events, detector not tuned: the ${q.kinds.length} quality sensors catch ${h.caught}/${h.events} at precision ${h.precision.toFixed(3)} (${Math.round(h.falseAlarmsPerWeek)} false alarms a week); ${kinds}, chosen on the first half, catch ${m.caught}/${m.events} at precision ${m.precision.toFixed(2)} (${m.falseAlarmsPerWeek.toFixed(2)} false alarms a week) but caught only ${k.firstHalf.caught}/${k.firstHalf.events} on the first half.</p>`;
   }
   return '';
 }
 
-const [seven, thirty, stress, enf, gecco] = await Promise.all([
+const [seven, thirty, stress, enf, gecco, ablations, sweeps] = await Promise.all([
   get<Evidence>('seven-day.json'), get<Evidence>('30-day.json'), get<Evidence>('stress-week.json'), get<Enf>('enf-whu.json'), get<Gecco>('gecco.json'),
+  get<Ablations>('ablations.json'), get<Sweeps>('sweeps.json'),
 ]);
 
-document.getElementById('matrix')!.innerHTML = PROBLEMS.map((p, i) => `<li class="card" data-id="${p.id}">
+// At a glance: the cards' own verdicts, counted. The seven-day wins, then every stress-week row STRATUM does not win.
+const verdict = (e: Evidence, p: Problem, note = '') => {
+  const d = e.policies.directorate?.[p.id], s = e.policies.stratum?.[p.id];
+  if (note || !d || !s || noEvent(p.id, SCRIPTS[e.script]?.events ?? [], e.days * 86400)) return { note, d, s, w: null };
+  return { note, d, s, w: winner(p.better, d.final.mean, s.final.mean) };
+};
+const card = (p: Problem) => `<a href="#problem-${PROBLEMS.indexOf(p) + 1}">${PROBLEMS.indexOf(p) + 1}. ${p.title}</a>`;
+const glance: string[] = [];
+if (seven?.policies) {
+  const scored = PROBLEMS.map((p) => ({ p, ...verdict(seven, p, p.id === 'p09' ? NOISE : '') })).filter((x) => x.w);
+  const rest = scored.filter((x) => x.w !== 'STRATUM').map((x) => `${card(x.p)}: ${x.w === 'tie' ? 'a tie' : 'Directorate better'}`);
+  glance.push(`Seven-day week, ${seven.seeds.length} seeds, <strong>SIMULATED</strong>: STRATUM better on ${scored.filter((x) => x.w === 'STRATUM').length} of the ${scored.length} problems the week can score${rest.length ? ` (${rest.join('; ')})` : ''}. Problem 9's outbreak is too small to score in a week: see its 30-day run.`);
+}
+// What each stress-week loss means, in words the cards do not print.
+const AGAINST: Partial<Record<Problem['id'], string>> = { p01: 'the warning gain is gone', p13: "STRATUM's verdict is wrong in every round", p14: 'nothing lighter proven' };
+/** STRATUM's lead over the Directorate as a share of the Directorate's figure, or null when there is none to shrink. */
+const lead = (e: Evidence | null, p: Problem) => {
+  const d = e?.policies?.directorate?.[p.id]?.final.mean, s = e?.policies?.stratum?.[p.id]?.final.mean;
+  return d && s !== undefined && winner(p.better, d, s) === 'STRATUM' ? Math.abs(d - s) / Math.abs(d) : null;
+};
+/** A stress-week win that lost a seven-day zero or most of a seven-day lead (the docs/coverage.md rule for "against STRATUM"). */
+function shrunk(p: Problem): string {
+  const was = lead(seven, p), now = lead(stress, p);
+  if (was === null || now === null) return '';
+  if (seven!.policies.stratum?.[p.id]?.final.mean === 0 && stress!.policies.stratum![p.id]!.final.mean > 0) return 'STRATUM still better, but its seven-day zero is gone';
+  return now < was / 2 ? `STRATUM still better, but its lead shrinks from ${Math.round(was * 100)}% to ${Math.round(now * 100)}%` : '';
+}
+if (stress?.policies) {
+  const lost = PROBLEMS.map((p) => ({ p, ...verdict(stress, p, STRESS_NOTE[p.id]?.startsWith('against') ? STRESS_NOTE[p.id] : shrunk(p)) }))
+    .filter((x) => x.d && x.s && (x.note || (x.w && x.w !== 'STRATUM')))
+    .map((x) => {
+      const b = x.s!.beside?.breaches?.mean; // p14: the planned trial's breaches, the cost the tie hides
+      return `<li>${card(x.p)}: Directorate ${show(x.d!.final.mean, x.d!.unit)}, STRATUM ${show(x.s!.final.mean, x.s!.unit)}; ${x.note || (x.w === 'tie' ? 'a tie' : 'Directorate better')}${AGAINST[x.p.id] ? `, ${AGAINST[x.p.id]}` : ''}${b ? `, ${b} breaches in the planned trial under STRATUM (Directorate ${x.d!.beside?.breaches?.mean ?? 0})` : ''}</li>`;
+    });
+  if (lost.length) glance.push(`Stress week, ${stress.seeds.length} seeds, <strong>SIMULATED</strong>, against us:<ul class="list">${lost.join('')}</ul>`);
+}
+glance.push('What each engine adds, and how the results move under a harder stress: <a href="#enginesTitle">What each engine contributes</a>, <a href="#sweepsTitle">Sweeps</a>.');
+glance.push('Limits of the model and the plan: <a href="#againstTitle">Results against us</a>.');
+document.getElementById('glance')!.innerHTML = glance.map((g) => `<li>${g}</li>`).join('');
+
+// The seven-day week as one dumbbell row per problem; a problem the week cannot score says why instead.
+document.getElementById('dumbbells')!.innerHTML = PROBLEMS.map((p) => {
+  const d = seven?.policies?.directorate?.[p.id], s = seven?.policies?.stratum?.[p.id];
+  if (!seven || !d || !s) return dumbbell(p, 'not yet run');
+  const none = noEvent(p.id, SCRIPTS[seven.script]?.events ?? [], seven.days * 86400);
+  return none ? dumbbell(p, none) : dumbbell(p, { d: d.final.mean, s: s.final.mean, unit: s.unit }, p.id === 'p09' ? `${NOISE}: card 9 has the 30-day run` : '');
+}).join('');
+document.getElementById('engines')!.innerHTML = ablations?.conditions ? engines(ablations)
+  : '<p class="small">The ablation file was not found: run npm run harness:ablations -- --seeds 20.</p>';
+document.getElementById('sweeps')!.innerHTML = sweeps?.sweeps ? sweeps.sweeps.map((w) => sweep(w, sweeps.seeds.length)).join('')
+  + `<p class="small">Not run, because each needs a model constant changed rather than the script: ${sweeps.skipped.map((k) => k.why).join(' ')}</p>`
+  : '<p class="small">The sweep file was not found: run npm run harness:sweeps -- --seeds 20.</p>';
+
+document.getElementById('matrix')!.innerHTML = PROBLEMS.map((p, i) => `<li class="card" id="problem-${i + 1}" data-id="${p.id}">
   <h2>${i + 1}. ${p.title}</h2>
   <p class="tiers">${badges(p.tier).map((b) => `<span class="badge">${b}</span>`).join(' ')} <span class="small muted">${p.tier}</span></p>
   <p class="small"><b>Mechanism:</b> ${p.mechanism}</p>

@@ -3,7 +3,10 @@ import { publicKeys } from '../../core/packet/keys.ts';
 import { $, app, store } from '../app.ts';
 import { CODEBOOK, message, type Entry, type KeyChoice } from '../codebook.ts';
 
-const GROUPS = [['OK', 'OK'], ['NEED', 'Need'], ['REPORT', 'Problems here']] as const;
+const GROUPS: [Entry['type'][], string, string][] = [
+  [['OK'], 'OK', ''], [['NEED'], 'Need', ''], [['REPORT'], 'Problems here', ''],
+  [['HOLD_WATER', 'ROUTE'], 'Public alerts', 'Warn everyone nearby to act now. Anyone nearby can read these.'],
+];
 const TO: Record<KeyChoice, string> = { family: 'your family', public: 'everyone nearby' };
 
 export function mountReport(root: HTMLElement) {
@@ -16,7 +19,7 @@ export function mountReport(root: HTMLElement) {
     </div>
     <label class="check"><input type="checkbox" id="power" checked /> Power on here</label>
     <fieldset id="grid">
-      ${GROUPS.map(([type, name]) => `<h3>${name}</h3><div class="grid">${CODEBOOK.filter((e) => e.type === type)
+      ${GROUPS.map(([types, name, note]) => `<h3>${name}</h3>${note && `<p class="muted">${note}</p>`}<div class="grid">${CODEBOOK.filter((e) => types.includes(e.type))
         .map((e) => `<button data-code="${e.code}"><span aria-hidden="true">${e.icon}</span>${e.label}</button>`).join('')}</div>`).join('')}
     </fieldset>
     <p id="sent" role="status"></p>
@@ -67,11 +70,12 @@ export function mountReport(root: HTMLElement) {
     $('#to', dlg).hidden = e.keys.length < 2;
     $('#confirm-title', dlg).textContent = `${e.icon} ${e.label}`;
     const placed = level.value !== '' && sector.value !== '';
-    // Power is a field of OK and REPORT only; a need does not carry it.
+    // Power is a field of OK and REPORT only; a need or an alert does not carry it.
     $('#where', dlg).textContent = placed
-      ? `Level ${level.value}, sector ${String.fromCharCode(65 + Number(sector.value))}${e.type === 'NEED' ? '' : `, power ${powerOn(e) ? 'on' : 'off'}`}.`
+      ? `Level ${level.value}, sector ${String.fromCharCode(65 + Number(sector.value))}${e.type === 'OK' || e.type === 'REPORT' ? `, power ${powerOn(e) ? 'on' : 'off'}` : ''}.`
       : 'Choose your level and sector first (Cancel, then pick them at the top).';
-    $('#nofamily', dlg).textContent = app.family ? (e.keys.length < 2 ? 'Goes to your family only.' : '') : k
+    $('#nofamily', dlg).textContent = e.keys.length < 2 && e.keys[0] === 'public' ? 'Goes to everyone nearby.'
+      : app.family ? (e.keys.length < 2 ? 'Goes to your family only.' : '') : k
       ? 'You have no family yet, so this goes to everyone nearby. To send to your family only, create or join a family on the Family tab.'
       : 'This message goes to your family only, and you have no family yet. Create a family, or join one with its six words, on the Family tab.';
     go.hidden = go.disabled = !k || !placed; // disabled too, so Enter cannot submit it

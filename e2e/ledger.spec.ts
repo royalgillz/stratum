@@ -1,5 +1,58 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { expectSoundLayout } from './layout.ts';
+
+/** Keeps the app (whatever subscribes to 'reading') on window, so test readings and packets go through the real event path. */
+async function hookApp(page: Page) {
+  await page.addInitScript(() => {
+    const add = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function (this: EventTarget, type: string, ...rest: [never, never]) {
+      if (type === 'reading') (window as unknown as { testApp: EventTarget }).testApp = this;
+      return add.call(this, type, ...rest);
+    };
+  });
+}
+const fire = (page: Page, type: 'reading' | 'packet', detail: object) =>
+  page.evaluate(([type, detail]) => (window as unknown as { testApp: EventTarget }).testApp.dispatchEvent(new CustomEvent(type, { detail })), [type, detail] as const);
+const reading = (tier?: string) => ({ t: 0, state: tier ? 'LIVE' : 'NO_HUM', snrDb: 20, label: 'LIVE', tier, deviationMHz: -60 });
+/** A public "Power cut here" report from level 5, member m, sent now (by the page's clock). */
+const cutReport = (page: Page, member: number) => page.evaluate((member) => {
+  const decoded = { type: 2, hops: 3, minute: Math.floor(Date.now() / 60000), keySet: 'public', public: true, duplicate: false, timesHeard: 1,
+    payload: { member, code: 0x10, level: 5, sector: 0, flags: 0, value: 0 } };
+  (window as unknown as { testApp: EventTarget }).testApp.dispatchEvent(new CustomEvent('packet', { detail: { decoded, bytes: new Uint8Array(), at: Date.now() } }));
+}, member);
+
+test.describe('cut odds on the Listen tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await hookApp(page);
+    await page.clock.install();
+    await page.goto('/src/phone/#report', { waitUntil: 'domcontentloaded' });
+  });
+
+  test('at AMBER with a level chosen, one line gives that level\'s odds from the Ledger; none at GREEN or with no level', async ({ page }) => {
+    const odds = page.locator('#odds');
+    await page.getByRole('tab', { name: 'Listen' }).click();
+    await fire(page, 'reading', reading('AMBER'));
+    await expect(page.locator('#tier')).toHaveText('▲ AMBER: WARNING, grid under strain');
+    await expect(odds).toBeHidden(); // no level chosen yet
+    await page.getByRole('tab', { name: 'Report' }).click();
+    await page.locator('#level').selectOption('5');
+    await page.getByRole('tab', { name: 'Listen' }).click();
+    await fire(page, 'reading', reading('AMBER'));
+    await expect(odds).toHaveText('Level 5: no data yet (needs reports from 3 phones)');
+    await expectSoundLayout(page);
+    for (const m of [1, 2, 3]) await cutReport(page, m); // three phones report level 5 dark during the event
+    await fire(page, 'reading', reading('GREEN'));
+    await expect(odds).toBeHidden();
+    await page.clock.fastForward('11:00'); // the event closes 10 min after GREEN
+    await fire(page, 'reading', reading('AMBER'));
+    await expect(odds).toHaveText('Level 5: cut in 1 of 1 past AMBER event, odds 67% · LIVE');
+    await fire(page, 'reading', reading('RED'));
+    await expect(odds).toHaveText('Level 5: no data yet (needs reports from 3 phones)'); // the past event never reached RED
+    await expectSoundLayout(page);
+    await fire(page, 'reading', reading());
+    await expect(odds).toBeHidden(); // NO HUM: no tier, no odds
+  });
+});
 
 test.describe('ledger screen', () => {
   test.beforeEach(async ({ page }) => {

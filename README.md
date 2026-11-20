@@ -32,7 +32,7 @@ Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real
 | --- | --- |
 | Live (a part runs on a real phone) | 1 (power warning), 7 (messages without the network), 8 (families), 10 (Breath Count and the medicine request) |
 | Modelled (algorithm in District 7 against the Directorate's rule) | 2, 3, 4, 5, 6, 9, 10 (delivery), 11, 12, 13, 14, 15 |
-| Thin or Roadmap | 1 (air warning: no rule warns before an air cut) |
+| Thin or Roadmap | none. The air half of problem 1 is a fan-stop alert on the phone, built, phone test pending |
 
 The phone sends real reports for 2, 4, 5, 9 and 12, but District 7 does not analyse them yet. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md). Known limits: [docs/limits.md](docs/limits.md).
 
@@ -57,9 +57,13 @@ Every simulated number comes from the harness:
 npm run harness -- --seeds 20                         # seven-day week, seeds 1 to 20, both rules -> public/evidence/seven-day.json
 npm run harness -- --seeds 20 --script stress-week    # the stress week -> public/evidence/stress-week.json
 npm run harness -- --seeds 20 --days 30               # 30 days -> public/evidence/30-day.json
+npm run harness:ablations -- --seeds 20               # each engine switched off alone -> public/evidence/ablations.json
+npm run harness:sweeps -- --seeds 20                  # one scripted stress varied at a time, both rules -> public/evidence/sweeps.json
 ```
 
 Each file holds every seed's final value, the mean with a 95% interval (Student t) and the hourly mean, per rule and metric, all labelled SIMULATED. Costs shown beside a metric are under its `beside`. The files have no timestamp, so the same command writes the same bytes. `--check` adds the kernel's write checks (slower); `--out <path>` writes elsewhere.
+
+An ablation switches one engine off: the adapters mapped to it run the Directorate's rule and the rest run STRATUM's (mapping in [docs/intent/adapters/adapters-design.md](docs/intent/adapters/adapters-design.md), "Ablations"). `ablations.json` holds the five conditions and each engine's contribution (STRATUM minus STRATUM without it, paired by seed, with a 95% interval). A sweep changes one event of the seven-day script and no model constant: lying surface crews 0 to 5, the depth of the deep shortfall, and the outbreak seed. Results and what goes against us: [docs/coverage.md](docs/coverage.md), "Ablations" and "Sweeps".
 
 The two replays of real data (REPLAY). Fetch the ENF-WHU recordings first, as [data/README.md](data/README.md) says (the GECCO file is committed):
 

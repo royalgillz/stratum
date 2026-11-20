@@ -47,6 +47,19 @@ export function interval(xs: number[]): { mean: number; lo: number; hi: number }
   return { mean: m, lo: m - half, hi: m + half };
 }
 
+/** A metric's final value across seeds, and its beside figures if any, without the hourly means (ablations and sweeps). */
+export type Final = Omit<Summary, 'hourly'>;
+
+export function finals(runs: Partial<Record<AdapterId, Series>>[], extras: Beside[] = []): Partial<Record<AdapterId, Final>> {
+  return Object.fromEntries(Object.entries(summarise(runs, extras)).map(([id, { hourly: _, ...rest }]) => [id, rest]));
+}
+
+/** 95% interval of the mean difference a[i] - b[i], for two conditions run on the same seeds. */
+export function paired(a: number[], b: number[]): { mean: number; lo: number; hi: number } {
+  if (a.length !== b.length) throw new RangeError(`paired needs equal lengths, got ${a.length} and ${b.length}`);
+  return interval(a.map((x, i) => x - b[i]!));
+}
+
 // runs: one series map per seed, all from the same script and policy, so every seed has the same ids and sample times.
 // extras: the beside figures of each run, in the same order, with the same keys on every seed.
 export function summarise(runs: Partial<Record<AdapterId, Series>>[], extras: Beside[] = []): Partial<Record<AdapterId, Summary>> {

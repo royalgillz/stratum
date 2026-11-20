@@ -38,10 +38,10 @@ const byId = (as: Adapter[], id: string) => as.find((a) => a.id === id)!;
 /** The seven-day script cut to its first day: separation, outbreak seed, network down. */
 const dayOne: Script = { ...sevenDay, days: 1, acts: sevenDay.acts.filter((a) => a.atH <= 24), events: sevenDay.events.filter((e) => e.atH <= 24) };
 
-function runFor(policy: Policy, script: Script, seconds: number, wrap = (a: Adapter) => a) {
+function runFor(policy: Policy, script: Script, seconds: number, wrap = (a: Adapter) => a, per?: Partial<Record<string, Policy>>) {
   const w = createWorld(SEED, script);
   spy.on = true; // an adapter that made its own stream at build time would show here
-  const set = createAdapters(policy, script);
+  const set = createAdapters(policy, script, per);
   spy.on = false;
   const k = createKernel(w, set.map(wrap), { dt: 60, check: true });
   k.run(seconds);
@@ -147,6 +147,36 @@ describe('createAdapters', () => {
     }
     for (const bad of ['', 'Directorate', 'fair', undefined]) expect(() => createAdapters(bad as Policy, sevenDay)).toThrow(RangeError);
   });
+
+  // @spec ADAPT-POLICY-010
+  it('builds each adapter named in a per-adapter map with its policy and the rest with the given one', () => {
+    const all = (p: Policy) => Object.fromEntries(ADAPTER_IDS.map((id) => [id, p]));
+    for (const p of POLICIES) {
+      const other: Policy = p === 'stratum' ? 'directorate' : 'stratum';
+      const plain = runFor(p, dayOne, DAY / 2);
+      // A map naming every adapter is that policy alone; an empty map is no map.
+      const swapped = runFor(other, dayOne, DAY / 2, undefined, all(p));
+      expect(swapped.w).toEqual(plain.w);
+      expect(swapped.m).toEqual(plain.m);
+      const empty = runFor(p, dayOne, DAY / 2, undefined, {});
+      expect(empty.w).toEqual(plain.w);
+    }
+    // One adapter switched: p13 alone under the Directorate posts the official band on its first step; its STRATUM twin does not.
+    const mixed = createAdapters('stratum', dayOne, { p13: 'directorate' });
+    const w = createWorld(SEED, dayOne);
+    createKernel(w, [byId(mixed, 'p13'), byId(mixed, 'p15')]).step();
+    expect(w.surface.band).toBe(OFFICIAL);
+    const z = createWorld(SEED, dayOne);
+    createKernel(z, [byId(createAdapters('stratum', dayOne), 'p13')]).step();
+    expect(z.surface.band).toBe('unknown');
+    // p15 kept STRATUM's rule: the same plan as an all-STRATUM p15.
+    const y = createWorld(SEED, dayOne);
+    createKernel(y, [byId(createAdapters('stratum', dayOne), 'p15')]).step();
+    expect(w.alloc.returnSlots).toEqual(y.alloc.returnSlots);
+    for (const bad of [{ p16: 'stratum' }, { p00: 'directorate' }, { p13: 'fair' }, { p13: undefined }, { toString: 'stratum' }]) {
+      expect(() => createAdapters('stratum', dayOne, bad as never), JSON.stringify(bad)).toThrow(RangeError);
+    }
+  }, 60_000);
 
   // @spec ADAPT-POLICY-002
   it('declares the reads and writes of the rung 3 and rung 4 tables', () => {

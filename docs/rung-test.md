@@ -143,6 +143,21 @@ Laptop first (about 10 minutes), then a short pass on the phone.
 
 Phone model and Chrome version: Chrome three-dot menu, **Settings**, **About Chrome**.
 
+## Part I (stretch): the fan-stop alert
+
+You need a fan you can switch off: a desk fan, a box fan or a bathroom extractor. About 15 minutes.
+
+1. Phone: open `/src/phone/`, pull down to reload twice, tap **Listen**, **Start listening**.
+2. Quiet room first, fan off, phone on the table: wait 1 minute. Under the reading, the Air line says
+   **Fan: listening for a steady fan · LIVE**. It must not say "running".
+3. Switch the fan on, phone 1 m away, pointing at it. Within about 30 s the line says **Fan: running · LIVE**.
+4. Switch the fan off at its switch. Note the time. Within 5 s the line turns red: **FAN STOPPED: ...** and the phone
+   vibrates once. Note how many seconds it took.
+5. Switch it back on: within about 5 s it says **Fan: running** again. Repeat steps 4 and 5 three times.
+6. With the fan running, talk normally for 1 minute near the phone, close a door, put a cup down: no alert.
+7. Switch the fan off while you keep talking: the alert should still come within about 5 s.
+8. Open **Fan test log**, tap **Save fan log**, and send the CSV file with your notes (times of each switch).
+
 ## Results to send back
 
 Copy this table into the chat with your results. Paste the laptop's gateway log text under it.
@@ -170,3 +185,8 @@ Copy this table into the chat with your results. Paste the laptop's gateway log 
 | G | Same pages on the phone, no sideways scroll | | | |
 | H | Installed to the home screen | | | |
 | H | Opens and listens in Airplane mode | | | |
+| I | Quiet room: not "running" | | | |
+| I | Fan on: "running" | 1 m | | |
+| I | Fan off: alert within 5 s (x3) | 1 m | | |
+| I | Talk and noise: no alert | 1 m | | |
+| I | Fan off while talking: alert | 1 m | | |

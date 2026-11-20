@@ -11,6 +11,8 @@
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc",
     "harness": "node harness/run.ts",
+    "harness:ablations": "node harness/ablations.ts",
+    "harness:sweeps": "node harness/sweeps.ts",
     "score:enf": "node harness/enf.ts",
     "score:gecco": "node harness/gecco.ts",
     "check": "node scripts/check.mjs",

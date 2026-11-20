@@ -23,10 +23,10 @@ export interface Run {
 export interface Series { name: string; unit: string; label: Label; t: number[]; value: number[] }
 
 // @spec SCEN-004
-export function createRun(given: Script, seed: number, policy: Policy, opts: { check?: boolean } = {}): Run {
+export function createRun(given: Script, seed: number, policy: Policy, opts: { check?: boolean; per?: Partial<Record<AdapterId, Policy>> } = {}): Run {
   validateScript(given);
   const script = varyScript(given, seed);
-  const kernel = createKernel(createWorld(seed, script), createAdapters(policy, script), { dt: DT, check: opts.check ?? true });
+  const kernel = createKernel(createWorld(seed, script), createAdapters(policy, script, opts.per), { dt: DT, check: opts.check ?? true });
   const w = kernel.world;
   const end = script.days * 86400;
   const index = () => script.acts.filter((a) => a.atH * 3600 <= w.t).length - 1; // acts rise and start at 0
@@ -62,9 +62,9 @@ export function createRun(given: Script, seed: number, policy: Policy, opts: { c
 }
 
 // @spec SCEN-007, SCEN-008, SCEN-009
-export function runHeadless(script: Script, seed: number, policy: Policy, opts: { sampleEvery?: number; check?: boolean } = {}): { series: Partial<Record<AdapterId, Series>>; world: World } {
+export function runHeadless(script: Script, seed: number, policy: Policy, opts: { sampleEvery?: number; check?: boolean; per?: Partial<Record<AdapterId, Policy>> } = {}): { series: Partial<Record<AdapterId, Series>>; world: World } {
   const every = opts.sampleEvery ?? 3600;
-  const { kernel } = createRun(script, seed, policy, { check: opts.check });
+  const { kernel } = createRun(script, seed, policy, { check: opts.check, per: opts.per });
   const end = script.days * 86400;
   if (!(every > 0 && every % DT === 0 && end % every === 0)) throw new RangeError(`sampleEvery must be a positive multiple of ${DT} dividing ${end}, got ${every}`);
   const series: Partial<Record<AdapterId, Series>> = {};

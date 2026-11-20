@@ -1,10 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { encode, TYPES } from '../src/core/packet/codec.ts';
-import { deriveKeys, type KeySet } from '../src/core/packet/keys.ts';
+import { createDecoder, encode, payloadDigest, TYPES, type Decoded } from '../src/core/packet/codec.ts';
+import { deriveKeys, publicKeys, type KeySet } from '../src/core/packet/keys.ts';
 import { expectSoundLayout } from './layout.ts';
 
 const worldT = async (page: Page) => Number(await page.locator('#clock').getAttribute('data-t'));
-const shownMetrics = (page: Page) => page.locator('#metrics td:nth-child(2)').allTextContents();
+const column = (page: Page, n: 2 | 3) => page.locator(`#metrics td:nth-child(${n})`).allTextContents(); // 2: Directorate, 3: STRATUM
 
 /** A real-codec OK, made here in Node as a phone makes it, under the given six words. */
 async function okBytes(words: string, member: number, type: number = TYPES.OK, code = 0) {
@@ -17,11 +17,16 @@ async function okBytes(words: string, member: number, type: number = TYPES.OK, c
 }
 
 test.describe('District 7 page', () => {
-  test('reachable from the home page; the week plays and the switch shows the other rule at the same world time', async ({ page }) => {
+  test('reachable from the home page; the week plays and the switch draws the other rule at the same world time, columns fixed', async ({ page }) => {
     test.setTimeout(60_000);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.getByRole('link', { name: 'District 7' }).click();
     await expect(page.getByRole('heading', { name: 'District 7', level: 1 })).toBeVisible();
+    // A nav row under the h1, and one line on what to do
+    const nav = page.getByRole('navigation', { name: 'Pages' }).getByRole('link');
+    await expect(nav).toHaveText(['Home', 'Judge mode', 'Coverage matrix', 'Phones in this room ↓']);
+    await expect(nav.last()).toHaveAttribute('href', '#boardTitle');
+    await expect(page.getByText('Press Play.', { exact: true })).toBeVisible();
     await expect(page.locator('#act')).toContainText('The network is down · TIME-LAPSE x3600 · paused', { timeout: 15_000 });
     await expect(page.locator('#clock')).toContainText('World time day 1, 00:00');
     await expect(page.locator('#clock')).toContainText('SIMULATED');
@@ -38,15 +43,20 @@ test.describe('District 7 page', () => {
     await expect.poll(() => worldT(page), { timeout: 20_000 }).toBeGreaterThan(8 * 3600);
     await page.getByRole('button', { name: 'Pause' }).click();
     await expect(page.locator('#act')).toContainText('paused');
-    const t = await worldT(page), directorate = await shownMetrics(page);
+    const t = await worldT(page), directorate = await column(page, 2), stratum = await column(page, 3);
+    expect(stratum).not.toEqual(directorate);
+    await expect(page.locator('#head-directorate')).toHaveText('Directorate (shown)');
+    await expect(page.locator('#head-stratum')).toHaveText('STRATUM');
 
     await page.getByRole('button', { name: 'STRATUM rule' }).click();
     await expect(page.getByRole('button', { name: 'STRATUM rule' })).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#shownHead')).toHaveText('STRATUM (shown)');
+    await expect(page.locator('#head-stratum')).toHaveText('STRATUM (shown)');
+    await expect(page.locator('#head-directorate')).toHaveText('Directorate');
+    await expect(page.locator('#clock')).toContainText('STRATUM rule');
     expect(await worldT(page)).toBe(t);
-    const stratum = await shownMetrics(page);
-    expect(stratum).not.toEqual(directorate);
-    expect(await page.locator('#metrics td:nth-child(3)').allTextContents()).toEqual(directorate); // the other rule, beside it
+    // The columns never swap: Directorate stays left and STRATUM right, whichever rule the map draws.
+    expect(await column(page, 2)).toEqual(directorate);
+    expect(await column(page, 3)).toEqual(stratum);
     await expectSoundLayout(page);
 
     await page.getByRole('button', { name: 'Sound: off' }).click();
@@ -90,6 +100,8 @@ test.describe('District 7 page', () => {
     }, null, { polling: 'raf', timeout: 30_000 });
     const act = page.locator('#act');
     await expect(act).toContainText('The hum sags: under a minute of warning, too short to count · REAL TIME · paused');
+    // Why the clock slows, beside the caption: this act lasts 90 world seconds (seven-day.ts)
+    await expect(page.locator('#actWhy')).toHaveText('REAL TIME: the hum sags at the pace a real phone nearby hears it, so the world clock runs one second per second here. The time-lapse resumes after 90 s.');
     const f = Number(/grid ([\d.]+) Hz/.exec((await clock.textContent())!)![1]);
     expect(f).toBeLessThanOrEqual(399.95); // AMBER starts at f <= 399.95 (grid.ts), and the page pauses on its first frame
     const [f1, f2, gain] = await hum(3);
@@ -101,6 +113,9 @@ test.describe('District 7 page', () => {
     await expect(page.getByRole('button', { name: 'Week ended' })).toBeDisabled({ timeout: 120_000 });
     await expect(clock).toContainText('World time end of day 7 · ');
     await expect(page.locator('#act')).toHaveText('Week ended · press Restart to replay');
+    await expect(page.locator('#actWhy')).toBeHidden();
+    // p01: only STRATUM warns, so the Directorate's 0 is marked as set by its rule (p01.ts)
+    await expect(page.locator('#metrics tr').first().locator('td')).toHaveText(['0% (no tool, by rule)', /^\d+%$/]);
     await expectSoundLayout(page); // the week's longest figures
     await page.getByRole('button', { name: 'Sound: on' }).click();
     await expect.poll(async () => (await hum(1))[0]).toBe(0);
@@ -138,6 +153,12 @@ test.describe('District 7 page', () => {
 
       const seven = page.getByRole('button', { name: 'Seven-day week' }), stress = page.getByRole('button', { name: 'Stress week' });
       await expect(seven).toHaveAttribute('aria-pressed', 'true');
+      // Pressed reads as a mode switch: filled with the accent, the other button not; each pair has a visible label
+      const accent = scheme === 'light' ? 'rgb(26, 79, 160)' : 'rgb(138, 180, 255)';
+      await expect(seven).toHaveCSS('background-color', accent);
+      await expect(stress).not.toHaveCSS('background-color', accent);
+      await expect(page.getByText('Drawing:', { exact: true })).toBeVisible();
+      await expect(page.getByText('Week:', { exact: true })).toBeVisible();
       await expect(page.locator('#scriptNote')).toContainText('Seven-day week');
       await page.getByRole('button', { name: 'Play' }).click();
       await expect.poll(() => worldT(page), { timeout: 20_000 }).toBeGreaterThan(3600);
@@ -188,6 +209,55 @@ test.describe('District 7 page', () => {
     await expect(log).toContainText('Verified NEED from member 42 · LIVE');
     await expect(board).toContainText('Member 42: Medicine request: Breath Count RED (danger sign), sent');
     await expectSoundLayout(page);
+  });
+
+  test('the ledger shows measured beside official as SIMULATED with its digest, and Send ledger digest plays a LEDGER_HEAD the phone shows', async ({ page, context }) => {
+    test.setTimeout(60_000);
+    await page.goto('/src/district/?test&speed=10', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => 'districtTest' in window);
+    const rows = page.locator('#ledgerRows tr'), digest = page.locator('#digest');
+    await expect(page.getByRole('heading', { name: 'Ledger: measured beside official SIMULATED' })).toBeVisible();
+    await expect(digest).toHaveText(/^[0-9a-f]{32}$/); // the empty chain's genesis head before any entry
+    await page.getByRole('button', { name: 'Play' }).click();
+    // Past day 2, 06:00: the Directorate's first water sample is back from the lab, beside STRATUM's hourly sensors.
+    await expect.poll(() => worldT(page), { timeout: 20_000 }).toBeGreaterThan(31 * 3600);
+    await page.getByRole('button', { name: 'Pause' }).click();
+    await expect(rows.first()).toContainText('SIMULATED');
+    await expect(page.locator('#ledgerChain')).toContainText('Directorate rule: 0 measured entries'); // today's rule keeps only its own figures
+    await expect(page.locator('#ledgerChain')).toContainText("No measured entries: the head digest is the empty chain's starting value, the same on every run, so it proves nothing yet.");
+    // An empty chain's digest is a constant: the button says so instead of playing it
+    await page.getByRole('button', { name: 'Send ledger digest' }).click();
+    await expect(page.locator('#sendStatus')).toHaveText("Not sent: the Directorate rule has no measured entries yet, so its digest is only the empty chain's starting value. Press Play, or show the STRATUM rule.");
+    expect(await page.evaluate(() => (window as unknown as { districtTest: { sent: number[][] } }).districtTest.sent.length)).toBe(0);
+
+    await page.getByRole('button', { name: 'STRATUM rule' }).click();
+    const water = rows.filter({ hasText: 'Tap water, organic carbon (mg/L), level' });
+    await expect(water).toHaveCount(1);
+    await expect(water.locator('td')).toHaveText([/^\d+\.\d\d$/, /^\d+\.\d\d$/, /^[+-]?\d+\.\d\d$/]); // measured, official, gap
+    await expect(rows.filter({ hasText: 'Outbreak cases' })).toHaveCount(1);
+    for (const row of await rows.locator('th').allTextContents()) expect(row).toContain('SIMULATED');
+    await expect(page.locator('#ledgerChain')).toContainText(/STRATUM rule: [\d,]+ measured entries, [\d,]+ official entr(y|ies), each chained to the one before by SHA.256 · SIMULATED/);
+    await expect(page.locator('#ledgerChain')).not.toContainText('No measured entries');
+    await expect(page.getByText('Anyone with a copy of the ledger can check this number')).toBeVisible();
+    const shown = (await digest.textContent())!;
+    expect(shown).toMatch(/^[0-9a-f]{32}$/);
+    await expect(digest.locator('b')).toHaveText(shown.slice(0, 12));
+    await expectSoundLayout(page);
+
+    await page.getByRole('button', { name: 'Send ledger digest' }).click();
+    await page.waitForFunction(() => (window as unknown as { districtTest: { sent: number[][] } }).districtTest.sent.length === 1);
+    const bytes = await page.evaluate(() => (window as unknown as { districtTest: { sent: number[][] } }).districtTest.sent[0]!);
+    const r = (await createDecoder([], await publicKeys())(new Uint8Array(bytes), Date.now())) as Decoded; // the phone's decoder, here in Node
+    expect([r.type, r.public, payloadDigest(r.payload)]).toEqual([TYPES.LEDGER_HEAD, true, shown.slice(0, 12)]);
+    await expect(page.locator('#sendStatus')).toContainText(`digest ${shown.slice(0, 12)} of the SIMULATED STRATUM ledger`);
+
+    // The same bytes into a phone page, through the path its microphone feeds: the inbox shows the screen's digest.
+    const phone = await context.newPage();
+    await phone.goto('/src/phone/?test#family', { waitUntil: 'domcontentloaded' });
+    await phone.waitForFunction(() => 'phoneTest' in window);
+    await phone.evaluate((b) => (window as unknown as { phoneTest: { hear(b: number[]): Promise<void> } }).phoneTest.hear(b), bytes);
+    await expect(phone.locator('#inbox')).toContainText(`Public ledger digest heard: ${shown.slice(0, 12)}, compare with the District 7 screen · packet LIVE`);
+    await expectSoundLayout(phone);
   });
 
   test('dark mode: the key text and a cut sector are visible, focus shows on the pressed rule button, the layout holds', async ({ page }) => {

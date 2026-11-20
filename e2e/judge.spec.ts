@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectSoundLayout } from './layout.ts';
+import { expectQr, expectSoundLayout } from './layout.ts';
 
 test.describe('judge mode', () => {
   test('start screen lays out cleanly, reachable from the home page', async ({ page }) => {
@@ -10,7 +10,9 @@ test.describe('judge mode', () => {
     await expect(page.getByRole('button', { name: 'Sound: on' })).toBeVisible();
     await expect(page.locator('#addr')).toHaveText(/\/src\/phone\/$/, { timeout: 15_000 }); // set by the module; the local server can be slow
     await expect(page.locator('#story')).toBeHidden();
-    await expect(page.getByText('QR code')).toHaveCount(0);
+    await expect(page.getByText('On a second phone (Android, in Chrome), scan the code or open the address, tap Listen, then Start listening.')).toBeVisible();
+    await expectQr(page);
+    await expect(page.locator('#next')).toBeHidden(); // the next step appears once the story ends
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme)).toBe('light dark');
     await expectSoundLayout(page);
   });
@@ -72,6 +74,12 @@ test.describe('judge mode', () => {
       if (caption.includes('warns: AMBER')) expect(tier, caption).toBe('AMBER');
     }
     expect(seen.some(([c]) => c.includes('warns: AMBER'))).toBe(true);
+    // The first 34 s carry the premise, not a blank wait, and claim no tier.
+    expect(seen.some(([c, tier]) => c.startsWith('Where: the Hollow') && tier === 'CALIBRATING')).toBe(true);
+    expect(seen.some(([c, tier]) => c.startsWith('Why sound') && tier === 'CALIBRATING')).toBe(true);
+    // The story ends on the headline result, with its label and the stress-week loss, then points to the results.
+    await expect(page.locator('#caption')).toContainText("STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED.");
+    await expect(page.getByRole('link', { name: 'Next: the fifteen problems and results' })).toHaveAttribute('href', './coverage.html');
     await expect(page.locator('#seq li')).toHaveCount(5); // nothing flickered after the cut
     await expectSoundLayout(page);
   });

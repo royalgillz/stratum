@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Decoded } from '../../core/packet/codec.ts';
-import { boardRows, power, says } from './family.ts';
+import { digestPayload, TYPES, type Decoded } from '../../core/packet/codec.ts';
+import { boardRows, ledgerLine, power, says, senders } from './family.ts';
 
 const T = 29_000_000; // a Unix minute
 const pkt = (member: number, minute: number, extra: Partial<Decoded> = {}): Decoded => ({
@@ -46,9 +46,33 @@ describe('says', () => {
     expect(says(with_(2, 0x13)) + power(with_(2, 0x13))).toBe('Report: Flooding or route blocked · power off');
     expect(says(with_(1, 0x10))).toBe('■ RED: medicine request (danger sign)'); // a breath code, not the REPORT code 0x10
     expect(says(with_(1, 0x11, 52))).toBe('▲ AMBER: medicine request, 52 breaths per minute');
-    expect(says(with_(5, 0))).toBe('Save water');
+    expect(says(with_(5, 0))).toBe('Hold water'); // a code this phone does not know: the type alone
+    expect(says(with_(5, 0x30)) + power(with_(5, 0x30))).toBe('⚠ Water looks or smells wrong: hold, do not drink');
+    expect(says(with_(6, 0x31)) + power(with_(6, 0x31))).toBe('⚠ Tunnel flooded or blocked here');
+    expect(says(with_(2, 0x30))).toBe('Report'); // the alert's code under another type is not the alert
     expect(says(with_(1, 0x20, 5))).toBe('Needs help: Medicine (5 people)'); // the count from the Report dialog
     expect(says(with_(2, 0x15, 1))).toBe('Report: People coughing or sick (1 person)');
     expect(says(with_(2, 0x13, 9))).toBe('Report: Flooding or route blocked'); // a code with no count ignores the value
+  });
+});
+
+describe('ledgerLine', () => {
+  it('shows a ledger digest as its 12 hex characters, the packet LIVE, with no sender claimed, member or place', () => {
+    const d = pkt(0, T, { type: TYPES.LEDGER_HEAD, keySet: 'public', public: true, payload: digestPayload('c0ffee00beef') });
+    expect(ledgerLine(d)).toMatch(/^Public ledger digest heard: c0ffee00beef, compare with the District 7 screen · packet LIVE, sent .+ · public$/);
+    expect(ledgerLine({ ...d, duplicate: true, timesHeard: 2 })).toMatch(/ · public · heard 2×$/);
+  });
+});
+
+describe('senders', () => {
+  it('counts the different members who sent one public alert at one place, unconfirmed below three', () => {
+    const seen = new Map<string, Set<number>>();
+    const hold = (member: number, sector = 0) => pkt(member, T, { type: TYPES.HOLD_WATER, keySet: 'public', public: true, payload: { member, code: 0x30, level: 5, sector, flags: 0, value: 0 } });
+    expect(senders(seen, hold(9))).toBe(' · 1 sender, unconfirmed');
+    expect(senders(seen, { ...hold(9), duplicate: true, timesHeard: 2 })).toBe(' · 1 sender, unconfirmed'); // a relayed copy is not a second sender
+    expect(senders(seen, hold(4, 1))).toBe(' · 1 sender, unconfirmed'); // another sector is another alert
+    expect(senders(seen, hold(4))).toBe(' · 2 senders, unconfirmed');
+    expect(senders(seen, hold(5))).toBe(' · 3 senders');
+    expect(senders(seen, pkt(1, T, { type: TYPES.REPORT }))).toBe(''); // only the public alerts are counted
   });
 });

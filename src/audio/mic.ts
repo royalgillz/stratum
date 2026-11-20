@@ -4,7 +4,7 @@ import tapUrl from './tap.worklet.js?url&no-inline';
  * Opens one microphone stream with all browser processing off (project sound rule) and feeds
  * raw blocks to onBlock. One stream serves both the tracker and the packet decoder.
  */
-export async function openMic(ctx: AudioContext, onBlock: (x: Float32Array) => void) {
+export async function openMic(ctx: AudioContext, onBlock: (x: Float32Array) => void, analyser?: AnalyserNode) {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
   });
@@ -14,7 +14,9 @@ export async function openMic(ctx: AudioContext, onBlock: (x: Float32Array) => v
     await ctx.resume();
     const node = new AudioWorkletNode(ctx, 'tap');
     node.port.onmessage = (e) => onBlock(e.data);
-    ctx.createMediaStreamSource(stream).connect(node).connect(ctx.destination); // node outputs silence
+    const source = ctx.createMediaStreamSource(stream);
+    source.connect(node).connect(ctx.destination); // node outputs silence
+    if (analyser) source.connect(analyser); // the fan watch reads the same stream
     return stream.getAudioTracks()[0].getSettings();
   } catch (e) {
     stream.getTracks().forEach((t) => t.stop()); // a failed open must not leave the microphone live
@@ -47,3 +49,17 @@ export function decimator(sampleRate: number) {
     },
   };
 }
+
+/**
+ * FFT bins of the fan band (docs/intent/air/fan-design.md): 150 to 1,700 Hz, below the packet band,
+ * leaving out 4 bins each side of every multiple of 400 Hz so the in-world hum is not counted as fan.
+ * The analyser's Blackman window spreads a tone over about ±3 bins, so a narrower notch lets the hum in.
+ */
+export function fanBins(sampleRate: number, fftSize: number): number[] {
+  const hz = sampleRate / fftSize, bins: number[] = [];
+  for (let k = Math.ceil(150 / hz); k * hz <= 1700; k++) if (Math.abs(k * hz - 400 * Math.round((k * hz) / 400)) > 4 * hz) bins.push(k);
+  return bins;
+}
+
+/** Total power of those bins in dB, from an analyser's dB-per-bin spectrum; -Infinity on digital silence. */
+export const bandDb = (spectrum: Float32Array, bins: number[]) => 10 * Math.log10(bins.reduce((sum, k) => sum + 10 ** (spectrum[k] / 10), 0));

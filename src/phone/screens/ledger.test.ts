@@ -46,5 +46,8 @@ describe('ledgerView', () => {
     expect(html).toContain('(LIVE)');
     expect(html).toContain('Reports heard (LIVE): 3 from your family, 1 public.');
     expect(v.html()).not.toContain('class="now"'); // GREEN, NO HUM and calibrating mark nothing
+    // The Listen tab's line: the same figures as the cell, in words.
+    expect(v.line(2, 'RED')).toBe('Level 2: cut in 1 of 1 past RED event, odds 67% · LIVE');
+    expect(v.line(3, 'AMBER')).toBe('Level 3: no data yet (needs reports from 3 phones)');
   });
 });

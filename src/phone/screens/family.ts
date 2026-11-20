@@ -1,4 +1,4 @@
-import { TYPES, type Decoded } from '../../core/packet/codec.ts';
+import { payloadDigest, TYPES, type Decoded } from '../../core/packet/codec.ts';
 import { NEED_CODES } from '../../core/care/breath.ts';
 import { generateWords } from '../../core/packet/keys.ts';
 import { $, app, clock, random, store, type Heard } from '../app.ts';
@@ -6,7 +6,7 @@ import { CODEBOOK } from '../codebook.ts';
 
 const KIND: Record<number, string> = {
   [TYPES.OK]: 'I am OK', [TYPES.NEED]: 'Needs help', [TYPES.REPORT]: 'Report', [TYPES.CODEBOOK]: 'Codebook',
-  [TYPES.GRID_ALERT]: 'Grid alert', [TYPES.HOLD_WATER]: 'Save water', [TYPES.ROUTE]: 'Route', [TYPES.LEDGER_HEAD]: 'Ledger update',
+  [TYPES.GRID_ALERT]: 'Grid alert', [TYPES.HOLD_WATER]: 'Hold water', [TYPES.ROUTE]: 'Route', [TYPES.LEDGER_HEAD]: 'Ledger update',
 };
 const STALE_MIN = 30;
 
@@ -23,7 +23,22 @@ export function says(d: Decoded) {
   const e = CODEBOOK.find((x) => TYPES[x.type] === d.type && x.code === d.payload.code);
   const n = e?.count ? d.payload.value : 0; // 0 = count not given
   const people = n ? ` (${n} ${n === 1 ? 'person' : 'people'})` : '';
+  if (e && (d.type === TYPES.HOLD_WATER || d.type === TYPES.ROUTE)) return `⚠ ${e.label}`; // a public alert: its own words say what to do
   return careAlert(d)?.text ?? (d.type === TYPES.OK ? KIND[d.type] : e ? `${KIND[d.type]}: ${e.label}${people}` : KIND[d.type] ?? `Message type ${d.type}`);
+}
+
+/** A ledger digest's inbox line: its six bytes as hex, to compare with the District 7 screen. Anyone can forge a public packet,
+ *  so the line names no sender, and LIVE is the packet's label, not the data's (the digest is of District 7's SIMULATED ledger). */
+export const ledgerLine = (d: Decoded) =>
+  `Public ledger digest heard: ${payloadDigest(d.payload)}, compare with the District 7 screen · packet LIVE, sent ${clock(d.minute)} · public${d.duplicate ? ` · heard ${d.timesHeard}×` : ''}`;
+
+/** A public HOLD WATER or ROUTE alert's sender count at its place, " · 1 sender, unconfirmed"; "" for any other message.
+ *  Records the sender in `seen`. Plan: a public claim counts as confirmed at three different senders (member numbers can be forged too). */
+export function senders(seen: Map<string, Set<number>>, d: Decoded): string {
+  if (d.type !== TYPES.HOLD_WATER && d.type !== TYPES.ROUTE) return '';
+  const p = d.payload, key = `${d.type}:${p.code}:${p.level}:${p.sector}`, set = seen.get(key) ?? new Set<number>();
+  seen.set(key, set.add(p.member));
+  return ` · ${set.size} sender${set.size === 1 ? '' : 's'}${set.size < 3 ? ', unconfirmed' : ''}`;
 }
 
 /** " · power on" or off: power is a field of OK and REPORT only, so a need shows none rather than a value that is not a reading. */
@@ -59,6 +74,7 @@ export function mountFamily(root: HTMLElement) {
     <ul id="inbox" class="list" role="log" aria-live="polite"><li class="muted empty">Nothing heard yet.</li></ul>`;
   const box = $('#familyBox', root), board = $('#board', root), inbox = $('#inbox', root);
   let heard: Decoded[] = []; // latest per member only, kept small by boardRows
+  const alerts = new Map<string, Set<number>>(); // public alert -> members who sent it
 
   function render() {
     // Create, Join and Leave rebuild this box and destroy the focused button: move focus to what replaced it.
@@ -154,8 +170,8 @@ export function mountFamily(root: HTMLElement) {
   app.on('packet', ({ decoded: r }: Heard) => {
     const p = r.payload, nick = store.get(nickKey(p.member));
     const from = p.member === app.member ? 'you' : nick ? `${nick} (member ${p.member})` : `member ${p.member}`;
-    const text = `LIVE · ${clock(r.minute)} · ${says(r)} from ${from} · level ${p.level}, sector ${String.fromCharCode(65 + p.sector)}${power(r)}`
-      + (r.public ? ' · public' : '') + (r.duplicate ? ` · heard ${r.timesHeard}×` : '');
+    const text = r.type === TYPES.LEDGER_HEAD ? ledgerLine(r) : `LIVE · ${clock(r.minute)} · ${says(r)} from ${from} · level ${p.level}, sector ${String.fromCharCode(65 + p.sector)}${power(r)}`
+      + (r.public ? ' · public' : '') + senders(alerts, r) + (r.duplicate ? ` · heard ${r.timesHeard}×` : '');
     // A repeat (relayed copy) updates its row instead of adding a second one.
     const key = `${r.keySet}:${r.minute}:${r.type}:${p.member}:${p.code}`;
     const old = r.duplicate ? [...inbox.children].find((li) => (li as HTMLElement).dataset.key === key) : undefined;

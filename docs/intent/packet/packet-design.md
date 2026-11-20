@@ -39,6 +39,8 @@ The payload is 6 bytes: member (1), status or codebook code (1), level 1–6 in 
 | GRID_ALERT, HOLD_WATER, ROUTE, LEDGER_HEAD | 4, 5, 6, 7 | public only |
 | 8–15 | none | undefined, rejected |
 
+**LEDGER_HEAD payload.** A ledger digest carries no member, code or place. Its six payload bytes are the first 6 bytes of Witness's 16-byte `digest()`, in order: member, code, level and sector byte, flags, value high, value low. The receiver reads them back in the same order and shows 12 lowercase hex characters, which a reader compares with the first 12 characters of the digest on the sender's screen.
+
 ## Keys
 
 The first phone in a family generates six words from a 2,048-word list (66 bits) using random bytes from the caller. Other phones type the words once. Typed words are normalised: trimmed, whitespace collapsed to single spaces, lower-cased and Unicode NFKD. Any word not on the list is rejected before deriving keys, so a typo is caught at entry rather than giving a silently different key.
@@ -67,6 +69,7 @@ Decode never throws on bad bytes. Byte 16 is reported clamped to MAX_HOPS (4), s
 - `deriveKeys(words) → KeySet | { error: 'word-count' } | { error: 'unknown-word', word }`
 - `generateWords(random: Uint8Array(9)) → string[6]`, reading bits most-significant first, 11 per word
 - `encode(keys, { type, minute, nonce, hops, payload }) → Uint8Array(25)`. Throws RangeError for a field outside its range. It does not enforce which key set a type may use; decode does.
+- `digestPayload(digestHex) → Payload` puts the first 6 bytes of a hex digest into a LEDGER_HEAD payload; throws RangeError unless the input starts with 12 hex characters. `payloadDigest(payload) → string` reads the 12 hex characters back.
 - `createDecoder(familyKeySets, publicKeys)` returns `decode(bytes, nowMs) → Decoded | { reject: reason }`. Each family key set carries a caller-chosen `id`; the public set's id is `public`.
 
 `Decoded` holds:
@@ -89,6 +92,7 @@ Decode never throws on bad bytes. Byte 16 is reported clamped to MAX_HOPS (4), s
 | Public messages | Same codec, published keys, types restricted per key set | Separate unauthenticated format | One decode path; per-type key rules stop a forged public OK |
 | Seen-set key | (key set, minute, nonce) | (minute, nonce) | Two families can draw the same nonce in a minute; neither message may be lost |
 | Randomness | Supplied by the caller | `crypto.getRandomValues` inside the codec | Keeps `src/core` deterministic for seeded simulation |
+| Ledger digest on air | First 6 digest bytes in one packet | All 16 bytes over three packets, each with a part number | One packet is 2 to 3 s on air; 48 bits make an accidental match about 1 in 2.8 × 10^14; a public packet can be forged whatever its length, so more bytes add no trust |
 | Key material | Six generated words, validated on entry | User-chosen passphrase | People choose guessable passphrases; validation turns typos into errors instead of a silent wrong key |
 
 ## Open Questions & Future Decisions

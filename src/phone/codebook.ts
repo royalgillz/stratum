@@ -6,7 +6,7 @@ export type KeyChoice = 'family' | 'public';
 
 export interface Entry {
   code: number; // payload code byte, unique across the table so a reader needs no type to look it up
-  type: 'OK' | 'NEED' | 'REPORT';
+  type: 'OK' | 'NEED' | 'REPORT' | 'HOLD_WATER' | 'ROUTE';
   label: string;
   icon: string;
   keys: readonly KeyChoice[]; // allowed key sets; the first is the default
@@ -14,7 +14,7 @@ export interface Entry {
   count?: boolean; // the value field carries how many people are affected
 }
 
-const FAMILY = ['family'] as const, NEED = ['family', 'public'] as const, REPORT = ['public', 'family'] as const;
+const FAMILY = ['family'] as const, NEED = ['family', 'public'] as const, REPORT = ['public', 'family'] as const, ALERT = ['public'] as const;
 
 export const CODEBOOK: readonly Readonly<Entry>[] = Object.freeze(([
   { code: 0x00, type: 'OK', label: 'I am OK', icon: '✅', keys: FAMILY },
@@ -29,6 +29,9 @@ export const CODEBOOK: readonly Readonly<Entry>[] = Object.freeze(([
   { code: 0x13, type: 'REPORT', label: 'Flooding or route blocked', icon: '🌊', keys: REPORT },
   { code: 0x14, type: 'REPORT', label: 'Fan stopped or air hot', icon: '🌡️', keys: REPORT },
   { code: 0x15, type: 'REPORT', label: 'People coughing or sick', icon: '🤒', keys: REPORT, count: true },
+  // Public alerts: the codec allows these types under the public key set only (packet design, type table).
+  { code: 0x30, type: 'HOLD_WATER', label: 'Water looks or smells wrong: hold, do not drink', icon: '⛔', keys: ALERT },
+  { code: 0x31, type: 'ROUTE', label: 'Tunnel flooded or blocked here', icon: '🚧', keys: ALERT },
 ] satisfies Entry[]).map((e) => Object.freeze(e)));
 
 export interface Choice { member: number; level: number; sector: number; power: boolean; count: string; to: KeyChoice }

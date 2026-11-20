@@ -1,5 +1,5 @@
 // The adapter set for one run (design: docs/intent/adapters/policy/policy-design.md, "Factory").
-import type { Adapter } from '../contracts.ts';
+import type { Adapter, AdapterId } from '../contracts.ts';
 import type { Script } from '../scenario/types.ts';
 import { createP01 } from './p01.ts';
 import { createP02 } from './p02.ts';
@@ -20,8 +20,12 @@ import type { Policy } from './shared.ts';
 
 const FACTORIES = [createP01, createP02, createP03, createP04, createP05, createP06, createP07, createP08, createP09, createP10, createP11, createP12, createP13, createP14, createP15];
 
-// @spec ADAPT-POLICY-001
-export function createAdapters(policy: Policy, script: Script): Adapter[] {
-  if (policy !== 'directorate' && policy !== 'stratum') throw new RangeError(`unknown policy ${String(policy)}`);
-  return FACTORIES.map((f) => f(policy, script));
+const IDS = FACTORIES.map((_, i) => `p${String(i + 1).padStart(2, '0')}`);
+const isPolicy = (p: unknown): p is Policy => p === 'directorate' || p === 'stratum';
+
+// @spec ADAPT-POLICY-001, ADAPT-POLICY-010
+export function createAdapters(policy: Policy, script: Script, per: Partial<Record<AdapterId, Policy>> = {}): Adapter[] {
+  if (!isPolicy(policy)) throw new RangeError(`unknown policy ${String(policy)}`);
+  for (const [id, p] of Object.entries(per)) if (!IDS.includes(id) || !isPolicy(p)) throw new RangeError(`bad per-adapter policy ${id}: ${String(p)}`);
+  return FACTORIES.map((f, i) => f(per[IDS[i] as AdapterId] ?? policy, script));
 }

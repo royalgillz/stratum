@@ -41,7 +41,7 @@ where `t` and `value` are 8-byte big-endian IEEE-754 doubles (`-0` written as `0
 
 ## Ledger digest
 
-The `LEDGER_HEAD` packet carries the first 16 bytes of the **measured** chain head (32 hex characters in the interface). A device holding the same measured entries recomputes the head and compares; a mismatch means the two copies differ somewhere. The official chain's head is exposed beside it.
+`digest()` is the first 16 bytes of the **measured** chain head (32 hex characters). The `LEDGER_HEAD` packet carries its first 6 bytes, the whole packet payload (packet design). A device holding the same measured entries recomputes the head and compares; a mismatch means the two copies differ somewhere. The official chain's head is exposed beside it.
 
 ## Two small estimators
 
@@ -69,7 +69,7 @@ Free functions: `sha256(bytes): Uint8Array`, `verifyChain(entries, chain): { ok:
 | Persistence | 3 of 5 | One exceedance; 2 of 3 | One exceedance alarms on every spike; 3 of 5 costs two extra readings of delay |
 | Baseline during an event | Frozen | Keep adapting | Adapting teaches the baseline that the contamination is normal |
 | `gap` with no pair | NaN | 0 | Never fake a reading |
-| Digest | Measured head only | Hash of both heads | Matches the packet's "first 16 bytes of the chain head"; officials are the Directorate's own public record |
+| Digest | Measured head only | Hash of both heads | One chain head to compare, sent as its first bytes in a LEDGER_HEAD packet; officials are the Directorate's own public record |
 | Float encoding in the hash | Big-endian float64 | Decimal text | Decimal text differs between languages and locales; bits do not |
 
 ## Open Questions & Future Decisions

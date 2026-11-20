@@ -16,7 +16,7 @@ prefix: ADAPT-SURFACE
 - *Directorate (under both policies):* the official verdict is `sealed`, "the air up there would kill you in minutes", observed as `('surface.band', 'surface', band index, 'official')`. Under the Directorate `surface.band` is `sealed` from the first step.
 - *STRATUM:* the crews read (`crewRead`), each reading is appended to `surface.readings` and observed as `('surface.<gas>', 'surface', ppm, 'crew:<crew>')`, a hash-chained entry with source `crew:<crew>` (signing happens on real packets, not in the simulation). The verdict is `bandOf` of the three `quorum` medians over the current campaign's readings, or `unknown` when any gas has no quorum. It is written to `surface.band` and, when known, observed as `('surface.band', 'surface', band index, 'estimate:quorum')`, so `gap('surface.band')` shows measured against official. Band indices: open 0, mask 1, suit 2, sealed 3, closed 4.
 
-`p13` makes one Witness on its first step, as `p04` and `p09` do. Witness's `digest()` gives the ledger digest anyone can compare. Sending it as a LEDGER_HEAD packet and showing it on the district page are not built (docs/coverage.md, problem 13).
+`p13` makes one Witness on its first step, as `p04` and `p09` do. Witness's `digest()` gives the ledger digest anyone can compare. The District 7 page shows it beside the ledger and sends its first 6 bytes as a public LEDGER_HEAD packet (packet design); the simulated mesh does not carry it.
 
 **Metric:** "wrong-band rate", unit `share`: the rounds whose verdict after the round differs from `bandOf` of the truth, over all rounds; `unknown` counts as wrong; 0 before the first round.
 

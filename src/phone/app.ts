@@ -1,9 +1,10 @@
 // Shared phone services: family keys, one audio context, one microphone stream, one decoder.
 // Screens subscribe to events instead of calling each other.
 import { createTracker, type Reading } from '../core/tracker/tracker.ts';
-import { createDecoder, type Decoded } from '../core/packet/codec.ts';
+import { createDecoder, TYPES, type Decoded } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys, type KeySet } from '../core/packet/keys.ts';
-import { decimator, openMic } from '../audio/mic.ts';
+import { bandDb, decimator, fanBins, openMic } from '../audio/mic.ts';
+import { createFanWatch, type FanReading } from '../core/air/fan.ts';
 import { createModem } from '../audio/modem.ts';
 import { createRelay } from '../core/relay/relay.ts';
 
@@ -19,7 +20,7 @@ export const random = (n: number) => crypto.getRandomValues(new Uint8Array(n));
 
 export interface Heard { decoded: Decoded; bytes: Uint8Array; at: number }
 
-type Events = { reading: Reading; packet: Heard; family: KeySet | null; listening: boolean; relayed: Uint8Array };
+type Events = { reading: Reading; packet: Heard; family: KeySet | null; listening: boolean; relayed: Uint8Array; fan: FanReading | null };
 
 class App extends EventTarget {
   family: KeySet | null = null;
@@ -78,11 +79,12 @@ class App extends EventTarget {
     return { ctx: this.ctx, modem };
   }
 
-  /** Opens the microphone once; feeds the tracker (8 kHz copy) and the packet decoder. Returns the mic settings. */
+  /** Opens the microphone once; feeds the tracker (8 kHz copy), the packet decoder and the fan watch. Returns the mic settings. */
   async listen() {
     const { ctx, modem } = await this.audio();
     const dec = decimator(ctx.sampleRate);
     const tracker = createTracker({ sampleRate: dec.rate, label: 'LIVE' });
+    const analyser = new AnalyserNode(ctx, { fftSize: 2048, smoothingTimeConstant: 0 });
     const s = await openMic(ctx, (x) => {
       const rs = tracker.push(dec.push(x));
       if (rs.length && performance.now() > this.quietUntil) {
@@ -90,13 +92,23 @@ class App extends EventTarget {
         this.emit('reading', this.lastReading);
       }
       for (const bytes of modem.receive(x)) void this.receive(bytes);
-    });
+    }, analyser);
+    // Fan watch (problem 1, air): the fan-band level 10 times a second, on the audio clock.
+    const fan = createFanWatch({ label: 'LIVE' }), bins = fanBins(ctx.sampleRate, analyser.fftSize), spectrum = new Float32Array(analyser.frequencyBinCount);
+    let silent = 0;
+    setInterval(() => {
+      analyser.getFloatFrequencyData(spectrum);
+      const r = fan.push(ctx.currentTime, bandDb(spectrum, bins));
+      silent = r ? 0 : silent + 1;
+      if (r || silent === 20) this.emit('fan', r); // null: 2 s of digital silence, so the line must not keep showing the last state
+    }, 100);
     this.listening = true;
     this.emit('listening', true);
     return s;
   }
 
-  private async receive(bytes: Uint8Array) {
+  /** Every heard packet goes through here (not private: the ?test seam in phone.ts feeds it bytes, as the modem does). */
+  async receive(bytes: Uint8Array) {
     this.decode ??= createDecoder(this.family ? [this.family] : [], await publicKeys());
     const now = Date.now();
     const r = await this.decode(bytes, now);
@@ -114,7 +126,8 @@ class App extends EventTarget {
     }
     if ('reject' in r) return; // not for us, damaged or replayed: say nothing
     // A valid packet can still carry an impossible place (the codec allows 0..15): show nothing, as the shed ledger does.
-    if (r.payload.level < 1 || r.payload.level > 6 || r.payload.sector > 3) return;
+    // A ledger digest carries no place: its six payload bytes are all digest.
+    if (r.type !== TYPES.LEDGER_HEAD && (r.payload.level < 1 || r.payload.level > 6 || r.payload.sector > 3)) return;
     this.emit('packet', { decoded: r, bytes, at: Date.now() });
   }
 

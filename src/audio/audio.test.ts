@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { createDecoder, encode, TYPES } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys, type KeySet } from '../core/packet/keys.ts';
 import { createTracker } from '../core/tracker/tracker.ts';
-import { decimator } from './mic.ts';
+import { bandDb, decimator, fanBins } from './mic.ts';
 import { createModem } from './modem.ts';
 
 // The browser loads ggwave as a classic script. Here "type": "module" would treat it as ESM, so run it as CommonJS.
@@ -49,5 +49,38 @@ describe('audio adapters', () => {
     expect(last!.tier).toBe('RED');
     expect(last!.deviationMHz).toBeGreaterThan(-205);
     expect(last!.deviationMHz).toBeLessThan(-195);
+  });
+
+  it('sums the fan band, 150 to 1,700 Hz, without the hum at multiples of 400 Hz', () => {
+    const hz = 48000 / 2048, bins = fanBins(48000, 2048);
+    const f = bins.map((k) => k * hz);
+    expect(Math.min(...f)).toBeGreaterThanOrEqual(150);
+    expect(Math.max(...f)).toBeLessThanOrEqual(1700);
+    for (const h of [400, 800, 1200, 1600]) expect(f.some((x) => Math.abs(x - h) <= 4 * hz), `${h} Hz`).toBe(false);
+    expect(bins.length).toBe(34);
+    const spectrum = new Float32Array(1024).fill(-100);
+    expect(bandDb(spectrum, bins)).toBeCloseTo(-100 + 10 * Math.log10(bins.length), 6);
+    spectrum[Math.round(800 / hz)] = 0; // a loud hum bin is left out
+    expect(bandDb(spectrum, bins)).toBeCloseTo(-100 + 10 * Math.log10(bins.length), 6);
+    expect(bandDb(new Float32Array(1024).fill(-Infinity), bins)).toBe(-Infinity);
+  });
+
+  it('keeps the hum out of the fan band through the analyser window', () => {
+    // A pure hum tone through a Blackman window (the AnalyserNode's), 2,048 points: what leaks into the fan bins.
+    const N = 2048;
+    const win = Array.from({ length: N }, (_, n) => 0.42 - 0.5 * Math.cos((2 * Math.PI * n) / N) + 0.08 * Math.cos((4 * Math.PI * n) / N));
+    for (const sr of [44100, 48000]) {
+      for (const tone of [400, 800]) {
+        const x = win.map((w, n) => w * Math.sin((2 * Math.PI * tone * n) / sr));
+        const power = Array.from({ length: N / 2 }, (_, k) => {
+          let re = 0, im = 0;
+          for (let n = 0; n < N; n++) { re += x[n] * Math.cos((2 * Math.PI * k * n) / N); im -= x[n] * Math.sin((2 * Math.PI * k * n) / N); }
+          return re * re + im * im;
+        });
+        const spectrum = Float32Array.from(power, (p) => 10 * Math.log10(p));
+        const total = 10 * Math.log10(power.reduce((a, b) => a + b, 0));
+        expect(bandDb(spectrum, fanBins(sr, N)) - total, `${tone} Hz at ${sr}`).toBeLessThan(-50);
+      }
+    }
   });
 });

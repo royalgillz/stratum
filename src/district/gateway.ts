@@ -2,7 +2,7 @@
 // The microphone, the modem and the codec run on the page; this decides what is injected and what the log says.
 import type { MeshMessage } from '../core/contracts.ts';
 import { NEED_CODES } from '../core/care/breath.ts';
-import { TYPES, type Decoded, type Reject } from '../core/packet/codec.ts';
+import { payloadDigest, TYPES, type Decoded, type Reject } from '../core/packet/codec.ts';
 import { CODEBOOK } from '../phone/codebook.ts';
 
 const NAME = Object.fromEntries(Object.entries(TYPES).map(([k, v]) => [v, k.replace('_', ' ')]));
@@ -24,6 +24,7 @@ export function needText({ code, value }: { code: number; value: number }): stri
 /** The message to inject (family packets heard for the first time only) and a log line that never shows the bytes. */
 export function toMessage(r: Decoded | Reject, bytes: Uint8Array): { message?: MeshMessage; note: string } {
   if ('reject' in r) return { note: `Rejected: ${WHY[r.reject]}` };
+  if (r.type === TYPES.LEDGER_HEAD) return { note: `Public ledger digest ${payloadDigest(r.payload)}: not a family message` }; // no sender: all six bytes are digest
   const what = `${NAME[r.type]} from member ${r.payload.member}`;
   if (r.public) return { note: `Public ${what}: not a family message, not added to the board` };
   if (r.duplicate) return { note: `Repeat of ${what}, heard ${r.timesHeard} times: already on the board` };

@@ -9,7 +9,9 @@
 <body>
   <header>
     <h1>District 7</h1>
-    <p class="muted">A <strong>SIMULATED</strong> week of District 7 (6 levels, 4 sectors each) under two rules, with the same supply. Real phones nearby can send OK by sound: those messages are <strong>LIVE</strong>. All fifteen problems, their tiers and the 20-seed results: <a href="./coverage.html">coverage matrix</a>.</p>
+    <nav aria-label="Pages"><a class="go" href="/">Home</a> · <a class="go" href="./judge.html">Judge mode</a> · <a class="go" href="./coverage.html">Coverage matrix</a> · <a class="go" href="#boardTitle">Phones in this room ↓</a></nav>
+    <p class="muted">A <strong>SIMULATED</strong> week of District 7 (6 levels, 4 sectors each) under two rules, with the same supply. Real phones nearby can send OK by sound: those messages are <strong>LIVE</strong>.</p>
+    <p><strong>Press Play.</strong> Each row of the results compares today's rule with STRATUM on the same supply. The table fills as the week plays; the 20-seed results are in the coverage matrix.</p>
   </header>
 
   <div class="row">
@@ -20,16 +22,19 @@
     <button id="sound">Sound: off</button>
   </div>
   <div class="row" role="group" aria-label="Rule shown">
+    <span class="lbl">Drawing:</span>
     <button id="show-directorate" aria-pressed="true">Directorate rule</button>
     <button id="show-stratum" aria-pressed="false">STRATUM rule</button>
   </div>
   <div class="row" role="group" aria-label="Week">
+    <span class="lbl">Week:</span>
     <button id="script-seven-day" aria-pressed="true">Seven-day week</button>
     <button id="script-stress-week" aria-pressed="false">Stress week</button>
   </div>
   </div>
 
   <p id="act" class="act" aria-live="polite"></p>
+  <p id="actWhy" class="small muted" hidden></p>
   <p id="clock" class="small"></p>
 
   <main class="layout">
@@ -55,10 +60,22 @@
         <p id="scriptNote" class="small"></p>
         <p class="small muted">One seed, this run so far. Tier badges as in the coverage matrix; read each row by which way is better.</p>
         <p class="small">Directorate rule: how the district's authority runs things today (fixed cuts, daily bulletins, no mesh). STRATUM rule: the same supply run by STRATUM's real allocator and mesh code. Where the Directorate has no such tool its figure is 0 by rule, not measured.</p>
-        <table>
-          <thead><tr><th scope="col">Problem</th><th scope="col" id="shownHead">Directorate</th><th scope="col" id="otherHead">STRATUM</th></tr></thead>
+        <table id="results" data-shown="directorate">
+          <thead><tr><th scope="col">Problem</th><th scope="col" id="head-directorate">Directorate</th><th scope="col" id="head-stratum">STRATUM</th></tr></thead>
           <tbody id="metrics"></tbody>
         </table>
+      </section>
+
+      <section aria-labelledby="ledgerTitle">
+        <h2 id="ledgerTitle">Ledger: measured beside official <span class="tag">SIMULATED</span></h2>
+        <p class="small">Witness keeps two hash-chained lists for the rule shown: what sensors, crews and residents' reports measured, and what the Directorate announced. Each row is the latest value of one kind, at the place where the two differ most.</p>
+        <table id="ledgerTable">
+          <thead><tr><th scope="col">What</th><th scope="col">Measured</th><th scope="col">Official</th><th scope="col">Gap</th></tr></thead>
+          <tbody id="ledgerRows"></tbody>
+        </table>
+        <p id="ledgerChain" class="small"></p>
+        <p class="small">Head digest, first 16 bytes of the measured chain: <code id="digest"></code> <span class="tag">SIMULATED</span></p>
+        <p class="small muted">Anyone with a copy of the ledger can check this number: change one old entry and the digest changes. Send ledger digest, below, plays the bold part by sound.</p>
       </section>
 
       <section aria-labelledby="boardTitle">
@@ -74,6 +91,8 @@
         <p id="wordsErr" class="small" role="alert"></p>
         <button id="listen">Listen for phones</button>
         <p id="listenStatus" class="small" role="status"></p>
+        <button id="sendDigest">Send ledger digest</button>
+        <p id="sendStatus" class="small" role="status"></p>
         <h3>Heard <span class="tag">LIVE</span></h3>
         <ul id="heard" class="list small" role="log"></ul>
       </section>

@@ -1,15 +1,16 @@
 // District 7 page (docs/plan.md "Architecture"): the SIMULATED week from the worker, a policy switch, the hum
 // emitter, and the gateway that turns a real phone's OK, heard by the microphone, into a LIVE board entry.
 // Outside LID scope.
-import { createDecoder, TYPES } from '../core/packet/codec.ts';
+import { createDecoder, digestPayload, encode, TYPES } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys } from '../core/packet/keys.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
 import { openMic } from '../audio/mic.ts';
 import { createModem } from '../audio/modem.ts';
 import { needText, toMessage } from './gateway.ts';
-import { badges, NOISE, PROBLEMS, show } from './problems.ts';
-import type { ScriptName, Snapshot, ToWorker, View } from './snapshot.ts';
+import { badges, NOISE, PROBLEMS, show, ZERO_BY_RULE } from './problems.ts';
+import type { LedgerRow, ScriptName, Snapshot, ToWorker, View } from './snapshot.ts';
+import { BANDS } from '../core/adapters/p13.ts';
 import { STOCK_DAYS } from '../core/world/lightfood/lightfood.ts';
 
 type Policy = keyof Snapshot['views'];
@@ -18,7 +19,7 @@ const NOTES: Record<ScriptName, string> = {
   'seven-day': 'Seven-day week: the scripted week of the demo, with seed-varied event times and sizes.',
   'stress-week': "Stress week: built so STRATUM also loses. Supply falls below every life floor for a day, four levels lose their farms, and three of five surface crews lie. Expect STRATUM to lose on surface truth, its heat person-hours to rise far above the seven-day week's, everyone to fall below the food floor once the shared stores run out, and its trials to prove nothing lighter than the Directorate's (a tie on problem 14).",
 };
-const DAYS: Record<ScriptName, number> = { 'seven-day': sevenDay.days, 'stress-week': stressWeek.days };
+const SCRIPTS = { 'seven-day': sevenDay, 'stress-week': stressWeek };
 const DEMO = sevenDay.demo, DEMO_S = (DEMO.level - 1) * 4 + DEMO.sector;
 const letter = (sector: number) => String.fromCharCode(65 + sector);
 
@@ -83,9 +84,21 @@ function drawMap(v: View, p: Policy) {
   svg.setAttribute('aria-label', `District 7 cross-section, SIMULATED: ${[n('sectors without power', (c) => c.served === 0), n('trimmed', (c) => c.served > 0 && c.served < 0.999), n('flooded', (c) => c.flooded), n('with unsafe water', (c) => c.unsafe), n('above the heat limit', (c) => c.hot), n('with an empty food store', (c) => c.food < 0.05)].join(', ')}. ${surface}. The demo family's sector has ${Math.round(v.cells[DEMO_S].served * 100)}% power.`);
 }
 
+// The ledger panel: what each kind measures, in plain words; a kind not listed shows its own name.
+const KINDS: Record<string, string> = {
+  'water.toc': 'Tap water, organic carbon (mg/L)', cases: 'Outbreak cases', 'cases.both': 'Cases on both lists',
+  'surface.band': 'Surface verdict (band)', 'surface.co': 'Surface carbon monoxide (ppm)', 'surface.o3': 'Surface ozone (ppm)', 'surface.so2': 'Surface sulfur dioxide (ppm)',
+};
+const band = (k: string) => k === 'surface.band';
+const num = (k: string, x: number | undefined) => (x === undefined ? 'none' : band(k) ? BANDS[x] ?? String(x) : Number.isInteger(x) ? x.toLocaleString() : x.toFixed(2));
+function ledgerRow({ kind, where, measured: m, official: o }: LedgerRow) {
+  const place = /^L\d$/.test(where) ? `, level ${where.slice(1)}` : '';
+  const d = m === undefined || o === undefined ? 'none' : `${m - o > 0 ? '+' : ''}${band(kind) ? `${m - o} band${Math.abs(m - o) === 1 ? '' : 's'}` : num(kind, m - o)}`;
+  return `<tr><th scope="row">${KINDS[kind] ?? kind}${place}<br><span class="small muted">SIMULATED</span></th><td>${num(kind, m)}</td><td>${num(kind, o)}</td><td>${d}</td></tr>`;
+}
+
 function render(s: Snapshot) {
-  const other: Policy = shown === 'directorate' ? 'stratum' : 'directorate';
-  const v = s.views[shown], o = s.views[other];
+  const v = s.views[shown];
   put($('play'), s.playing ? 'Pause' : s.done ? 'Week ended' : 'Play');
   if (s.done && document.activeElement === $('play')) $('restart').focus(); // a disabled button drops focus to the page
   $<HTMLButtonElement>('play').disabled = s.done;
@@ -93,20 +106,40 @@ function render(s: Snapshot) {
   const title = s.act.title + (shown === 'stratum' && s.act.title.startsWith('Level 5 goes dark') ? ' (Directorate rule)' : '');
   put($('act'), s.done ? 'Week ended · press Restart to replay'
     : `${title} · ${s.act.mode === 'realtime' ? 'REAL TIME' : `TIME-LAPSE x${s.act.scale ?? 3600}`}${s.playing ? '' : ' · paused'}`);
+  // Why the clock slows: a REAL TIME act plays the sag at the pace a phone hears it (docs/plan.md "Two clocks").
+  const acts = SCRIPTS[s.script].acts, next = acts[acts.findIndex((a) => a.atH === s.act.atH) + 1];
+  const why = $('actWhy');
+  why.hidden = s.done || s.act.mode !== 'realtime';
+  put(why, why.hidden ? '' : `REAL TIME: the hum sags at the pace a real phone nearby hears it, so the world clock runs one second per second here.${next ? ` The time-lapse resumes after ${Math.round((next.atH - s.act.atH) * 3600)} s.` : ''}`);
   const clock = $('clock');
   clock.dataset.t = String(v.t);
-  put(clock, `World time ${s.done ? `end of day ${DAYS[s.script]}` : worldTime(v.t)} · grid ${v.f.toFixed(3)} Hz, ${v.tier} · ${NAMES[shown]} rule, seed ${s.seed} · SIMULATED`);
+  put(clock, `World time ${s.done ? `end of day ${SCRIPTS[s.script].days}` : worldTime(v.t)} · grid ${v.f.toFixed(3)} Hz, ${v.tier} · ${NAMES[shown]} rule, seed ${s.seed} · SIMULATED`);
   drawMap(v, shown);
   for (const k of ['seven-day', 'stress-week']) $(`script-${k}`).setAttribute('aria-pressed', String(k === s.script));
   put($('scriptNote'), NOTES[s.script]);
 
-  put($('shownHead'), `${NAMES[shown]} (shown)`);
-  put($('otherHead'), NAMES[other]);
+  // The columns never swap: Directorate left, STRATUM right; the drawn rule is marked.
+  $('results').dataset.shown = shown;
+  for (const p of ['directorate', 'stratum'] as const) {
+    const head = p === shown ? `${NAMES[p]} <b>(shown)</b>` : NAMES[p], el = $(`head-${p}`);
+    if (el.innerHTML !== head) el.innerHTML = head;
+  }
   const metrics = PROBLEMS.map(({ id, title, tier, metric, better }, i) => {
-    const m = v.metrics[id], cell = (x: View) => x.none[id] ?? (x.metrics[id] ? show(x.metrics[id].value, x.metrics[id].unit) : 'not yet run');
-    return `<tr><th scope="row"><b>${i + 1}. ${title}</b><br>${metric}${id === 'p09' ? `<br><b>${NOISE}, see the 30-day run in the coverage matrix</b>` : ''}<br><span class="small muted">${better} is better · figure: ${m?.label ?? 'SIMULATED'} · Tier: ${badges(tier).map((b) => `<span class="badge">${b}</span>`).join(' ')}</span></th><td>${cell(v)}</td><td>${cell(o)}</td></tr>`;
+    const m = v.metrics[id], cell = (p: Policy) => {
+      const x = s.views[p], r = x.metrics[id], zero = p === 'directorate' && r?.value === 0 && ZERO_BY_RULE[id];
+      return x.none[id] ?? (r ? show(r.value, r.unit) + (zero ? ` (${zero})` : '') : 'not yet run');
+    };
+    return `<tr><th scope="row"><b>${i + 1}. ${title}</b><br><span class="metric">${metric}</span>${id === 'p09' ? `<br><b>${NOISE}, see the 30-day run in the coverage matrix</b>` : ''}<br><span class="small muted">${better} is better · figure: ${m?.label ?? 'SIMULATED'} · Tier: ${badges(tier).map((b) => `<span class="badge">${b}</span>`).join(' ')}</span></th><td>${cell('directorate')}</td><td>${cell('stratum')}</td></tr>`;
   }).join('');
   if ($('metrics').innerHTML !== metrics) $('metrics').innerHTML = metrics;
+
+  const L = v.ledger, ledger = L.rows.map(ledgerRow).join('') || '<tr><td colspan="4" class="muted">No entries yet. Press Play.</td></tr>';
+  if ($('ledgerRows').innerHTML !== ledger) $('ledgerRows').innerHTML = ledger;
+  const entries = (n: number, what: string) => `${n.toLocaleString()} ${what} entr${n === 1 ? 'y' : 'ies'}`;
+  put($('ledgerChain'), `${NAMES[shown]} rule: ${entries(L.measured, 'measured')}, ${entries(L.official, 'official')}, each chained to the one before by SHA‑256 · SIMULATED`
+    + (L.measured ? '' : ". No measured entries: the head digest is the empty chain's starting value, the same on every run, so it proves nothing yet."));
+  const digest = `<b>${L.digest.slice(0, 12)}</b>${L.digest.slice(12)}`;
+  if ($('digest').innerHTML !== digest) $('digest').innerHTML = digest;
 
   const rows = Object.entries(v.board).map(([member, e]) => {
     const when = e.label === 'LIVE' ? new Date(e.minute * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : worldTime(e.minute * 60);
@@ -126,6 +159,8 @@ worker.onmessage = (e: MessageEvent<Snapshot>) => render((snap = e.data));
 let ctx: AudioContext | null = null, soundOn = false;
 let hum: { set(f: number, on: boolean): void } | null = null;
 const audio = () => (ctx ??= new AudioContext());
+let modemP: ReturnType<typeof createModem> | null = null; // one ggwave instance sends and hears, as on the phone
+const modem = () => (modemP ??= createModem(audio().sampleRate));
 
 $('sound').onclick = () => {
   soundOn = !soundOn;
@@ -180,15 +215,43 @@ async function heard(bytes: Uint8Array) {
   log(r.note);
 }
 
+// Send ledger digest: the shown rule's digest, first 6 bytes, as a public LEDGER_HEAD packet by sound.
+const sent: number[][] = []; // test seam: the bytes of each packet played
+$('sendDigest').onclick = async () => {
+  const btn = $<HTMLButtonElement>('sendDigest'), status = $('sendStatus'), v = snap?.views[shown];
+  if (!v) return;
+  if (!v.ledger.measured) return put(status, `Not sent: the ${NAMES[shown]} rule has no measured entries yet, so its digest is only the empty chain's starting value. Press Play, or show the STRATUM rule.`);
+  btn.disabled = true;
+  const hexed = v.ledger.digest.slice(0, 12), rule = NAMES[shown];
+  try {
+    const c = audio(), resumed = c.resume(); // inside the click: browsers allow sound only after a gesture
+    const nonce = crypto.getRandomValues(new Uint32Array(1))[0]! >>> 8; // packet design: a fresh nonce from a secure source
+    const bytes = await encode(await publicKeys(), { type: TYPES.LEDGER_HEAD, minute: Math.floor(Date.now() / 60000), nonce, hops: 3, payload: digestPayload(v.ledger.digest) });
+    sent.push([...bytes]);
+    put(status, `Playing digest ${hexed} of the SIMULATED ${rule} ledger…`);
+    await resumed;
+    const x = (await modem()).encode(bytes);
+    const buf = c.createBuffer(1, x.length, c.sampleRate);
+    buf.getChannelData(0).set(x);
+    const src = new AudioBufferSourceNode(c, { buffer: buf });
+    src.connect(c.destination);
+    await new Promise((r) => { src.onended = r; src.start(); });
+    put(status, `Sent by sound: digest ${hexed} of the SIMULATED ${rule} ledger. A listening phone shows it in its Family tab inbox.`);
+  } catch {
+    put(status, 'Not sent: sound could not play on this device. Try again.');
+  }
+  btn.disabled = false;
+};
+
 $('listen').onclick = async () => {
   const btn = $<HTMLButtonElement>('listen'), status = $('listenStatus');
   btn.disabled = true;
   put(status, 'Opening the microphone…');
   try {
     const c = audio();
-    const modem = await createModem(c.sampleRate);
+    const m = await modem();
     // shortcut: the hum is not lowered while a packet arrives (ggwave reports a packet only once complete); the 1.7 kHz low-pass keeps it out of the packet band
-    await openMic(c, (x) => { for (const b of modem.receive(x)) void heard(b); });
+    await openMic(c, (x) => { for (const b of m.receive(x)) void heard(b); });
     put(btn, 'Listening');
     put(status, 'Listening. Hold a phone within about 1 m and send OK from its Report tab. Sound only: nothing is recorded.');
   } catch (e) {
@@ -198,4 +261,4 @@ $('listen').onclick = async () => {
 };
 
 // Test-only seam: CI has no microphone, so ?test feeds 25 decoded bytes into the same path the modem does.
-if (query.has('test')) Object.assign(window, { districtTest: { hear: (b: number[]) => heard(new Uint8Array(b)) } });
+if (query.has('test')) Object.assign(window, { districtTest: { hear: (b: number[]) => heard(new Uint8Array(b)), sent } });

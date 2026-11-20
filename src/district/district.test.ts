@@ -1,13 +1,15 @@
 // The district page's pure steps: the gateway's packet-to-message rule and the worker's snapshot of a run.
 import { describe, expect, it } from 'vitest';
-import { createDecoder, encode, TYPES } from '../core/packet/codec.ts';
+import { createDecoder, digestPayload, encode, TYPES } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys, type KeySet } from '../core/packet/keys.ts';
 import { createRun } from '../core/scenario/run.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { needText, toMessage } from './gateway.ts';
 import { badges, noEvent, PROBLEMS, show, winner } from './problems.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';
-import { audioClock, view, type AudioClock } from './snapshot.ts';
+import { audioClock, ledgerView, view, type AudioClock } from './snapshot.ts';
+import { createWitness } from '../core/witness/witness.ts';
+import { genesis, hex } from '../core/witness/ledger.ts';
 
 const WORDS = 'abandon ability able about above absent';
 const now = Date.UTC(2026, 10, 16, 12, 0);
@@ -50,6 +52,8 @@ describe('gateway toMessage', () => {
     const r = toMessage(await decode(alert, now), alert);
     expect(r.message).toBeUndefined();
     expect(r.note).toBe('Public GRID ALERT from member 42: not a family message, not added to the board');
+    const head = await encode(pub, { type: TYPES.LEDGER_HEAD, minute: Math.floor(now / 60000), nonce: 12, hops: 3, payload: digestPayload('0a1b2c3d4e5f') });
+    expect(toMessage(await decode(head, now), head)).toEqual({ note: 'Public ledger digest 0a1b2c3d4e5f: not a family message' }); // no member: the bytes are digest
   });
 });
 
@@ -156,5 +160,33 @@ describe('problems: shown values and who did better', () => {
     expect(noEvent('p15', sevenDay.events, 0)).toBe('not started');
     expect(noEvent('p15', sevenDay.events, 60)).toBeNull();
     expect(noEvent('p03', stressWeek.events, 60)).toBeNull();
+  });
+});
+
+describe('snapshot ledgerView', () => {
+  it('keeps one row per kind at the widest gap, counts both chains, and gives the digest Witness gives', () => {
+    const ledger = { measured: [], official: [] };
+    expect(ledgerView(ledger)).toEqual({ rows: [], measured: 0, official: 0, digest: hex(genesis('measured')).slice(0, 32) });
+    let t = 0;
+    const w = createWitness({ now: () => t++, ledger });
+    w.observe('water.toc', 'L1', 0.5, 'sensor:L1');
+    w.observe('water.toc', 'L5', 5.5, 'sensor:L5');
+    w.observe('water.toc', 'L6', 0.6, 'sensor:L6');
+    w.observe('water.toc', 'L1', 0.5, 'official');
+    w.observe('water.toc', 'L5', 0.5, 'official');
+    w.observe('cases', 'district', 10, 'official');
+    w.observe('cases', 'district', 20, 'estimate:capture-recapture');
+    w.observe('cases', 'district', 30, 'estimate:capture-recapture'); // the latest value wins
+    w.observe('surface.co', 'surface', 21, 'crew:c1');
+    w.observe('surface.band', 'surface', 3, 'official');
+    expect(ledgerView(ledger)).toEqual({
+      rows: [
+        { kind: 'water.toc', where: 'L5', measured: 5.5, official: 0.5 },
+        { kind: 'cases', where: 'district', measured: 30, official: 10 },
+        { kind: 'surface.co', where: 'surface', measured: 21 },
+        { kind: 'surface.band', where: 'surface', official: 3 },
+      ],
+      measured: 6, official: 4, digest: w.digest(),
+    });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createDecoder, encode, TYPES, type Decoded, type EncodeInput } from './codec.ts';
+import { createDecoder, digestPayload, encode, payloadDigest, TYPES, type Decoded, type EncodeInput } from './codec.ts';
 import { deriveKeys, publicKeys, type KeySet } from './keys.ts';
 
 const MIN = 29_000_000; // a Unix minute in 2025
@@ -146,5 +146,18 @@ describe('packet codec', () => {
       type: TYPES.REPORT, hops: 4, minute: MIN, keySet: 'A', public: false,
       payload: { member: 7, code: 2, level: 5, sector: 3, flags: 1, value: 1234 },
     });
+  });
+});
+
+describe('LEDGER_HEAD payload', () => {
+  // @spec PKT-001
+  it('holds the first 6 digest bytes in payload order and reads them back as 12 lowercase hex characters', async () => {
+    const p = digestPayload('A1b2C3d4E5f6' + '0'.repeat(20));
+    expect(p).toEqual({ member: 0xa1, code: 0xb2, level: 0xc, sector: 0x3, flags: 0xd4, value: 0xe5f6 });
+    expect(payloadDigest(p)).toBe('a1b2c3d4e5f6');
+    const r = ok(await createDecoder([], PUB)(await encode(PUB, pkt({ type: TYPES.LEDGER_HEAD, payload: p })), now(MIN)));
+    expect([r.type, r.public, payloadDigest(r.payload)]).toEqual([TYPES.LEDGER_HEAD, true, 'a1b2c3d4e5f6']); // survives the wire
+    expect(payloadDigest(digestPayload('00ff00ff00ff'))).toBe('00ff00ff00ff');
+    for (const bad of ['', 'a1b2c3d4e5', 'a1b2c3d4e5fg', ' a1b2c3d4e5f6']) expect(() => digestPayload(bad)).toThrow(RangeError);
   });
 });

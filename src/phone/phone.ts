@@ -47,5 +47,8 @@ window.addEventListener('hashchange', () => {
 });
 show(location.hash.slice(1) || 'listen');
 
+// Test-only seam: CI has no microphone, so ?test feeds 25 bytes into the path the modem feeds.
+if (new URLSearchParams(location.search).has('test')) Object.assign(window, { phoneTest: { hear: (b: number[]) => app.receive(new Uint8Array(b)) } });
+
 const saved = store.get('stratum.words');
 if (saved) void app.join(saved);

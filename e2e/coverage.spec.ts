@@ -31,7 +31,7 @@ for (const scheme of ['light', 'dark'] as const) {
         await expect(card.locator('tbody th', { hasText: 'Stress week, 20 seeds' })).toHaveCount(1);
       }
       await expect(page.locator('#matrix tbody tr:not(.beside)')).toHaveCount(31); // seven-day and stress week for each, and p09's 30-day run
-      await expect(cards(page).nth(11).locator('tbody tr', { hasText: 'Stress week' })).toContainText('against STRATUM: every level breaches');
+      await expect(cards(page).nth(11).locator('tbody tr', { hasText: 'Stress week' })).toContainText('against STRATUM: the metric reads higher, but every level breaches');
       await expect(cards(page).nth(13).locator('tr.beside', { hasText: 'trial breaches' }).last()).toContainText('4'); // the stress week's cost is on screen
       // Problem 3 from the committed evidence: STRATUM's heat person-hours, interval below.
       await expect(cards(page).nth(2).locator('tbody td').nth(1)).toContainText(show(seven.policies.stratum.p03.final.mean, 'person-h'));
@@ -41,6 +41,31 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(cards(page).nth(7).locator('tbody tr').nth(1)).toContainText('no separations in this script');
       await expect(cards(page).nth(0)).toContainText('REPLAY ENF-WHU, 130 real 50 Hz recordings');
       await expect(cards(page).nth(3)).toContainText('REPLAY GECCO 2018, held-out half, 22 events');
+      await expect(cards(page).nth(3)).toContainText('pH, Redox, conductivity, chosen on the first half'); // not the dataset's "Leit"
+      // A Directorate 0 set by its own rule says so (p01: no warning tool; p07: the 06:00 bulletin only)
+      await expect(cards(page).nth(0).locator('tbody td').first()).toContainText('0% (no tool, by rule)');
+      await expect(cards(page).nth(6).locator('tbody td').first()).toContainText('0% (06:00 bulletin only)');
+
+      // Results at a glance, above the cards: the cards' verdicts counted from the committed evidence, the stress-week losses linked
+      const glance = page.locator('#glance');
+      expect((await glance.boundingBox())!.y).toBeLessThan((await cards(page).first().boundingBox())!.y);
+      await expect(glance).toContainText('Seven-day week, 20 seeds, SIMULATED: STRATUM better on 14 of the 14 problems the week can score.');
+      const lost = glance.locator('li li');
+      await expect(lost).toHaveText([
+        /^1\. Warn before power or air cuts: Directorate 0%, STRATUM 0%; a tie, the warning gain is gone$/,
+        // docs/coverage.md marks rows 3 and 5 against STRATUM too: a win that lost most of its lead, or its zero
+        /^3\. .*: Directorate 178,000 person‑h, STRATUM 139,000 person‑h; STRATUM still better, but its lead shrinks from 86% to 22%$/,
+        /^5\. .*: Directorate 28,800 person‑h, STRATUM 20,500 person‑h; STRATUM still better, but its seven-day zero is gone$/,
+        /^12\. .*: Directorate 3 days, STRATUM 5 days; against STRATUM: the metric reads higher, but every level breaches the food floor$/,
+        /^13\. .*: Directorate 0%, STRATUM 100%; Directorate better, STRATUM's verdict is wrong in every round$/,
+        /^14\. .*; a tie, nothing lighter proven, 4 breaches in the planned trial under STRATUM \(Directorate 0\)$/,
+      ]);
+      for (const n of [12, 13]) {
+        await expect(glance.locator(`a[href="#problem-${n}"]`)).toHaveText(new RegExp(`^${n}\. `));
+        await expect(page.locator(`#problem-${n} h2`)).toHaveText(new RegExp(`^${n}\. `));
+      }
+      await expect(glance.getByRole('link', { name: 'Results against us' })).toHaveAttribute('href', '#againstTitle');
+      await expect(page.getByText('Tier = how far it is built; label (LIVE, REPLAY, SIMULATED) = where the number came from.')).toBeVisible();
       await expect(page.getByRole('heading', { name: /Results against us/ })).toBeVisible();
       await expectSoundLayout(page);
 
@@ -48,6 +73,75 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.getByRole('heading', { name: 'District 7', level: 1 })).toBeVisible();
       await page.getByRole('link', { name: 'coverage matrix' }).click();
       await expect(cards(page)).toHaveCount(15, { timeout: 15_000 }); // the page script still comes from the preview server, which stalls under load
+    });
+
+    test('charts: a dumbbell row per problem, what each engine contributes, a line chart per swept metric; no sideways scroll at 344 px', async ({ page }) => {
+      await page.goto('/src/district/coverage.html', { waitUntil: 'domcontentloaded' });
+      const rows = page.locator('#dumbbells > li');
+      await expect(rows).toHaveCount(15, { timeout: 15_000 }); // the page script still comes from the preview server, which stalls under load
+      // Under "Results at a glance", above the cards; labelled SIMULATED; every problem scores in the week, so every row is drawn
+      await expect(page.getByRole('heading', { name: 'STRATUM against the Directorate, seven-day week SIMULATED', level: 3 })).toBeVisible();
+      expect((await rows.first().boundingBox())!.y).toBeLessThan((await cards(page).first().boundingBox())!.y);
+      await expect(page.locator('#dumbbells svg.db-svg')).toHaveCount(15);
+      for (const [i, row] of (await rows.all()).entries()) {
+        await expect(row.getByRole('link')).toHaveText(new RegExp(`^${i + 1}\\. `));
+        await expect(row).toContainText(/(higher|lower) is better/);
+        await expect(row.locator('.db-v')).toHaveText([/^Directorate: /, /^STRATUM: /]); // both values printed, named
+        await expect(row.locator('b')).toHaveText(/^(Directorate|STRATUM): .*, better$/); // the better one by direction
+        await expect(row.locator('.mk-best')).toHaveCount(1);
+      }
+      await expect(rows.nth(2).locator('b')).toHaveText(`STRATUM: ${show(seven.policies.stratum.p03.final.mean, 'person-h')}, better`);
+      await expect(rows.nth(8)).toContainText('small outbreak: noise: card 9 has the 30-day run');
+
+      // What each engine contributes: the three engines, a worse-without line with its interval, and the result against us
+      const eng = page.locator('#engines');
+      await expect(eng.locator('section.engine h3')).toHaveText(['Witness off', 'Mesh off', 'Fair Share off']);
+      await expect(eng.locator('[data-engine=witness] li[data-id=p04]')).toContainText('STRATUM 0 person‑h, without Witness 23,300 person‑h: worse without it; change +23,300 person‑h (95%: +22,100 person‑h to +24,500 person‑h)');
+      await expect(eng).toContainText('Against STRATUM: the engines barely interact. 15 of the 16 changes'); // only changes whose interval excludes 0
+      await expect(eng).toContainText('Cross effects: Fair Share off moves 1. Warn before power or air cuts. No clear change, the interval spans 0: Fair Share off on 9. Track the real outbreak');
+      await expect(eng.locator('[data-engine=fairShare] li.cross')).toHaveCount(2);
+      await expect(eng.locator('[data-engine=fairShare] li[data-id=p09]')).toContainText('no clear change, the interval spans 0');
+
+      // Sweeps: one chart per swept metric, both rules drawn, SIMULATED, and where STRATUM is not better
+      const sw = page.locator('#sweeps');
+      await expect(sw.locator('section.sweep h3')).toHaveText(['Surface crews that falsify their readings', 'Depth of the deep shortfall', 'Size of the outbreak seed']);
+      const charts = sw.getByRole('img');
+      await expect(charts).toHaveCount(7);
+      for (const c of await charts.all()) {
+        await expect(c).toHaveAttribute('aria-label', /, SIMULATED\. Directorate .*\. STRATUM .*\./);
+        await expect(c.locator('polyline')).toHaveCount(2);
+      }
+      await expect(sw.locator('[data-sweep=lying-crews] li[data-id=p13]')).toContainText('Against STRATUM: STRATUM not better at 3, 4, 5 crews of 5');
+      await expect(sw.locator('[data-sweep=outbreak]')).toContainText("STRATUM's worst is 36% at 5 (best 11% at 40)");
+      await expect(sw).toContainText('Not run, because each needs a model constant changed');
+      const table = sw.locator('[data-sweep=outbreak] details');
+      expect((await table.locator('summary').boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      await table.locator('summary').click();
+      await expect(table.locator('tbody tr')).toHaveCount(5);
+      await expect(table.locator('tbody tr').first()).toContainText('95%:');
+      await expectSoundLayout(page);
+      // Every disclosure open (the deep-shortfall heat table has the longest intervals): still no sideways scroll
+      await page.locator('details').evaluateAll((ds) => ds.forEach((d) => ((d as HTMLDetailsElement).open = true)));
+      await expect(sw.locator('details[open]')).toHaveCount(7);
+      await expectSoundLayout(page);
+
+      await page.setViewportSize({ width: 344, height: 800 }); // the narrowest phone the site is laid out for
+      await expectSoundLayout(page);
+    });
+
+    test('a problem with no event in the week says so instead of a row; missing ablation and sweep files say how to make them', async ({ page }) => {
+      const week = structuredClone(seven);
+      week.script = 'stress-week'; // a script with no separations: problem 8 has no result
+      await page.route('**/evidence/seven-day.json', (r) => r.fulfill({ json: week }));
+      for (const f of ['ablations', 'sweeps']) await page.route(`**/evidence/${f}.json`, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>x</title>' }));
+      await page.goto('/src/district/coverage.html', { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('#dumbbells > li')).toHaveCount(15, { timeout: 15_000 }); // the page script still comes from the preview server, which stalls under load
+      const p08 = page.locator('#dumbbells > li[data-id=p08]');
+      await expect(p08).toContainText('no separations in this script');
+      await expect(p08.locator('svg')).toHaveCount(0);
+      await expect(page.locator('#engines')).toHaveText('The ablation file was not found: run npm run harness:ablations -- --seeds 20.');
+      await expect(page.locator('#sweeps')).toHaveText('The sweep file was not found: run npm run harness:sweeps -- --seeds 20.');
+      await expectSoundLayout(page);
     });
 
     test('an adapter missing from the evidence shows "not yet run"; a stress-week file adds its row, and a loss shows', async ({ page }) => {
@@ -67,6 +161,9 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(loss).toContainText('Stress week, 20 seeds');
       await expect(loss).toContainText('Directorate better');
       await expect(loss).toContainText('95%: 400 person\u2011h to 600 person\u2011h'); // non-breaking hyphen
+      // The glance counts what the files hold: p15 missing from the week, p03 lost in the stress week
+      await expect(page.locator('#glance')).toContainText('STRATUM better on 13 of the 13 problems the week can score');
+      await expect(page.locator('#glance li li', { hasText: '3. Keep lower levels livable' })).toContainText('Directorate 0 person\u2011h, STRATUM 500 person\u2011h; Directorate better');
       await expectSoundLayout(page);
     });
 
@@ -77,6 +174,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(cards(page)).toHaveCount(15, { timeout: 15_000 }); // the page script still comes from the preview server, which stalls under load
       await expect(page.getByText(/Stress week/)).toHaveCount(0);
       await expect(page.locator('#matrix tbody tr:not(.beside)')).toHaveCount(16); // p09 adds its 30-day run
+      await expect(page.locator('#glance')).toContainText('STRATUM better on 14 of the 14'); // the seven-day line stands alone
       await expect(page.locator('#status')).toHaveText('');
     });
   });

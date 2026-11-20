@@ -11,7 +11,7 @@ This leaf owns `createAdapters(policy, script)` and the rules every adapter foll
 
 ## Factory
 
-`createAdapters(policy, script)` returns all fifteen adapters, `p01` to `p15`, as fresh objects with fresh private state. It throws a RangeError for a policy other than `'directorate'` or `'stratum'`. The script is validated by the scenario module before it gets here. No world exists yet, so every piece of state that depends on the world (epidemic state, relays, Witness instances and detectors, `COOL_CAP`, histories, flooded flags, food stores, care requests, return plans) is built on the adapter's first `step` from the world passed in. Two calls with the same arguments give adapters that, run by the kernel from the same world and seed, produce identical worlds and metrics.
+`createAdapters(policy, script, per?)` returns all fifteen adapters, `p01` to `p15`, as fresh objects with fresh private state. It throws a RangeError for a policy other than `'directorate'` or `'stratum'`. `per` is an optional map from adapter id to policy: an adapter named in it is built with that policy, every other adapter with `policy`. A key other than `p01` to `p15`, or a value other than the two policies, throws a RangeError. The harness uses `per` for ablations: the adapters of one engine run the Directorate's rule and the rest run STRATUM's (`adapters-design.md`, "Ablations"). The script is validated by the scenario module before it gets here. No world exists yet, so every piece of state that depends on the world (epidemic state, relays, Witness instances and detectors, `COOL_CAP`, histories, flooded flags, food stores, care requests, return plans) is built on the adapter's first `step` from the world passed in. Two calls with the same arguments give adapters that, run by the kernel from the same world and seed, produce identical worlds and metrics.
 
 ## Conventions
 
@@ -27,7 +27,7 @@ This leaf owns `createAdapters(policy, script)` and the rules every adapter foll
 ## Interface
 
 - `type Policy = 'directorate' | 'stratum'`
-- `createAdapters(policy, script): Adapter[]`
+- `createAdapters(policy, script, per?: Partial<Record<AdapterId, Policy>>): Adapter[]`
 - `sectorId(s)`, `powerDemand(people)`, `lifeFloor(people)`, `weight(world, s)`: shared helpers in `adapters/shared.ts`.
 
 ## Decisions & Alternatives
@@ -37,12 +37,13 @@ This leaf owns `createAdapters(policy, script)` and the rules every adapter foll
 | Factory per run | Fresh closures each call | Module-level singletons | Singletons leak state between runs and break reproducibility across seeds |
 | Ventilation in the floor | Fans are fed first from a sector's power | A separate ventilation good | Fans are life support; the floor is where Fair Share protects life |
 | Empty shares | 0 until a denominator exists | NaN | The kernel rejects non-finite metrics; 0 is stated in each metric's definition |
+| Ablations | A per-adapter policy map | A third and fourth policy value; a switch per engine inside each adapter | Each adapter already has both rules, so no adapter changes. An adapter whose STRATUM rule uses two engines is switched whole, under the engine it is mapped to |
 | Whole households | Tracked households, scaled by a weight per sector | One claim per person; a household list for all 12,000 | 241 claims keep every rotation cheap and families whole; the sample's household sizes are drawn per seed |
 
 ## Open Questions & Future Decisions
 
 ### Deferred
-1. More policy values for ablations (Fair Share only, Witness only, Mesh only).
+1. Switching one engine inside an adapter whose STRATUM rule uses two (p10's requests over the mesh beside its Fair Share care points; p09's medicine by Fair Share beside its Witness estimate).
 
 ## References
 

@@ -22,7 +22,35 @@
 
   <main>
     <p id="status" class="small" role="status">Loading the evidence files…</p>
+    <section aria-labelledby="glanceTitle">
+      <h2 id="glanceTitle">Results at a glance</h2>
+      <ul id="glance" class="list small"></ul>
+      <p class="small">Tier = how far it is built; label (LIVE, REPLAY, SIMULATED) = where the number came from.</p>
+      <h3 id="dbTitle">STRATUM against the Directorate, seven-day week <span class="tag">SIMULATED</span></h3>
+      <p class="small">One row per problem, each on its own scale: 0 at the left, the larger value at the right (100% for shares). Means over the published seeds; the 95% intervals are on the cards. A ring marks the better value by the problem's direction.</p>
+      <ul class="legend small" aria-label="Chart key">
+        <li><svg class="mk" width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true" focusable="false"><rect class="mk-d" x="-5.5" y="-5.5" width="11" height="11" rx="1"/></svg> Directorate</li>
+        <li><svg class="mk" width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true" focusable="false"><circle class="mk-s" r="6"/></svg> STRATUM</li>
+      </ul>
+      <ul id="dumbbells" class="db-list"></ul>
+    </section>
     <ol id="matrix" class="cards"></ol>
+
+    <section aria-labelledby="enginesTitle">
+      <h2 id="enginesTitle">What each engine contributes <span class="tag">SIMULATED</span></h2>
+      <div id="engines"></div>
+    </section>
+
+    <section aria-labelledby="sweepsTitle">
+      <h2 id="sweepsTitle">Sweeps <span class="tag">SIMULATED</span></h2>
+      <p class="small">One stress in the seven-day week varied at a time, under both rules. Each chart has its own y axis from 0.</p>
+      <ul class="legend small" aria-label="Chart key">
+        <li><svg class="mk" width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true" focusable="false"><rect class="mk-d" x="-5.5" y="-5.5" width="11" height="11" rx="1"/></svg> Directorate</li>
+        <li><svg class="mk" width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true" focusable="false"><circle class="mk-s" r="6"/></svg> STRATUM</li>
+        <li>vertical whisker: 95% interval</li>
+      </ul>
+      <div id="sweeps"></div>
+    </section>
 
     <section aria-labelledby="againstTitle">
       <h2 id="againstTitle">Results against us <span class="tag">SIMULATED</span></h2>
@@ -31,7 +59,7 @@
         <li>Shift-sharing of sleeping space raises contact rates.</li>
         <li>Shafts are not the limit on the return to the surface. Surface reception is.</li>
         <li>Sharing food at the floor lowers everyone's ration while one level is cut off; when supply is below everyone's floor, everyone breaches, later but together.</li>
-        <li>When most surface crews lie, the quorum is confidently wrong. In the stress week STRATUM's verdict is wrong in every round of the stress week, on all 20 seeds, while the Directorate's fixed verdict happens to be right.</li>
+        <li>When most surface crews lie, the quorum is confidently wrong. In the stress week STRATUM's verdict is wrong in every round, on all 20 seeds, while the Directorate's fixed verdict happens to be right.</li>
         <li>In this model staged trials never cost fewer exposure-hours than one direct 30-day trial: a breach is caught in the first hour either way. Their real value, catching harm that shows only after longer exposure, is not modelled.</li>
         <li>Heat is not held at zero: STRATUM's heat person-hours are above zero in the seven-day week, and when supply is below every life floor (the stress week) Fair Share breaches every floor equally and they rise far higher.</li>
         <li>A sudden plant trip gives no warning: the hum helps only with slow shortfalls.</li>

@@ -89,6 +89,18 @@ The kernel guards writes per top-level `World` key, so adapters that share a key
 | `alloc.trialSlots` | p14 |
 | `alloc.returnSlots` | p15 |
 
+## Ablations
+
+An ablation switches one engine off and keeps the other two. Each adapter is mapped to the one engine its STRATUM rule rests on; switching an engine off builds that engine's adapters with the Directorate's rule (`createAdapters(policy, script, per)`, `adapters/policy`) and the rest with STRATUM's.
+
+| Engine | Adapters | Why |
+| --- | --- | --- |
+| Witness | p01, p04, p09, p13, p14 | Hum tiers give the warning (p01); the detector raises HOLD WATER (p04); the Chapman estimate is the case figure p09 measures; the crews' quorum gives the band (p13), and the trials follow the measured band (p14) |
+| Mesh | p07, p08, p10 | The relay carries messages (p07) and the OK beacons it delivers (p08 has one rule, so its metric moves with p07); care requests travel over the mesh while the network is down (p10) |
+| Fair Share | p02, p03, p05, p06, p11, p12, p15 | `allocate` shares power, water, food, cooling and pump power (p02, p03, p05); `rotate` shares sleeping shifts, lamp sessions and return slots (p06, p11, p15); p12 tops up stores to the floor from its share |
+
+Two adapters use a second engine: p09 hands out medicine by Fair Share, and p10 places care points by Fair Share `rotate`. They are switched whole, with the engine their metric measures. p14 plans from the readings p13 writes only under STRATUM, so the two belong to the same engine and are switched together.
+
 ## Rung 3 adapters
 
 | Id | Problem | Leaf | Reads | Writes | Metric |
@@ -151,7 +163,6 @@ Every rung 4 adapter does its work at most hourly, daily, per reading round or o
 1. Secondary metrics per problem (floor-breach person-days, Jain index, false alarms per week, infections averted, delivery delay). Rung 4 computes its cost figures (contacts, trial exposure-hours and breaches, lamp energy to feed a person) in the harness from pure functions; an additive field on `Adapter` waits for a decision.
 2. p03 steering of cooling to where it removes the most person-hours.
 3. The Shed Ledger fed with simulated power reports, so p01 can show each level's cut odds in the district.
-4. Ablations (each engine off alone): a third and fourth policy value, once the two-policy comparison runs.
 
 ## References
 

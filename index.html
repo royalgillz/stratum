@@ -4,27 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STRATUM</title>
+  <link rel="stylesheet" href="/src/district/judge.css" />
   <style>
-    :root { color-scheme: light dark; } /* dark pages for dark phones, as judge mode does */
-    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 16px; line-height: 1.45; }
-    a.go { display: inline-block; min-height: 44px; line-height: 44px; font-weight: 700; }
+    /* The home page shares judge mode's colours, type and buttons; only its own layout is here. */
+    body { max-width: 40rem; }
+    a { color: var(--accent); }
+    h1 { font-size: 1.8rem; margin-top: 32px; letter-spacing: 0.02em; }
+    .lede { font-size: 1.15rem; margin: 8px 0; }
+    .start { margin: 24px 0 8px; }
+    .start .cta { font-size: 1.1rem; }
+    .facts { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+    .facts li { padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .facts strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .facts .proof strong { font-size: inherit; }
+    .facts .loss { border-left: 4px solid var(--amber); padding-left: 10px; }
+    .pages { list-style: none; padding: 0; margin: 0; }
+    .pages li { margin: 0 0 8px; }
+    /* A block link with padding: a 44 px target without the 44 px line-height that split wrapped lines apart. */
+    .pages a.go { display: inline-flex; align-items: flex-end; min-height: 44px; line-height: 1.45; font-weight: 700; }
+    .pages .muted { display: block; }
+    details { margin-top: 24px; }
     summary { padding: 12px 0; cursor: pointer; }
+    details a.go { line-height: 1.45; padding: 10px 0; }
   </style>
 </head>
 <body>
-  <h1>STRATUM</h1>
-  <p>A phone that hears the grid weaken before a power cut, and passes short family messages by sound. Real: the phone hum tracker, the message codec and the Fair Share allocator. Simulated: the grid and the message in judge mode.</p>
-  <p><a class="go" href="/src/district/">District 7</a>: a SIMULATED week under two rules, side by side, that hears real phones send OK by sound (laptop, with a microphone).</p>
-  <p><a class="go" href="/src/district/coverage.html">Coverage matrix</a>: the fifteen problems, each with its tier (Live, Modelled, Thin, Roadmap), mechanism and results, including those against us.</p>
-  <p><a class="go" href="/src/district/judge.html">Judge mode</a>: the 90-second story, no microphone needed.</p>
-  <p><a class="go" href="/src/phone/">Phone page</a>: hear the grid, send OK to your family.</p>
-  <details>
-    <summary>Developer spikes</summary>
-    <ul>
-      <li><a class="go" href="/spikes/emitter.html">Emitter</a> (laptop): 400 + 800 Hz hum</li>
-      <li><a class="go" href="/spikes/listener.html">Listener</a> (phone): hum tracker</li>
-      <li><a class="go" href="/spikes/packets.html">Packets</a> (both): ggwave, 25 bytes</li>
+  <header>
+    <h1>STRATUM</h1>
+    <p class="lede">In the Hollow, a city underground, the Directorate holds the breakers and the network. The network is down, and power cuts come with no warning.</p>
+    <p>STRATUM is a phone app that hears the grid weaken before a power cut, and passes short family messages by sound. No network needed.</p>
+  </header>
+
+  <main>
+    <p class="start"><a class="cta" href="/src/district/judge.html">Start here: Judge mode</a></p>
+    <p class="muted small">The 90-second story on this screen. No microphone, works muted.</p>
+
+    <h2>What it changes</h2>
+    <ul class="facts">
+      <li><strong>40% vs 0%</strong> of power cuts warned at least 10 minutes ahead, STRATUM against the Directorate's rule. Worst-off tenth: <strong>85% vs 66%</strong> of need met. Seven-day week, 20 seeds · SIMULATED</li>
+      <li class="loss">Against us: in the stress week the warning gain is gone, 0% vs 0% · SIMULATED</li>
+      <li class="proof"><strong>Tested on a real phone</strong> (Galaxy Z Fold 7, Nov 19 2026): hum tiers at 30&nbsp;cm, a signed family OK to the District 7 gateway at 30&nbsp;cm, 1&nbsp;m and 3&nbsp;m, one relay hop, and installed and listening in Airplane mode · LIVE</li>
     </ul>
-  </details>
+
+    <h2>More</h2>
+    <ul class="pages">
+      <li><a class="go" href="/src/district/coverage.html">Coverage matrix</a><span class="muted">The fifteen problems: tier, mechanism and results, including those against us.</span></li>
+      <li><a class="go" href="/src/phone/">Phone app</a><span class="muted">Android, in Chrome. Hear the grid, message your family, count a child's breaths.</span>
+        <!-- public/qr-phone.svg, made once offline (Python venv outside the repo, pip install segno==1.6.6):
+             python -c "import segno; segno.make('https://stratum-nine-swart.vercel.app/src/phone/', error='m', micro=False).save('public/qr-phone.svg', scale=4, border=4, dark='#000', light='#fff', xmldecl=False, title='QR code: https://stratum-nine-swart.vercel.app/src/phone/')" -->
+        <div class="qr"><img src="/qr-phone.svg" width="164" height="164" alt="QR code that opens the phone app at stratum-nine-swart.vercel.app/src/phone/" /><p class="small">Scan with a second phone's camera, or type:<br /><code>stratum-nine-swart.vercel.app/src/phone/</code></p></div></li>
+      <li><a class="go" href="/src/district/">District 7</a><span class="muted">A SIMULATED week under two rules, side by side. On a laptop with a microphone, it hears real phones.</span></li>
+    </ul>
+
+    <details>
+      <summary>Developer spikes</summary>
+      <ul>
+        <li><a class="go" href="/spikes/emitter.html">Emitter</a> (laptop): 400 + 800 Hz hum</li>
+        <li><a class="go" href="/spikes/listener.html">Listener</a> (phone): hum tracker</li>
+        <li><a class="go" href="/spikes/packets.html">Packets</a> (both): ggwave, 25 bytes</li>
+      </ul>
+    </details>
+  </main>
 </body>
 </html>

@@ -14,6 +14,7 @@ One loop: **hear → prove → pass on → share fairly**, run by three engines 
 - **Mesh**: one 25-byte authenticated packet (v3) carried by sound, with store-and-forward relay.
 - **Fair Share**: one allocation rule for every scarce good: life floors first, then raise the worst-off (water-filling), and rotate what cannot be split through a debt memory.
 - **Tracker** feeds Witness with the grid hum: a tone bank on the 800 Hz component gives relative deviation after calibration, then a tier.
+- **Air watch** hears a fan stop on the same microphone: a steady fan-band level that is 6 dB down for most of 3 s raises FAN STOPPED (LIVE), the half of problem 1 a phone can hear.
 - **Kernel** steps District 7 (6 levels × 4 sectors) so the engines can be scored against the Directorate's policy, one adapter per problem, all fifteen. Everything it produces is labelled SIMULATED.
 
 ## Target users
@@ -24,6 +25,7 @@ Residents with a phone (hear, report, check on family), the people who run a lev
 
 - The same core code runs on the phone, in the district worker and in Node, so what is scored is what is demoed.
 - The tracker reports deviation within 5 mHz on a clean signal (spike T1 at 30 cm) and says NO HUM rather than guess.
+- The air watch notices a fan stop within 5 s and raises no alert over 5 minutes of fan noise and speech (spike T4 pass mark).
 - Packets authenticate, cannot be replayed as fresh, and hide which family sent them.
 - Fair Share never breaches a floor while supply covers all floors, and states the breach when it cannot.
 - Every simulated run is reproducible from its seed, and different seeds face different weeks: the seed varies when and how hard things go wrong, within stated bounds, never the acts the screen shows.
@@ -61,6 +63,7 @@ flowchart LR
   SC[scenario<br/>script, runner, policy switch] --> K
   SC --> A
   G[district page gateway<br/>outside core: decoded live packets] -->|inject| SC
+  M[phone microphone<br/>outside core: fan-band level] --> AW[air watch<br/>fan running, stopped]
 ```
 
 | Component | Folder | Spec prefix | Serves problems |
@@ -73,6 +76,7 @@ flowchart LR
 | kernel | `src/core/kernel` | KERN | all modelled problems |
 | shed | `src/core/shed` | SHED | 1, 2 |
 | breath | `src/core/care` | BREATH | 10 |
+| air watch (fan stop) | `src/core/air` | AIR-FAN | 1 |
 | world models (sub-HLD: grid, air and heat, water, tunnels, epidemic, light and food, space, care delivery, surface and return) | `src/core/world` | WORLD | 1 to 7, 9 to 15 |
 | adapters (sub-HLD: policy, power, livable, evidence, family, space and care, light and food, surface) | `src/core/adapters` | ADAPT | 1 to 15 |
 | scenario and runner (with the scripts leaf: seed variation, the Level 5 act, the stress week) | `src/core/scenario` | SCEN | all modelled problems |
@@ -88,6 +92,7 @@ flowchart LR
 | Packet: HKDF keys from six generated words; tag, encrypted payload and 8-byte MAC in 25 bytes | Fits ggwave's 2–3 s budget; tag rotates every minute so listeners cannot follow a family | Signatures per packet: too many bytes |
 | Fair Share as leximin water-filling with floors | One explainable rule for all goods; proportional scaling when floors cannot all be met | Proportional to demand: favours the already-supplied |
 | One seeded generator, separate named stream per module | Adding a module does not change other modules' draws | `Math.random`: runs are not reproducible |
+| Fan stop from a band level with a percentile baseline | Speech only adds energy, so a low percentile ignores it; no model file or dependency | YAMNet sound model: a download and a dependency for a yes/no question |
 | The seed varies the script, not the models | Results that draw nothing still get honest seed intervals; models stay testable alone | A fixed script: four problems give one number on every seed |
 
 ## Success metrics

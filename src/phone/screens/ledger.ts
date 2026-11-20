@@ -27,6 +27,13 @@ export function ledgerView(clock: () => number = Date.now) {
     packet(d: Decoded) {
       if (ledger.report(d)) d.public ? pub++ : family++;
     },
+    /** One line for the Listen tab: the odds of `level` at tier `t`, the same figures as its table cell. */
+    line(level: number, t: StressTier) {
+      tick();
+      const { p, cuts, events, label } = ledger.odds(level, t, now);
+      if (events === 0) return `Level ${level}: no data yet (needs reports from 3 phones)`;
+      return `Level ${level}: cut in ${cuts} of ${events} past ${t} ${events === 1 ? 'event' : 'events'}, odds ${Math.round(p * 100)}% · ${label}`;
+    },
     /** The table, with the column of `cur` (the tier heard now) marked. */
     html(cur?: Tier) {
       tick();
@@ -42,6 +49,11 @@ export function ledgerView(clock: () => number = Date.now) {
   };
 }
 
+/** The page's one ledger, shared by this tab and the Listen tab's odds line; fed before any screen draws. */
+export const shared = ledgerView();
+app.on('reading', (r) => shared.reading(r));
+app.on('packet', ({ decoded }) => shared.packet(decoded));
+
 export function mountLedger(root: HTMLElement) {
   root.innerHTML = `
     <h2>Odds of a power cut</h2>
@@ -55,21 +67,20 @@ export function mountLedger(root: HTMLElement) {
       no data yet. The event happening now counts once it is over.</p></details>
     <p class="muted">Kept in this page's memory only: the ledger resets when the page reloads.</p>`;
 
-  const view = ledgerView();
   const out = $('#ledgerOut', root);
   let shown = '';
 
   function render() {
     const html = app.listening
-      ? view.html(app.lastReading?.tier)
+      ? shared.html(app.lastReading?.tier)
       : `<p id="ledger-empty">Not listening. Start listening on the Listen tab: this phone then records the
           stress events it hears and the power reports neighbours send.</p>
         <button onclick="location.hash = 'listen'">Go to Listen</button>`;
     if (html !== shown) out.innerHTML = shown = html;
   }
 
-  app.on('reading', (r) => { view.reading(r); render(); });
-  app.on('packet', ({ decoded }) => { view.packet(decoded); render(); });
+  app.on('reading', render);
+  app.on('packet', render);
   app.on('listening', render);
   render();
 }

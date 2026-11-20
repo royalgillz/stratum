@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { expectSoundLayout } from './layout.ts';
+import { expectQr, expectSoundLayout } from './layout.ts';
 
 const VISIBLE_TABS = [
   ['Listen', 'Listen to the grid'],
@@ -79,12 +79,33 @@ test.describe('phone page', () => {
     await expectSoundLayout(page);
   });
 
+  test('a judge alone is told where the hum comes from, and the main actions stand out', async ({ page }) => {
+    // The tracker follows the Hollow's 400 Hz grid: a normal room never has it, so the page points to judge mode.
+    await expect(page.getByText("Listens for the Hollow's 400 Hz grid hum")).toBeVisible();
+    await expect(page.getByText('Alone? Try the Care tab.')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'judge mode' }).first()).toHaveAttribute('href', '/src/district/judge.html');
+    // The laptop hint shows only on a wide screen, where a judge has opened the phone page by mistake.
+    await expect(page.getByText('On a laptop?')).toBeVisible({ visible: page.viewportSize()!.width >= 900 });
+    // Start listening and Create a family carry the accent fill, as judge mode's Play does.
+    const fill = (name: string) => page.getByRole('button', { name }).evaluate((e) => {
+      const s = getComputedStyle(e);
+      return { bg: s.backgroundColor, fg: s.color, bodyBg: getComputedStyle(document.body).backgroundColor };
+    });
+    const listen = await fill('Start listening');
+    await page.getByRole('tab', { name: 'Family' }).click();
+    for (const b of [listen, await fill('Create a family')]) {
+      expect(b.bg, 'accent fill').not.toBe('rgba(0, 0, 0, 0)');
+      expect(b.fg, 'text on the fill is the page background').toBe(b.bodyBg);
+    }
+    await expectSoundLayout(page);
+  });
+
   for (const scheme of ['light', 'dark'] as const) {
     test(`Listen shows the tracker's REPLAY error on real recordings, small and readable (${scheme})`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       const line = page.locator('#replay');
       await expect(line).toBeVisible();
-      await expect(line).toHaveText(`In a replay of ${enf.clips} recordings of a real 50 Hz grid, the tracker was typically ${Math.round(cm.medianMHz)} mHz off; ${Math.round((100 * cm.over500) / cm.clips)}% of the ${cm.clips} scored followed another hum instead · REPLAY`);
+      await expect(line).toHaveText(`Checked on ${enf.clips} recordings of a real grid: typically ${Math.round(cm.medianMHz)} mHz off · REPLAY`); // one line; the rest one tap away
       const s = await line.evaluate((e) => {
         const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
         return { size: parseFloat(cs.fontSize), right: r.right, color: cs.color, bg: getComputedStyle(document.body).backgroundColor, tier: parseFloat(getComputedStyle(document.getElementById('tier')!).fontSize) };
@@ -95,8 +116,9 @@ test.describe('phone page', () => {
       expect(s.color).not.toBe(s.bg);
       // Both medians the evidence file asks for, with their clip counts, one tap away.
       await page.getByText('How sure is this?').click();
-      const more = page.locator('#replayMore p');
-      await expect(more).toBeVisible();
+      const more = page.locator('#replayMore');
+      await expect(more.locator('p').first()).toBeVisible();
+      await expect(more).toContainText(`In a replay of ${enf.clips} recordings of a real 50 Hz grid, the tracker was typically ${Math.round(cm.medianMHz)} mHz off; ${Math.round((100 * cm.over500) / cm.clips)}% of the ${cm.clips} scored followed another hum instead · REPLAY`);
       await expect(more).toContainText(`replayed ${enf.clips} recordings of a real 50 Hz grid`);
       await expect(more).toContainText(`each recording's median error: ${cm.medianMHz} mHz (${cm.clips} recordings; ${enf.clips - cm.clips} gave no reading)`);
       await expect(more).toContainText(`all ${enf.scored.toLocaleString('en-US')} readings pooled: ${enf.medianMHz} mHz`);
@@ -131,13 +153,25 @@ test.describe('phone page', () => {
   });
 });
 
-test('home page says what STRATUM does, District 7 and judge mode first, spikes tucked away', async ({ page }) => {
+test('home page says where and what STRATUM is, judge mode first, one result with its loss and the device test, spikes tucked away', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText('In the Hollow, a city underground')).toBeVisible();
   await expect(page.getByText('hears the grid weaken before a power cut')).toBeVisible();
   await expect(page.getByText('Rung 0')).toHaveCount(0);
+  // Every number keeps its label, and the loss sits beside the win.
+  await expect(page.locator('.facts li').nth(0)).toContainText(/40% vs 0%.*85% vs 66%.*20 seeds · SIMULATED$/);
+  await expect(page.locator('.facts li').nth(1)).toHaveText('Against us: in the stress week the warning gain is gone, 0% vs 0% · SIMULATED');
+  await expect(page.locator('.facts li').nth(2)).toContainText(/^Tested on a real phone \(Galaxy Z Fold 7, Nov 19 2026\).* · LIVE$/);
   const links = page.locator('a:visible');
-  await expect(links).toHaveText(['District 7', 'Coverage matrix', 'Judge mode', 'Phone page']);
+  await expect(links).toHaveText(['Start here: Judge mode', 'Coverage matrix', 'Phone app', 'District 7']);
+  // The way in is the filled button at the top of the first screen.
+  const start = await links.first().evaluate((e) => ({ bg: getComputedStyle(e).backgroundColor, bottom: e.getBoundingClientRect().bottom }));
+  expect(start.bg).not.toBe('rgba(0, 0, 0, 0)');
+  expect(start.bottom).toBeLessThanOrEqual(page.viewportSize()!.height);
   for (const a of await links.all()) expect((await a.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await expectQr(page);
+  const qr = (await page.getByRole('img', { name: /^QR code/ }).boundingBox())!, phone = (await page.getByRole('link', { name: 'Phone app' }).boundingBox())!;
+  expect(qr.y - (phone.y + phone.height), 'the QR code sits by the Phone app link').toBeLessThan(120);
   await expect(page.getByRole('link', { name: 'Emitter' })).toBeHidden();
   await page.getByText('Developer spikes').click();
   await expect(page.getByRole('link', { name: 'Emitter' })).toBeVisible();

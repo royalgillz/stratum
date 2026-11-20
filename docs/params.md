@@ -21,6 +21,7 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Packet seen-set size | 4096 | packets | packet | | true | Keyed by (key set, minute, nonce); oldest evicted first |
 | Packet stale limit | 24 | h | packet | | true | Older packets are rejected |
 | Packet MAX_HOPS | 4 | hops | packet | | true | Hops byte is reported clamped to this |
+| Ledger digest on air | 6 | bytes | packet | | true | First 6 of the 16-byte measured-chain digest, the whole LEDGER_HEAD payload: one packet on air. An accidental match is about 1 in 2.8 × 10^14 |
 | Relay back-off slot | 3000 | ms | relay | | true | Assumes air time (2 to 3 s) plus decode latency stays under 3 s, so a later slot hears an earlier relay's whole packet. Unmeasured: at 3 s air time suppression between neighbouring slots fails. Measure in the one-hop demo |
 | Relay back-off slots | 4 | slots | relay | | true | Delay is floor(rng() x 4) x 3 s, so 0 to 9 s. Tune in the multi-hop simulation |
 | Relay identities kept | 4096 | packets | relay | | true | Same as the packet seen-set; least recently heard evicted first |
@@ -52,6 +53,16 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Shed event grace | 10 | min | shed | | true | An event lasts while the tier holds plus 10 min after it falls below; a rise back within those 10 min continues the same event, so events of one tier never overlap |
 | Shed confirmation | 3 | distinct senders | shed | | true | From docs/plan.md: public claims count as confirmed at three senders. Sender = (key set id, member byte). Also the reporters needed for a level to count as observed in an event |
 | Shed cut-odds prior | (c + 1) / (e + 2) | - | shed | https://en.wikipedia.org/wiki/Rule_of_succession | false | Laplace rule of succession; 1/2 with no data, shown as "no data yet" |
+| Fan band | 150 to 1700, without 4 bins each side of each multiple of 400 | Hz | air (phone) | | true | Below the packet band (1,875 Hz); the notches are wider than the Blackman window's main lobe (±3 bins), so the in-world hum stays out. 2,048-point analyser, read 10 times a second |
+| Fan baseline window, percentile | 20, 20th | s, - | air | | true | Speech fills less than 80% of 20 s, so it does not lift the baseline |
+| Fan steady spread | 4 | dB | air | | true | Median minus baseline; fan noise spreads about 1 dB |
+| Fan quiet-floor cap (QUIET_DB) | -100 | dB | air | | true | Estimate of phone microphone self-noise in the band; set from the device test log |
+| Fan running margin, hold | 10, 10 | dB, s | air | | true | Baseline at least 10 dB over the quiet floor for 10 s |
+| Fan running-level memory | 10 | s | air | | true | Highest steady baseline in the last 10 s, so a slow spin-down is still caught |
+| Fan stop drop | 6 | dB | air | | true | A quarter of the power; far beyond fan jitter |
+| Fan stop test: span, set aside over R, low share, low share of all | 3, 3, 70, 20 | s, dB, %, % | air | | true | Alert 2.0 s after a sudden stop, inside the 5 s mark of spike T4; talk after the stop is set aside |
+| Fan reading gap | 2 | s | air | | true | A longer gap between readings breaks every run; hidden tabs read at 1 Hz |
+| Fan recover hold | 5 | s | air | | true | Longer than most unbroken speech |
 | Witness baseline window | 48 | readings | witness | | true | Per (kind, where) stream. Tune on GECCO |
 | Witness minimum baseline | 24 | readings | witness | | true | No judgement before this many are admitted |
 | Witness residual threshold | 4 | scale units | witness | | true | Exceeding when abs(x - median) / scale >= 4 |

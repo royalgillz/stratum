@@ -1,6 +1,6 @@
 // What the district worker posts to the page: one policy's run, reduced to what the screen draws.
 // Pure: no browser APIs, so it is unit-tested in Node. Outside LID scope (reads core, writes nothing).
-import type { AdapterId, MeshMessage, Metric, Tier } from '../core/contracts.ts';
+import type { AdapterId, MeshMessage, Metric, Tier, World } from '../core/contracts.ts';
 import { FOOD_SUPPLY } from '../core/adapters/p02.ts';
 import { served } from '../core/adapters/p03.ts';
 import { familyBoard, type BoardEntry } from '../core/adapters/p08.ts';
@@ -11,6 +11,7 @@ import { WB_LIMIT } from '../core/world/airheat/airheat.ts';
 import { CAP_MARGIN, capacityAt, swing, tierOf } from '../core/world/grid/grid.ts';
 import { RECOVER } from '../core/world/tunnels/tunnels.ts';
 import { unsafe } from '../core/world/water/water.ts';
+import { genesis, hex } from '../core/witness/ledger.ts';
 import { noEvent } from './problems.ts';
 
 export interface Cell {
@@ -24,6 +25,12 @@ export interface Cell {
   food: number; // days of the standard ration in the sector's store
 }
 
+/** One kind in Witness's ledger: the latest measured and official value at one place (undefined: none kept). */
+export interface LedgerRow { kind: string; where: string; measured?: number; official?: number }
+
+/** The shown rule's ledger, reduced: one row per kind, both chain lengths and the measured head digest. */
+export interface LedgerView { rows: LedgerRow[]; measured: number; official: number; digest: string }
+
 export interface View {
   t: number; // world seconds
   f: number; // grid frequency, Hz, on the audio clock in a REAL TIME act
@@ -33,6 +40,7 @@ export interface View {
   board: Record<number, BoardEntry>; // the demo household's family board, by member
   surface: string; // the exposure band the policy states for the surface ('unknown' before any reading)
   none: Partial<Record<AdapterId, string>>; // metrics whose event has not happened: why, in place of a placeholder 0
+  ledger: LedgerView;
 }
 
 export type ScriptName = 'seven-day' | 'stress-week';
@@ -73,6 +81,25 @@ export function audioClock(run: Run, prev: AudioClock | null, realDt: number): A
   return { t: w.t, sub, f, tier: tierOf(f, c.tier) };
 }
 
+/**
+ * Per kind, the place with the widest measured-minus-official gap (a place with only one of the two when no place has
+ * both, the first such place), and Witness's digest: the first 16 bytes of the measured chain head, as `digest()` gives.
+ */
+export function ledgerView(ledger: World['ledger']): LedgerView {
+  const kinds = new Map<string, Map<string, LedgerRow>>();
+  for (const chain of ['measured', 'official'] as const) {
+    for (const e of ledger[chain]) {
+      const at = kinds.get(e.kind) ?? kinds.set(e.kind, new Map()).get(e.kind)!;
+      const row = at.get(e.where) ?? at.set(e.where, { kind: e.kind, where: e.where }).get(e.where)!;
+      row[chain] = e.value; // entries are in time order: the last one wins
+    }
+  }
+  const gap = (r: LedgerRow) => (r.measured !== undefined && r.official !== undefined ? Math.abs(r.measured - r.official) : -1);
+  const rows = [...kinds.values()].map((at) => [...at.values()].reduce((a, b) => (gap(b) > gap(a) ? b : a)));
+  const head = ledger.measured[ledger.measured.length - 1]?.hash ?? hex(genesis('measured'));
+  return { rows, measured: ledger.measured.length, official: ledger.official.length, digest: head.slice(0, 32) };
+}
+
 export function view(run: Run, demoId: string, clock: AudioClock | null = null): View {
   const w = run.kernel.world;
   const edges = w.tunnels.edges, metrics = run.kernel.metrics();
@@ -98,5 +125,6 @@ export function view(run: Run, demoId: string, clock: AudioClock | null = null):
     })),
     board: familyBoard(w)[demoId] ?? {},
     surface: w.surface.band,
+    ledger: ledgerView(w.ledger),
   };
 }

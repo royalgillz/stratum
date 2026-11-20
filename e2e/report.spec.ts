@@ -30,7 +30,8 @@ test.describe('report grid', () => {
   });
 
   test('shows every codebook button, grouped, without breaking the layout', async ({ page }) => {
-    for (const h of ['OK', 'Need', 'Problems here']) await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
+    for (const h of ['OK', 'Need', 'Problems here', 'Public alerts']) await expect(page.getByRole('heading', { name: h, exact: true })).toBeVisible();
+    await expect(page.getByText('Warn everyone nearby to act now. Anyone nearby can read these.')).toBeVisible();
     for (const e of CODEBOOK) await expect(page.getByRole('button', { name: e.label, exact: true })).toBeVisible();
     await expectSoundLayout(page);
   });
@@ -99,6 +100,26 @@ test.describe('report grid', () => {
     await expect(dlg.getByLabel('How many people?')).toBeHidden();
     await expectSoundLayout(page);
     await dlg.getByRole('button', { name: 'Cancel' }).click();
+  });
+
+  test('a HOLD WATER alert goes to everyone nearby, with level and sector and no power state, even with a family', async ({ page }) => {
+    await page.getByRole('tab', { name: 'Family' }).click();
+    await page.getByRole('button', { name: 'Create a family' }).click();
+    await page.getByRole('tab', { name: 'Report' }).click();
+    for (const name of ['Water looks or smells wrong: hold, do not drink', 'Tunnel flooded or blocked here']) {
+      await page.getByRole('button', { name, exact: true }).click();
+      const dlg = page.getByRole('dialog');
+      await expect(dlg.getByRole('heading')).toContainText(name);
+      await expect(dlg).toContainText('Level 5, sector A.');
+      await expect(dlg).not.toContainText('power');
+      await expect(dlg).toContainText('Goes to everyone nearby.');
+      await expect(dlg.getByRole('group', { name: 'Send to' })).toBeHidden(); // no family choice: the codec allows alerts only in public
+      await expect(dlg.getByLabel('How many people?')).toBeHidden();
+      await expectSoundLayout(page);
+      if (name.startsWith('Tunnel')) { await dlg.getByRole('button', { name: 'Cancel' }).click(); break; }
+      await dlg.getByRole('button', { name: 'Send now' }).click();
+      await expect(page.getByRole('status')).toContainText(`Sent "${name}" to everyone nearby`, { timeout: 15_000 });
+    }
   });
 
   test('after a power cut is sent, the power box shows off and focus returns to the grid', async ({ page }) => {

@@ -98,6 +98,13 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
   ramp within 4 mHz. At 1 m in a room where people moved, echoes made the reading wander by
   ±15 mHz even after smoothing, so the warning levels sit well above that.
 
+## Air watch (fan-stop alert)
+
+- It hears a fan by its steady broadband sound (150 Hz to 1.7 kHz, the hum's frequencies left out) and alerts when that sound drops by 6 dB or more. It cannot tell why: a fan switched off for the night alerts the same as a power cut.
+- How loud a quiet room sounds depends on the phone's microphone. The quiet level is an assumption (−100 dB on the analyser's scale) until a phone test sets it: a phone with a loud quiet room may show "Fan: running" with no fan.
+- Unbroken talk louder than the fan hides a stop while the talk lasts; the alert comes in the pauses.
+- Tested on recorded traces and in Chromium with a synthetic microphone; not yet on a phone with a real fan. District 7 does not score air warnings.
+
 ## Phone battery
 
 - Phones run on their own batteries, so the app keeps working when the power is cut.
@@ -114,6 +121,8 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - Phones relay other families' messages without being able to check them, so well-formed junk can cost air time. Each phone relays any one message at most once and at most 4 hops, but an attacker can make endless new messages, and phones carry each one up to 4 hops of rooms beyond the attacker's speaker.
 - Anyone who hears a message can replay it marked "no hops left", so phones that hear the replay first never pass the real message on.
 - Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or hears no hum at all, so during a cut, or far from any hum, a forged alert still travels.
+- Any phone can send a public HOLD WATER ("hold, do not drink") or ROUTE ("tunnel blocked") alert. Phones relay it with no check, up to its hop count, and show it from a single sender. The inbox counts the different member numbers that sent the same alert at the same place and marks it unconfirmed below three, but one attacker can claim several member numbers, so the count is a hint, not proof.
+- A public ledger digest names no sender: anyone can send one. The phone shows it only to compare with the District 7 screen.
 - Messages carry their send time from the sender's clock. A receiver whose clock runs more than
   2 minutes behind the sender rejects fresh messages as from the future. Phones underground have no
   time signal, so clocks can drift apart over a long blackout.

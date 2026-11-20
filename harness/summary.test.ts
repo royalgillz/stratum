@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { interval, summarise, t95 } from './summary.ts';
+import { finals, interval, paired, summarise, t95 } from './summary.ts';
 
 describe('harness summary', () => {
   it('gives the 95% interval of the mean from the t distribution', () => {
@@ -43,5 +43,15 @@ describe('harness summary', () => {
     const out = summarise([s, s], [f(1), f(3)]);
     expect(out.p15!.beside).toEqual({ level1: { name: 'level 1 mean wait', unit: 'days', mean: 2, lo: expect.any(Number), hi: expect.any(Number), values: [1, 3] } });
     expect(summarise([s, s]).p15!.beside).toBeUndefined();
+  });
+
+  it('pairs two conditions by seed and keeps only the final values in finals', () => {
+    // Differences [1, 2, 3]: mean 2, sd 1, half width t(2) / sqrt(3) = 2.484138.
+    const r = paired([2, 4, 6], [1, 2, 3]);
+    expect(r.mean).toBe(2);
+    expect(r.hi - r.mean).toBeCloseTo(4.3027 / Math.sqrt(3), 6);
+    expect(() => paired([1], [1, 2])).toThrow(RangeError);
+    const s = (value: number[]) => ({ p01: { name: 'cut', unit: 'share', label: 'SIMULATED' as const, t: [0, 3600], value } });
+    expect(finals([s([0, 2]), s([2, 4])])).toEqual({ p01: { name: 'cut', unit: 'share', label: 'SIMULATED', final: { mean: 3, lo: expect.any(Number), hi: expect.any(Number), values: [2, 4] } } });
   });
 });
