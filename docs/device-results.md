@@ -45,4 +45,4 @@ Devices:
 
 - The 60-second tap count on the phone (it passed in a laptop browser).
 - A third device hearing a relayed copy.
-- The T4 sound model: dropped, so the air warning stays Roadmap.
+- The fan-stop alert (run sheet Part I): built after this run, phone test pending.

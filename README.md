@@ -8,16 +8,16 @@ Write-up: [docs/writeup.md](docs/writeup.md).
 
 Live: https://stratum-nine-swart.vercel.app
 
-1. **Judge mode** first (`/src/district/judge.html`): the 90-second story, no microphone, works muted.
-2. **District 7** (`/src/district/`): a SIMULATED week under both rules, fifteen problems, and a **Stress week** built so STRATUM also loses.
-3. **Coverage matrix** (`/src/district/coverage.html`): each problem's tier, mechanism, 20-seed results and the results against us.
-4. **Phone page** (`/src/phone/`, Android Chrome): Listen, Report, Family, Ledger, Care.
+1. **Judge mode** first, from the home page (`/src/district/judge.html`): the 90-second story with captions, no microphone, works muted.
+2. **District 7** (`/src/district/`): a SIMULATED week under both rules side by side (Directorate left, STRATUM right), fifteen problems, a ledger panel that sends its digest by sound, and a **Stress week** built so STRATUM also loses.
+3. **Coverage matrix** (`/src/district/coverage.html`): "Results at a glance", then each problem's tier, mechanism, 20-seed results, ablation and sweep charts, and the results against us.
+4. **Phone page** (`/src/phone/`, Android Chrome, or scan the QR code on the home page): Listen (hum tiers, cut odds at AMBER and RED, fan-stop alert), Report (OK, power cut, HOLD WATER, ROUTE), Family, Ledger, Care.
 
 Works offline: open the phone page once with network and it then opens and runs with none, and Chrome on Android can install it to the home screen (Add to Home screen) (tested on a Galaxy Z Fold 7: installed to the home screen, then opened and listened in Airplane mode). An update arrives on the next visit with network.
 
-The Listen screen shows how the same hum tracker did on real grid recordings (ENF-WHU, REPLAY): typically 31 mHz off, with 16% of the 129 recordings locked onto another tone. Tap "How sure is this?" for the per-clip and pooled medians.
+The Listen screen shows how the same hum tracker did on real grid recordings (ENF-WHU, REPLAY): median per-clip error 31.2 mHz, with 20 of 129 clips locked onto another tone. Tap "How sure is this?" for the per-clip and pooled medians.
 
-On a real phone and laptop, follow the run sheet [docs/rung-test.md](docs/rung-test.md) (about 45 minutes). Our results: [docs/device-results.md](docs/device-results.md).
+On a real phone and laptop, follow the run sheet [docs/rung-test.md](docs/rung-test.md) (about 50 minutes, plus 15 for the fan test in Part I). Our results: [docs/device-results.md](docs/device-results.md).
 
 ## What is real
 
@@ -25,6 +25,7 @@ Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real
 
 - Real code: the hum tracker, the 25-byte sound packets and their cryptography, the relay, the ledger and the allocator.
 - Tested on a real phone (Galaxy Z Fold 7, Chrome 158, results in [docs/device-results.md](docs/device-results.md)): the shipped hum tracker went GREEN, AMBER, RED and NO HUM at 30 cm; the phone's signed family OK was verified by the District 7 gateway on a laptop at 30 cm, 1 m and 3 m; a laptop tab's family OK reached the phone's family board. Earlier spikes T1 to T3 (spike code, [docs/spikes.md](docs/spikes.md)) measured the tracker's error and 20/20 packets at 1 m and 3 m. The phone passed a laptop tab's report on (one relay hop), installed to the home screen and opened and listened in Airplane mode. On the phone, a Breath Count danger sign gave RED and its medicine request by sound was verified by the District 7 gateway; the 60-second tap count was tested in a laptop browser. No iPhone was tested.
+- Tested in a browser only, not yet on a phone: the fan-stop alert, the cut odds on Listen, the HOLD WATER and ROUTE alerts, and the ledger digest by sound.
 - Scored on real data (REPLAY): the tracker on 130 ENF-WHU grid recordings, the water detector on GECCO 2018.
 - Simulated: District 7 and everything in it.
 
@@ -34,7 +35,19 @@ Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real
 | Modelled (algorithm in District 7 against the Directorate's rule) | 2, 3, 4, 5, 6, 9, 10 (delivery), 11, 12, 13, 14, 15 |
 | Thin or Roadmap | none. The air half of problem 1 is a fan-stop alert on the phone, built, phone test pending |
 
-The phone sends real reports for 2, 4, 5, 9 and 12, but District 7 does not analyse them yet. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md). Known limits: [docs/limits.md](docs/limits.md).
+The phone sends real reports for 2, 4, 5, 9 and 12, but District 7 does not analyse them yet. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md).
+
+Headline (SIMULATED, seven-day week, 20 seeds): cuts warned 10 min ahead, Directorate 0.00, STRATUM 0.40; worst-decile served fraction, Directorate 0.66, STRATUM 0.85. Against us: in the stress week the warning gain is gone (0.00 under both), and from 3 lying surface crews in 5 the quorum carries the wrong band.
+
+## Limits
+
+The main ones (full list: [docs/limits.md](docs/limits.md)):
+
+- District 7 is a simulation; its heat, water, disease, food and surface values are model outputs.
+- Sound carries a few metres. Devices showed one hop at up to 3 m and one relay hop; multi-hop reach is simulated.
+- Public alerts are not signed, and one sender can pose as several.
+- Android only; no iPhone was tested. The fan alert's phone test is pending, and District 7 does not score air warnings.
+- No case-report format yet; the grid-inertia and under-reporting sweeps were not run; no on-device sound model (such as cough counting) is shipped.
 
 ## Run it
 

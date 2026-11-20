@@ -1,12 +1,12 @@
 # Submission checklist
 
-Deadline: Fri Nov 20 2026, 11:00 PM (assume ET), no extensions. Judging on the organizers' platform, Nov 21 to 24. `docs/problem-statement.md` gives the track and the fifteen problems but no rubric and no submission format; the one judging hint it gives is that one well-connected solution addressing several problems can strengthen a project. Sources for the items below: rung 5 of the ladder and the submission checklist in `docs/plan.md`.
+Deadline: Fri Nov 20 2026, 11:59 PM ET on the event platform, no extensions. Judging on the organizers' platform, Nov 21 to 24. `docs/problem-statement.md` gives the track and the fifteen problems but no rubric and no submission format; the one judging hint it gives is that one well-connected solution addressing several problems can strengthen a project. Sources for the items below: rung 5 of the ladder and the submission checklist in `docs/plan.md`.
 
-Status as of Thu Nov 19. `[x]` done, `[ ]` not yet.
+Status as of Fri Nov 20. `[x]` done, `[ ]` not yet.
 
 ## Before the freeze (Wed Nov 18, 22:00 ET)
 
-- [x] Rung test on a real Android phone (Galaxy Z Fold 7) and laptop (`docs/rung-test.md`), Thu Nov 19; results in `docs/device-results.md`. All parts passed, including the relay hop and offline install; the medicine request by sound was verified by the gateway.
+- [x] Rung test on a real Android phone (Galaxy Z Fold 7) and laptop (`docs/rung-test.md`), Thu Nov 19; results in `docs/device-results.md`. Parts A to H passed, including the relay hop and offline install, except the Part B Ledger check (not reported) and Part D (laptop browser only; on the phone, a danger-sign RED and its medicine request, verified by the gateway, passed in an extra check). Part I (fan) was not run.
 - [x] Offline install (service worker and manifest; Playwright offline tests pass; installed and used in Airplane mode on the Galaxy Z Fold 7).
 
 ## The submission (rung 5)
@@ -15,18 +15,16 @@ Status as of Thu Nov 19. `[x]` done, `[ ]` not yet.
 - [x] Data licences listed (ENF-WHU: MIT, GECCO 2018: CC BY 4.0, ggwave: MIT) in `data/README.md` (datasets) and `README.md` (datasets and ggwave)
 - [x] Live address deployed: https://stratum-nine-swart.vercel.app
 - [x] Video script drafted (`docs/video-script.md`): 2:55 and 90-second shot lists, plus the fallback
-- [ ] Write-up final: DRAFT mark removed (rung-test results are in, "pending" lines resolved)
-- [ ] Video filmed and edited: the organizers raised the limit to 3:00, so the full cut ends by 2:55; captions burned in, no third-party music
-- [ ] Fallback if there is no video by Thu Nov 19, 20:00: the 90-second judge-mode screen cut plus one phone clip (`docs/video-script.md`)
+- [x] Write-up final: DRAFT mark removed, device results in, every known gap listed under "What is next"
+- [ ] Video made and uploaded (YouTube Unlisted or Google Drive), link pasted into the form: the limit is 3:00, so the full cut ends by 2:55; captions burned in, no third-party music. Fallback: the 90-second judge-mode screen cut plus one phone clip (`docs/video-script.md`)
 - [x] Five screenshots: phone at RED, family board, District 7 cross-section, the fairness result, coverage matrix (`docs/screenshots/`)
-- [ ] Clean-browser test: the live address in a private window on a laptop and on a phone (home, judge mode, District 7, coverage matrix, phone page), with no sideways scroll on the phone
-- [ ] Final check of README and write-up claims against `docs/coverage.md` and `public/evidence/*.json` after the last evidence run
-- [ ] Draft submitted on the platform Thu Nov 19 night
-- [ ] Final submission confirmed Fri Nov 20, before 23:00
+- [x] Browser test of the live address on a laptop and on the phone (judge mode, District 7, coverage matrix, phone page), no sideways scroll on the phone (`docs/device-results.md`, Parts E and G, Nov 19, before the Nov 20 site audit; not in a private window)
+- [x] Final check of README, write-up and submission text against `docs/coverage.md`, `docs/device-results.md` and `public/evidence/*.json` after the last evidence run (Nov 20)
+- [ ] Final submission on the platform (text in `docs/submission.md`), confirmed before 23:59 ET Fri Nov 20
 
 ## Links to paste into the submission
 
-- Live site: https://stratum-nine-swart.vercel.app (judge mode: `/src/district/judge.html`)
+- Live site (demo URL): https://stratum-nine-swart.vercel.app/ (judge mode: `/src/district/judge.html`)
 - Repo: https://github.com/royalgillz/stratum
 - Write-up: `docs/writeup.md` in the repo
 - Video: (pending)

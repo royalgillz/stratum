@@ -158,6 +158,23 @@ You need a fan you can switch off: a desk fan, a box fan or a bathroom extractor
 7. Switch the fan off while you keep talking: the alert should still come within about 5 s.
 8. Open **Fan test log**, tap **Save fan log**, and send the CSV file with your notes (times of each switch).
 
+## Part J (stretch, separate preview): the cough counter (experimental)
+
+The cough counter is not on the live site yet. It goes live only if this test passes. It runs on a preview of its branch:
+`https://stratum-git-air-cough-sehaj-gill-projects.vercel.app/src/phone/` (Vercel asks you to sign in once on the phone, with your Vercel account). About 12 minutes, with a second person to talk.
+
+1. Phone: open the preview address above, sign in to Vercel if asked. Tap **Care**, scroll to **Cough count (experimental)**, tap
+   **Start cough count**, allow the microphone. Wait until the line reads **Coughs heard: 0 ...**. If a line says
+   "Warning: this browser kept some microphone processing on", write it down.
+2. Phone on the table, microphone up, a fan running 1 to 3 m away. Do not touch it for 10 s. Keep the screen on and this tab
+   in front for the whole test.
+3. Stand 1 m from the phone. Cough 10 single times, about 5 s apart. Note the time of each, and the count 1 to 2 s later.
+4. Then 5 minutes of normal talk by two people near the phone, with some laughing and "s" and "sh" words. During it, clap once
+   and drop a book or a shoe once, 1 to 2 m away, and note when. Note any time the count goes up and what was happening.
+5. Tap **Stop cough count**, open **Cough test log**, tap **Save cough log**, and send the CSV with your notes.
+
+Pass: 8 or more of the 10 coughs counted, and at most 1 count during the 5 minutes (clap and drop included).
+
 ## Results to send back
 
 Copy this table into the chat with your results. Paste the laptop's gateway log text under it.
@@ -190,3 +207,5 @@ Copy this table into the chat with your results. Paste the laptop's gateway log 
 | I | Fan off: alert within 5 s (x3) | 1 m | | |
 | I | Talk and noise: no alert | 1 m | | |
 | I | Fan off while talking: alert | 1 m | | |
+| J | Coughs counted (of 10) | 1 m | | |
+| J | False counts in 5 min of talk, clap, drop | 1 m | | |

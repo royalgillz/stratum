@@ -103,7 +103,7 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - It hears a fan by its steady broadband sound (150 Hz to 1.7 kHz, the hum's frequencies left out) and alerts when that sound drops by 6 dB or more. It cannot tell why: a fan switched off for the night alerts the same as a power cut.
 - How loud a quiet room sounds depends on the phone's microphone. The quiet level is an assumption (−100 dB on the analyser's scale) until a phone test sets it: a phone with a loud quiet room may show "Fan: running" with no fan.
 - Unbroken talk louder than the fan hides a stop while the talk lasts; the alert comes in the pauses.
-- Tested on recorded traces and in Chromium with a synthetic microphone; not yet on a phone with a real fan. District 7 does not score air warnings.
+- Tested on synthetic traces and in Chromium with a synthetic microphone; not yet on a phone with a real fan. District 7 does not score air warnings.
 
 ## Phone battery
 
