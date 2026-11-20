@@ -41,7 +41,7 @@ const at = (pairs: Record<number, number>) => zeros().map((_, s) => pairs[s] ?? 
 const keyed = (xs: number[]): Allocation => Object.fromEntries(xs.map((x, s) => [sectorId(s), x]));
 
 /** The step order of ADAPT-EVIDENCE-006 replayed by hand on p09's stream, recording each day's cumulative lists. */
-function mirror(policy: Policy, steps: number) {
+function mirror(policy: Policy, steps: number, capture?: number) {
   const r = rng(SEED, 'p09');
   const { sectors } = makeWorld();
   const epi = createEpidemic(sectors.map((x) => x.people));
@@ -62,7 +62,7 @@ function mirror(policy: Policy, steps: number) {
       stock.forEach((_, s) => (stock[s] += h.shares[sectorId(s)]!));
     }
     if (t % 3600 === 0) {
-      const res = epiStep(epi, t, sectors.map((x) => x.co2), [...stock], 3600, r);
+      const res = epiStep(epi, t, sectors.map((x) => x.co2), [...stock], 3600, r, capture);
       res.coursesUsed.forEach((u, s) => (stock[s] -= u));
       truth += sum(res.newCases);
     }
@@ -74,9 +74,9 @@ function mirror(policy: Policy, steps: number) {
 const own09 = (a: Adapter, w: World) => ownOnly(a, w, (c) => { c.sectors.forEach((x) => (x.stock = 0)); c.alloc.medicine = {}; }, /^cases/);
 const own04 = (a: Adapter, w: World) => ownOnly(a, w, (c) => c.sectors.forEach((x) => (x.water = BASELINE)), /^water\./);
 
-function run(policy: Policy, seconds: number) {
+function run(policy: Policy, seconds: number, s: Script = script) {
   const w = makeWorld();
-  const k = createKernel(w, [own09(createP09(policy, script), w)], { dt: 60, check: true });
+  const k = createKernel(w, [own09(createP09(policy, s), w)], { dt: 60, check: true });
   k.run(seconds);
   return { w, metric: k.metrics().p09! };
 }
@@ -132,6 +132,14 @@ describe('p09 outbreak', () => {
     const p = createP09('stratum', script);
     expect([p.id, p.reads, p.writes]).toEqual(['p09', ['sectors', 'alloc'], ['sectors', 'alloc', 'ledger']]);
   });
+
+  // @spec ADAPT-EVIDENCE-006
+  it('passes script.model.capture to epiStep', () => {
+    const { w } = run('directorate', 2 * DAY + 60, { ...script, model: { capture: 0.5 } });
+    const half = mirror('directorate', (2 * DAY + 60) / 60, 0.5);
+    expect(w.alloc.medicine).toEqual(half.med);
+    expect(half.cum.n1).not.toBe(mirror('directorate', (2 * DAY + 60) / 60).cum.n1);
+  }, 30_000);
 
   // @spec ADAPT-EVIDENCE-010
   it('ledgers the clinic count daily under both policies and the Chapman estimate and both-list count under STRATUM', () => {

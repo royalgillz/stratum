@@ -18,6 +18,7 @@ A script is data, not code. The runner derives each run's concrete script from t
 - `demo`: the household the district page's gateway speaks for, `{ id, level, sector, members }`, with `sector` 0 to 3 within `level` (the packet payload's mapping). Its id is the key set id the gateway gives the family's keys, so a real OK lands on it.
 - `acts`: `{ atH, mode, scale?, title }`, in rising order, the first at 0. `realtime` means scale 1; `timelapse` takes a scale (default 3600). The title is the caption on screen.
 - `vary`: optional bounds `{ shiftH, scale }` for seed variation (`docs/intent/scenario/scripts`). Without it the concrete script equals the script.
+- `model`: optional `{ gridH?, capture? }`, the two model constants the sweeps change: the grid inertia constant in s (p01's `swing`) and a factor on every capture probability of the epidemic lists (p09's `epiStep`). Without it every run uses `H` and capture 1, exactly as before the field existed.
 - `events`, each with `type`, `atH` and an optional `fixed` flag; `fixed: true` keeps it exactly as written under seed variation. Every other field listed is required:
 
 | Type | Fields | Read by |

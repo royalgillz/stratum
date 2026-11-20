@@ -21,7 +21,7 @@ Devices:
 | B | Ledger shows 1 public report | | Not reported | |
 | C | Family board row for the other member | not reported | Pass | Laptop tab and phone in one family (words chosen by the human). The laptop tab's "I am OK" (family only) reached the phone's Family board and inbox, LIVE, signed with the family key by the shipped codec. See [screenshot](device/device-phone-family-board.png). |
 | D | AMBER after about 50 taps | | Pass, in a browser | Age 1 year, cough yes, 50 taps in 60 s gave AMBER (fast is 40 or more), labelled LIVE. Run in the laptop browser, not on the phone |
-| D | RED at once on a danger sign | | Pass, in a browser | Ticking Convulsions turned it RED at once. Laptop browser, not the phone |
+| D | RED at once on a danger sign | | Pass, in a browser | Ticking Convulsions turned it RED at once. Laptop browser, not the phone. Later the same evening it also passed on the phone, with its medicine request verified by the gateway: see Extra checks |
 | E | Judge mode plays end to end | | Pass | On the laptop: the drawn phone went through every tier and the OK arrived in its inbox. The real phone showed NO HUM during E because judge mode was muted, as expected |
 | F | OK verified, LIVE on board | 30 cm | Pass | The phone's "I am OK" (family only), a signed v3 packet from the shipped codec, verified by the District 7 gateway on the laptop: "Verified OK from member 232 · LIVE". The LIVE row appeared on "Family board: the demo family" while the run was paused. See [screenshot](device/device-gateway-verified.png). |
 | F | OK verified | 1 m | Pass | Same packet and gateway |
@@ -43,6 +43,24 @@ Devices:
 
 ## Not run on a device
 
-- The 60-second tap count on the phone (it passed in a laptop browser).
+- The 60-second tap count on the phone (it passed in a laptop browser; run sheet Part L1).
 - A third device hearing a relayed copy.
 - The fan-stop alert (run sheet Part I): built after this run, phone test pending.
+- Run sheet Part L: the cut odds on Listen, HOLD WATER and ROUTE, and the ledger digest on the phone (rows below).
+
+## Part L (pending)
+
+Run sheet `docs/rung-test.md` Part L, on the phone, for the features tested in a browser only so far.
+
+| Part | Check | Distance | Result | Notes |
+| --- | --- | --- | --- | --- |
+| L1 | Tap count: AMBER at about 50 taps | | Pending | |
+| L1 | Tap count: GREEN at about 30 taps | | Pending | |
+| L2 | Odds line at AMBER and RED ("no data yet"), gone at GREEN and NO HUM | 30 cm | Pending | |
+| L3 | HOLD WATER: 1 sender, unconfirmed | 30 cm | Pending | |
+| L3 | HOLD WATER: same window again, still 1 sender | 30 cm | Pending | |
+| L3 | HOLD WATER: 2 senders, unconfirmed | 30 cm | Pending | |
+| L3 | HOLD WATER: 3 senders, no "unconfirmed" | 30 cm | Pending | |
+| L3 | ROUTE: 1 sender, unconfirmed | 30 cm | Pending | |
+| L4 | Ledger digest: phone shows the same 12 characters | 30 cm | Pending | |
+| L5 | Optional: 67% on Ledger and on the Listen line | 30 cm | Pending | |

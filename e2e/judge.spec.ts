@@ -80,7 +80,7 @@ test.describe('judge mode', () => {
     expect(seen.some(([c, tier]) => c.startsWith('Where: the Hollow') && tier === 'CALIBRATING')).toBe(true);
     expect(seen.some(([c, tier]) => c.startsWith('Why sound') && tier === 'CALIBRATING')).toBe(true);
     // The story ends on the headline result, with its label and the stress-week loss, then points to the results.
-    await expect(page.locator('#caption')).toContainText("STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED.");
+    await expect(page.locator('#caption')).toContainText("STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED. If her two-year-old's breathing worries Ana, the phone's Care tab counts breaths against the WHO chart (a decision aid, not a medical device).");
     await expect(page.getByRole('link', { name: 'Next: the fifteen problems and results' })).toHaveAttribute('href', './coverage.html');
     await expect(page.locator('#seq li')).toHaveCount(5); // nothing flickered after the cut
     await expectSoundLayout(page);

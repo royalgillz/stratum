@@ -7,7 +7,7 @@ import { createKernel } from '../kernel/kernel.ts';
 import { allocate } from '../fairshare/fairshare.ts';
 import { CAP_MARGIN, F0, capacityAt, swing, tierOf } from '../world/grid/grid.ts';
 import { lifeFloor, powerDemand, sectorId, type Policy } from './shared.ts';
-import { createP01 } from './p01.ts';
+import { airUnwarned, createP01, FAN_ALERT_S, LISTEN_SHARE } from './p01.ts';
 import { SHED_HZ, WATER_FLOOR, createP02 } from './p02.ts';
 
 const H = 3600;
@@ -68,6 +68,17 @@ describe('p01 warning', () => {
     const cap = capacityAt(events, 0, CAP_MARGIN * 12);
     const { f, rocof } = swing(399.9, cap, 11.5, 60);
     expect(w.grid).toEqual({ f, rocof, gapMW: cap - 11.5, tier: tierOf(f, 'GREEN') });
+  });
+
+  // @spec ADAPT-POWER-001
+  it('passes script.model.gridH to swing as the inertia constant', () => {
+    const events = [hold(0, 0.05, 10)];
+    const w = world();
+    w.grid.f = 399.9;
+    createKernel(w, [createP01('stratum', { ...script(events), model: { gridH: 30 } })]).step(); // tau 30 s, so the step does not settle
+    const { f } = swing(399.9, capacityAt(events, 0, CAP_MARGIN * 12), 12, 60, 30);
+    expect(w.grid.f).toBe(f);
+    expect(f).not.toBe(swing(399.9, capacityAt(events, 0, CAP_MARGIN * 12), 12, 60).f);
   });
 
   // @spec ADAPT-POWER-001
@@ -277,5 +288,35 @@ describe('p02 fair sharing', () => {
     k.run(10 * 60);
     const cut = (0 + 0 + 0.92) / 3, fed = (1 + 0.8 + 0.92) / 3; // power, water, food served fractions
     expect(k.metrics().p02!.value).toBeCloseTo((600 * cut + 610 * fed) / 1210, 9);
+  });
+});
+
+describe('p01 air: person-hours before a fan-stop warning', () => {
+  const stops = (fanStops: Script['fanStops'], days = 7): Script => ({ ...sevenDay, days, fanStops });
+  const both = (s: Script) => ({ d: airUnwarned(world(), s, 'directorate'), s: airUnwarned(world(), s, 'stratum') });
+  const close = (got: { d: number; s: number }, d: number, s: number) => { expect(got.d).toBeCloseTo(d, 9); expect(got.s).toBeCloseTo(s, 9); };
+
+  // @spec ADAPT-POWER-012
+  it('ADAPT-POWER-012 Directorate: unwarned until the 06:00 bulletin or the fan restarts; STRATUM: phones after FAN_ALERT_S, the rest at the bulletin', () => {
+    expect([LISTEN_SHARE, FAN_ALERT_S]).toEqual([0.5, 5]);
+    // level 6 (2,000 people) at 16:00 for 3 h: no bulletin inside the stop
+    close(both(stops([{ atH: 40, level: 6, durH: 3 }])), 6000, 1000 * 3 + (1000 * 5) / H);
+    // level 4 at 05:00 for 4 h: the 06:00 bulletin warns everyone left after 1 h
+    close(both(stops([{ atH: 101, level: 4, durH: 4 }])), 2000, 1000 + (1000 * 5) / H);
+    // a stop at 06:00 exactly is warned by that bulletin; a stop shorter than the alert costs its whole span under both
+    close(both(stops([{ atH: 30, level: 1, durH: 2 }])), 0, 0);
+    close(both(stops([{ atH: 40, level: 1, durH: 1 / H }])), 2000 / H, 2000 / H);
+    // stops add up, and people come from the world given
+    expect(airUnwarned(world(EVEN.map((p, s) => (s >= 20 ? 2 * p : p))), stops([{ atH: 40, level: 6, durH: 3 }, { atH: 140, level: 2, durH: 2 }]), 'directorate')).toBe(12000 + 4000);
+  });
+
+  // @spec ADAPT-POWER-012
+  it('ADAPT-POWER-012 counts nothing past the run end or without fan stops, and throws on a bad stop', () => {
+    close(both(stops(undefined)), 0, 0);
+    close(both(stops([{ atH: 23, level: 3, durH: 5 }], 1)), 2000, 1000 + (1000 * 5) / H); // clipped at hour 24
+    close(both(stops([{ atH: 30, level: 3, durH: 5 }], 1)), 0, 0);
+    for (const bad of [{ atH: 1, level: 7, durH: 1 }, { atH: 1, level: 1.5, durH: 1 }, { atH: -1, level: 1, durH: 1 }, { atH: 1, level: 1, durH: NaN }, { atH: 1, level: 1, durH: Infinity }]) {
+      expect(() => airUnwarned(world(), stops([bad]), 'stratum')).toThrow(RangeError);
+    }
   });
 });

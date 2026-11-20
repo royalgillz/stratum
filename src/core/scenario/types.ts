@@ -37,6 +37,13 @@ export interface Demo {
   members: number;
 }
 
+/** A ventilation fan stopped on `level` (1..6) for `durH` hours from `atH`. */
+export interface FanStop {
+  atH: number;
+  level: number;
+  durH: number;
+}
+
 export interface Script {
   name: string;
   days: number;
@@ -44,4 +51,6 @@ export interface Script {
   acts: Act[];
   events: ScenarioEvent[];
   vary?: { shiftH: number; scale: number }; // seed variation bounds; absent, the concrete script is the script
+  model?: { gridH?: number; capture?: number }; // model constants a sweep changes; absent, the defaults H and capture 1
+  fanStops?: FanStop[]; // read only by p01's airUnwarned, never by a world model or the kernel; never varied by seed
 }

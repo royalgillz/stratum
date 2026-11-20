@@ -70,10 +70,11 @@ function add(list: number[], day: number, x: number): void {
   list[day] += x;
 }
 
-// @spec WORLD-EPI-002, WORLD-EPI-003, WORLD-EPI-004, WORLD-EPI-005, WORLD-EPI-007, WORLD-EPI-008
-export function epiStep(state: EpiState, t: number, co2: number[], stock: number[], dt: number, rng: Rng): EpiStepResult {
+// @spec WORLD-EPI-002, WORLD-EPI-003, WORLD-EPI-004, WORLD-EPI-005, WORLD-EPI-007, WORLD-EPI-008, WORLD-EPI-009
+export function epiStep(state: EpiState, t: number, co2: number[], stock: number[], dt: number, rng: Rng, capture = 1): EpiStepResult {
   if (!Number.isFinite(t) || t < 0) throw new RangeError(`invalid t ${t}`);
   if (!Number.isFinite(dt) || dt <= 0) throw new RangeError(`invalid dt ${dt}`);
+  if (!(Number.isFinite(capture) && capture > 0 && CLIN_TOP * capture <= 1)) throw new RangeError(`invalid capture ${capture}`); // every capture probability stays at or below 1
   const beta = co2.slice(0, SECTORS).map((c) => R0 * GAMMA * Math.min(BETA_CAP, rebreathed(c) / rebreathed(CO2_REF)));
   if (beta.length < SECTORS) throw new RangeError('co2 must have 24 sectors');
   for (let s = 0; s < SECTORS; s++) if (!Number.isFinite(stock[s]) || stock[s] < 0) throw new RangeError(`invalid stock ${stock[s]}`);
@@ -97,9 +98,9 @@ export function epiStep(state: EpiState, t: number, co2: number[], stock: number
     E[s] += ne - ni;
     I[s] += ni - rt - ru;
     R[s] += rt + ru;
-    const n1 = binomial(ni, CLIN_TOP - CLIN_STEP * (l / 4), rng);
-    const m = binomial(n1, P_REPORT, rng);
-    const n2 = m + binomial(ni - n1, P_REPORT, rng);
+    const n1 = binomial(ni, (CLIN_TOP - CLIN_STEP * (l / 4)) * capture, rng);
+    const m = binomial(n1, P_REPORT * capture, rng);
+    const n2 = m + binomial(ni - n1, P_REPORT * capture, rng);
     add(state.clinic[s], day, n1);
     add(state.both[s], day, m);
     add(state.residents[s], day, n2);

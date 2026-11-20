@@ -35,7 +35,7 @@ export function mountListen(root: HTMLElement) {
     <p id="replay" class="muted">${REPLAY_SUMMARY}</p>
     <details id="replayMore"><summary>How sure is this?</summary><p class="muted">${REPLAY_TEXT}</p><p class="muted">${REPLAY_DETAILS}</p></details>
     <p id="micinfo" class="muted"></p>
-    <details id="fanMore"><summary>Fan test log</summary>
+    <details id="fanMore"><summary>Fan test log (for testers)</summary>
       <p class="muted">For testing the fan alert: saves this session's fan readings (time, level, state) as a CSV file. Nothing is uploaded.</p>
       <button id="fanSave">Save fan log</button>
     </details>

@@ -1,6 +1,6 @@
 # Submission checklist
 
-Deadline: Fri Nov 20 2026, 11:59 PM ET on the event platform, no extensions. Judging on the organizers' platform, Nov 21 to 24. `docs/problem-statement.md` gives the track and the fifteen problems but no rubric and no submission format; the one judging hint it gives is that one well-connected solution addressing several problems can strengthen a project. Sources for the items below: rung 5 of the ladder and the submission checklist in `docs/plan.md`.
+Deadline: Fri Nov 20 2026, 11:00 PM ET on the event platform, no extensions. Judging on the organizers' platform, Nov 21 to 24. `docs/problem-statement.md` gives the track and the fifteen problems but no rubric and no submission format; the one judging hint it gives is that one well-connected solution addressing several problems can strengthen a project. Sources for the items below: rung 5 of the ladder and the submission checklist in `docs/plan.md`.
 
 Status as of Fri Nov 20. `[x]` done, `[ ]` not yet.
 
@@ -20,7 +20,7 @@ Status as of Fri Nov 20. `[x]` done, `[ ]` not yet.
 - [x] Five screenshots: phone at RED, family board, District 7 cross-section, the fairness result, coverage matrix (`docs/screenshots/`)
 - [x] Browser test of the live address on a laptop and on the phone (judge mode, District 7, coverage matrix, phone page), no sideways scroll on the phone (`docs/device-results.md`, Parts E and G, Nov 19, before the Nov 20 site audit; not in a private window)
 - [x] Final check of README, write-up and submission text against `docs/coverage.md`, `docs/device-results.md` and `public/evidence/*.json` after the last evidence run (Nov 20)
-- [ ] Final submission on the platform (text in `docs/submission.md`), confirmed before 23:59 ET Fri Nov 20
+- [ ] Final submission on the platform (text in `docs/submission.md`), confirmed before 23:00 ET Fri Nov 20 (deadline 11:00 PM ET)
 
 ## Links to paste into the submission
 

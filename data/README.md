@@ -10,7 +10,7 @@ Real recordings the evidence harness replays. The ENF-WHU audio is not committed
   at 400 Hz, starting with the recording.
 - **Source:** https://github.com/ghua-ac/ENF-WHU-Dataset
 - **Licence:** MIT, copyright (c) 2023 HUA GUANG. Copy: [`ENF-WHU-LICENSE`](ENF-WHU-LICENSE).
-- **Used by:** `npm run score:enf` (`harness/enf.ts`), which writes `public/evidence/enf-whu.json` (REPLAY).
+- **Used by:** `npm run score:enf` (`harness/enf.ts`), which writes `public/evidence/enf-whu.json` (REPLAY): frequency error, NO HUM, and the tiers (`tiers`) against the same rule on the reference.
 - **Fetch** (about 1.7 GB; skips the 1.9 GB one-day references and the MATLAB code, which the harness does not use), from the repo root:
 
 ```sh

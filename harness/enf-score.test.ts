@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Reading } from '../src/core/tracker/tracker.ts';
-import { errorsMHz, parseWav, percentile, zeroCrossingHz } from './enf-score.ts';
+import { createTracker, type Reading } from '../src/core/tracker/tracker.ts';
+import { errorsMHz, parseWav, percentile, refHzAt, tiersOf, zeroCrossingHz } from './enf-score.ts';
 
 const wav = (samples: number[], sr: number, channels = 1, bits = 16) => {
   const b = new Uint8Array(44 + 2 * samples.length);
@@ -61,6 +61,36 @@ describe('ENF-WHU scoring', () => {
     expect(errorsMHz([reading(3, 50), reading(6, 50)], ref, 400, 2, 50)).toHaveLength(1);
     // A finite reference 1.5 Hz off f0 is not the grid either.
     expect(errorsMHz([reading(3, 48.5)], tone(10, 400, () => 48.5), 400, 2, 50)).toHaveLength(0);
+  });
+
+  it('replays the tracker tier rule exactly on the frequencies the tracker read, gaps included', () => {
+    // 100 Hz tone (h 2 of a 50 Hz grid) at 2 kHz: steady, a 200 mHz sag from 60 s, back by 120 s, a 3 s gap at 140 s.
+    const sr = 2000, grid = (t: number) => (t < 60 ? 50 : t < 80 ? 50 - 0.01 * (t - 60) : t < 110 ? 49.8 : t < 120 ? 49.8 + 0.02 * (t - 110) : 50);
+    const x = tone(170, sr, (t) => 2 * grid(t));
+    x.fill(0, 140 * sr, 143 * sr);
+    const rs = createTracker({ sampleRate: sr, f0: 50, h: 2, w: 1.5, label: 'REPLAY' }).push(x);
+    const tiers = tiersOf(rs.map((r) => r.f));
+    expect(tiers).toEqual(rs.map((r) => r.tier));
+    expect(tiers).toContain('AMBER');
+    expect(tiers).toContain('RED');
+  });
+
+  it('scales every threshold: a 10 mHz dip is GREEN as shipped and AMBER at 50/400', () => {
+    const fs = [...Array(100).fill(50), ...Array(20).fill(49.99), ...Array(30).fill(50)];
+    expect(tiersOf(fs)).not.toContain('AMBER');
+    const scaled = tiersOf(fs, 50 / 400);
+    expect(scaled.slice(0, 64)).toEqual([...Array(63).fill(undefined), 'GREEN']); // 4 skipped, 59 calibrating, LIVE at the 60th
+    expect(scaled.slice(100, 104)).toEqual(['GREEN', 'GREEN', 'GREEN', 'AMBER']); // median of 5 reaches -10 mHz on the 3rd dip reading, held 2
+    // A gap mid-AMBER: 4 readings skipped, then GREEN again with the baseline kept.
+    expect(tiersOf([...fs.slice(0, 110), undefined, ...fs.slice(111)], 50 / 400).slice(109, 116)).toEqual(['AMBER', undefined, undefined, undefined, undefined, undefined, 'GREEN']);
+  });
+
+  it('measures the reference per reading, undefined past its end or on a dropout', () => {
+    const ref = tone(10, 400, () => 50.02);
+    expect(refHzAt(4, ref, 400, 2, 50)! - 50.02).toBeCloseTo(0, 3);
+    expect(refHzAt(1, ref, 400, 2, 50)).toBeUndefined();
+    expect(refHzAt(11, ref, 400, 2, 50)).toBeUndefined();
+    expect(refHzAt(4, tone(10, 400, () => 48.5), 400, 2, 50)).toBeUndefined();
   });
 
   it('takes nearest-rank percentiles', () => {

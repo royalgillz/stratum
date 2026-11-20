@@ -22,7 +22,7 @@
     .facts .proof strong { font-size: inherit; }
     .facts .loss { border-left: 4px solid var(--amber); padding-left: 10px; }
     .facts .lead .big { display: block; }
-    .facts .lead strong, .facts .loss strong { font-size: 1.8rem; line-height: 1.15; }
+    .facts .lead strong, .facts .loss strong { font-size: 1.8rem; line-height: 1.15; white-space: normal; } /* the named sides wrap on a phone */
     .facts .lead .caveat { display: block; margin-top: 4px; }
     .pages { list-style: none; padding: 0; margin: 0; }
     .pages li { margin: 0 0 8px; }
@@ -47,8 +47,8 @@
 
     <h2>What it changes</h2>
     <ul class="facts">
-      <li class="lead"><span class="big"><strong>40% vs 0%</strong> of power cuts warned at least 10 minutes ahead</span> <span class="big"><strong>85% vs 66%</strong> of need met for the worst-off tenth</span> <span class="caveat">STRATUM against the Directorate's rule (the Directorate's rule issues no warnings, so its 0% is by rule; with Fair Share switched off, STRATUM warns 15%). Seven-day week, 20 seeds · SIMULATED</span></li>
-      <li class="loss">Against us: in the stress week the warning gain is gone, <strong>0% vs 0%</strong> · SIMULATED</li>
+      <li class="lead"><span class="big"><strong>STRATUM 40% vs Directorate 0%</strong> of power cuts warned at least 10 minutes ahead</span> <span class="big"><strong>STRATUM 85% vs Directorate 66%</strong> of need met for the worst-off tenth</span> <span class="caveat">STRATUM against the Directorate's rule (the Directorate's rule issues no warnings, so its 0% is by rule; with Fair Share switched off, STRATUM warns 15%). Seven-day week, 20 seeds · SIMULATED</span></li>
+      <li class="loss">Against us: in the stress week the warning gain is gone, <strong>STRATUM 0% vs Directorate 0%</strong> · SIMULATED</li>
       <li class="proof"><strong>Tested on a real phone</strong> (Galaxy Z Fold 7, Nov 19 2026): hum tiers at 30&nbsp;cm, a signed family OK to the District 7 gateway at 30&nbsp;cm, 1&nbsp;m and 3&nbsp;m, one relay hop, and installed and listening in Airplane mode · LIVE</li>
       <li><strong>Care:</strong> a decision aid, not a medical device, for children under five. A parent counts breaths and ticks five of the WHO chart's danger signs, gets GREEN, AMBER or RED, and can request medicine by sound. Danger-sign RED and the request tested on the Fold 7 · LIVE; the 60-second count in a laptop browser</li>
     </ul>
@@ -65,7 +65,7 @@
     </ul>
 
     <details>
-      <summary>Developer spikes</summary>
+      <summary>Developer spikes (early test pages, not the product)</summary>
       <ul>
         <li><a class="go" href="/spikes/emitter.html">Emitter</a> (laptop): 400 + 800 Hz hum</li>
         <li><a class="go" href="/spikes/listener.html">Listener</a> (phone): hum tracker</li>

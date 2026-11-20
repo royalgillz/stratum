@@ -6,7 +6,6 @@ export const F0 = 400; // Hz, nominal grid frequency
 export const H = 4; // s, inertia constant
 export const D = 2; // per unit load change per unit frequency change
 export const CAP_MARGIN = 1.05; // nominal plant capacity, times full demand
-const TAU = (2 * H) / D; // s
 const RED_IN = -0.15, RED_OUT = -0.13, AMBER_IN = -0.05, AMBER_OUT = -0.03; // Hz from F0, the tracker's thresholds
 
 type Field = 'from' | 'to' | 'rampH' | 'holdH' | 'recoverH' | 'loss' | 'durH';
@@ -58,13 +57,14 @@ export function steadyDeviation(capMW: number, loadMW: number): number {
   return loadMW <= capMW ? 0 : (-F0 * (loadMW - capMW)) / (D * loadMW); // also 0 at zero load, and never -0
 }
 
-/** Exact exponential step of the swing equation over dt seconds. */
-// @spec WORLD-GRID-005, WORLD-GRID-006, WORLD-GRID-008
-export function swing(f: number, capMW: number, loadMW: number, dt: number): { f: number; rocof: number } {
+/** Exact exponential step of the swing equation over dt seconds, with inertia constant h (default H). */
+// @spec WORLD-GRID-005, WORLD-GRID-006, WORLD-GRID-008, WORLD-GRID-009
+export function swing(f: number, capMW: number, loadMW: number, dt: number, h = H): { f: number; rocof: number } {
   finite('f', f);
   if (!(Number.isFinite(dt) && dt > 0)) throw new RangeError(`grid: dt is ${dt}`);
+  if (!(Number.isFinite(h) && h > 0)) throw new RangeError(`grid: h is ${h}`);
   const dss = steadyDeviation(capMW, loadMW);
-  const next = F0 + dss + (f - F0 - dss) * Math.exp(-dt / TAU);
+  const next = F0 + dss + (f - F0 - dss) * Math.exp(-dt / ((2 * h) / D));
   return { f: next, rocof: (next - f) / dt };
 }
 

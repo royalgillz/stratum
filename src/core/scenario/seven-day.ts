@@ -3,7 +3,7 @@
 // Events a real-time act shows are fixed, so every seed plays each act on its event (docs/intent/scenario/scripts).
 import type { Script } from './types.ts';
 
-// @spec SCEN-010, SCEN-011, SCEN-SCRIPT-004, SCEN-SCRIPT-005, SCEN-SCRIPT-006
+// @spec SCEN-010, SCEN-011, SCEN-SCRIPT-004, SCEN-SCRIPT-005, SCEN-SCRIPT-006, SCEN-SCRIPT-009
 export const sevenDay: Script = {
   name: 'seven-day',
   days: 7,
@@ -35,5 +35,11 @@ export const sevenDay: Script = {
     { type: 'shortfall', atH: 100, from: 0.05, to: 0.1, rampH: 1, holdH: 12, recoverH: 2 },
     { type: 'flood', atH: 101, sector: 22, inflowM3h: 15, durH: 10, fixed: true },
     { type: 'surface', atH: 120, co: 20, o3: 0.4, so2: 1, crews: 5, falsified: 1, bias: 0.02 },
+  ],
+  // Fan failures for p01's air score only; the hour-101 stop spans the 06:00 bulletin at hour 102.
+  fanStops: [
+    { atH: 40, level: 6, durH: 3 },
+    { atH: 101, level: 4, durH: 4 },
+    { atH: 140, level: 2, durH: 2 },
   ],
 };

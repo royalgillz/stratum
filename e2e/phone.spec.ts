@@ -11,7 +11,7 @@ const VISIBLE_TABS = [
 ] as const;
 
 // The committed REPLAY figures (npm run score:enf), read from disk so the screen is checked against the evidence, not against itself.
-const enf = JSON.parse(readFileSync('public/evidence/enf-whu.json', 'utf8')).withHum, cm = enf.clipMedians;
+const enfAll = JSON.parse(readFileSync('public/evidence/enf-whu.json', 'utf8')), enf = enfAll.withHum, cm = enf.clipMedians, tiers = enfAll.tiers.absolute;
 
 test.describe('phone page', () => {
   test.beforeEach(async ({ page }) => {
@@ -123,6 +123,8 @@ test.describe('phone page', () => {
       await expect(more).toContainText(`each recording's median error: ${cm.medianMHz} mHz (${cm.clips} recordings; ${enf.clips - cm.clips} gave no reading)`);
       await expect(more).toContainText(`all ${enf.scored.toLocaleString('en-US')} readings pooled: ${enf.medianMHz} mHz`);
       await expect(more).toContainText(`${cm.over500} of the ${cm.clips} recordings were off by over 500 mHz`);
+      // The tiers on the real grid: false warnings and misses, with how much was checked
+      await expect(more).toContainText(`Warnings, checked the same way over ${tiers.comparedHours} hours of tiers from ${tiers.clipsCompared} recordings: while the real grid stayed GREEN, the tracker showed AMBER or RED on ${(100 * tiers.falseAlarmShare).toFixed(1)}% of readings, ${tiers.falseEntriesPerHour} false warnings an hour; it showed GREEN on ${(100 * tiers.missShare).toFixed(1)}% of readings where the real grid was AMBER or RED.`);
       await expect(more).toContainText('The grid here runs at 400 Hz, not 50 Hz, so take these figures as a guide · REPLAY');
       await expectSoundLayout(page);
     });
@@ -159,8 +161,8 @@ test('home page says where and what STRATUM is, judge mode first, one result wit
   await expect(page.getByText('hears the grid weaken before a power cut')).toBeVisible();
   await expect(page.getByText('Rung 0')).toHaveCount(0);
   // Every number keeps its label, and the loss sits beside the win.
-  await expect(page.locator('.facts li').nth(0)).toContainText(/40% vs 0%.*85% vs 66%.*20 seeds · SIMULATED$/);
-  await expect(page.locator('.facts li').nth(1)).toHaveText('Against us: in the stress week the warning gain is gone, 0% vs 0% · SIMULATED');
+  await expect(page.locator('.facts li').nth(0)).toContainText(/STRATUM 40% vs Directorate 0%.*STRATUM 85% vs Directorate 66%.*20 seeds · SIMULATED$/);
+  await expect(page.locator('.facts li').nth(1)).toHaveText('Against us: in the stress week the warning gain is gone, STRATUM 0% vs Directorate 0% · SIMULATED');
   // The caveats on the big numbers are not set smaller than the page's body text
   const [note, body] = await page.locator('.facts .lead .caveat').evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(document.body).fontSize]);
   expect(parseFloat(note)).toBeGreaterThanOrEqual(parseFloat(body));

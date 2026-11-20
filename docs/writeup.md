@@ -12,6 +12,8 @@ Numbers below come from `public/evidence/*.json` and `docs/coverage.md`. Device 
 
 The Directorate controls the network, the breakers and the numbers. It does not control the hum in the walls. Every powered machine hums at the grid frequency, and the pitch sags before supply runs out. A phone can hear that. A phone can pass a signed 25-byte packet by sound to a laptop 3 m away (device test, `docs/device-results.md`). And once people can see who gets cut, they can ask for a fairer rule. STRATUM starts from what a resident already carries: a phone with a microphone and a speaker.
 
+The Hollow is fiction, but its two failures are not. Whole countries have lost their internet during unrest (Myanmar after the 2021 coup, Iran during the 2022 protests), and scheduled blackouts such as South Africa's load-shedding fall hardest on those with least.
+
 ## What it is
 
 One loop, three engines, one test rig.
@@ -34,7 +36,7 @@ Every number on screen and in this write-up carries one of three labels:
 - **REPLAY**: real public recordings run through the same code the phone uses.
 - **SIMULATED**: District 7, or judge mode's drawn phone (which runs the real tracker and codec on a simulated hum, marked LOOPBACK).
 
-Each problem also carries a tier, from `docs/coverage.md`: **Live** (runs on a real phone), **Modelled** (an algorithm in District 7, measured against the Directorate's rule), **Thin** (one rule or chart on assumed parameters), **Roadmap** (write-up only). No problem is Thin or Roadmap. The air half of problem 1 is a fan-stop alert on the phone: it hears the steady sound of a fan and warns when it stops. It is built and tested on synthetic traces and in Chromium with a synthetic microphone; the phone test is pending. District 7 does not score air warnings.
+Each problem also carries a tier, from `docs/coverage.md`: **Live** (runs on a real phone), **Modelled** (an algorithm in District 7, measured against the Directorate's rule), **Thin** (one rule or chart on assumed parameters), **Roadmap** (write-up only). No problem is Thin or Roadmap. The air half of problem 1 is a fan-stop alert on the phone: it hears the steady sound of a fan and warns when it stops. It is built and tested on synthetic traces and in Chromium with a synthetic microphone; the phone test is pending. District 7 scores air warnings beside problem 1 on three scripted fan stops, on an assumed share of residents near a listening phone.
 
 Device status (`docs/device-results.md`): the run sheet ran on a Samsung Galaxy Z Fold 7 (Android 17, Chrome 158) and a Windows laptop. Passed: the hum tiers at 30 cm, the phone's family OK verified by District 7 at 30 cm, 1 m and 3 m, a laptop tab's family OK on the phone's board, judge mode, District 7 and the coverage matrix. Also passed: the phone passing a report on (one relay hop), install to the home screen and use in Airplane mode, and on the phone a danger-sign RED whose medicine request the District 7 gateway verified. District 7's family board now lists verified requests too; that was not rerun with the phone. The 60-second tap count passed in a laptop browser only. Earlier, spikes T1 to T3 passed on one Android phone and a laptop (`docs/spikes.md`). No iPhone was tested.
 
@@ -44,7 +46,7 @@ Every problem has a mechanism, a metric and a place on screen, with its tier pri
 
 | # | Problem | Mechanism | Tier | Headline result |
 | --- | --- | --- | --- | --- |
-| 1 | Warn before power or air cuts | Tone bank on the 800 Hz hum, 30 s calibration, GREEN / AMBER / RED tiers; Shed Ledger gives cut odds per level from neighbours' reports, also on the Listen tab at AMBER and RED; air: a fan-stop alert on the Listen tab | Live (power); air: fan-stop alert built, phone test pending | Tracker on 129 of 130 ENF-WHU clips: median per-clip error 31.2 mHz (REPLAY). Cuts warned 10 min ahead, 7-day: D 0.00, S 0.40; stress: D 0.00, S 0.00 (SIMULATED) |
+| 1 | Warn before power or air cuts | Tone bank on the 800 Hz hum, 30 s calibration, GREEN / AMBER / RED tiers; Shed Ledger gives cut odds per level from neighbours' reports, also on the Listen tab at AMBER and RED; air: a fan-stop alert on the Listen tab | Live (power); air: fan-stop alert built, phone test pending | Tracker on 129 of 130 ENF-WHU clips: median per-clip error 31.2 mHz; AMBER or RED on 9.1% of readings while the real grid was GREEN, 37.3 false warnings an hour (REPLAY). Cuts warned 10 min ahead, 7-day: D 0.00, S 0.40; stress: D 0.00, S 0.00 (SIMULATED). Air, three scripted fan stops, person-hours with a stopped fan not yet warned, 7-day: D 12,000 (06:00 bulletin), S about 6,000 (assumed 50% near a listening phone, warned in 5 s) (SIMULATED) |
 | 2 | Share power, water, food fairly | Fair Share: floors, then water-filling, debt rotates feeder cuts | Modelled; phone sends real reports | Worst-decile served fraction, 7-day: D 0.66, S 0.85; stress: D 0.50, S 0.63 (SIMULATED) |
 | 3 | Keep lower levels livable | Fair Share steers cooling to where it removes most person-hours over the limit; refuge rooms | Modelled | Person-hours above 27.5 C wet-bulb, 7-day: D 64,904, S 9,336; stress: D 178,050, S 138,670 (SIMULATED) |
 | 4 | Catch bad water before people drink it | Witness detector on recycler sensors; the level's water is held before bad water reaches the taps; a public HOLD WATER alert by sound from the phone | Modelled; real data; phone sends real reports | GECCO 2018, six sensors: 22/22 held-out events, precision 0.017; 21/29 on the first half (REPLAY). Person-hours of unsafe water drunk, 7-day: D 23,280, S 0 (SIMULATED) |
@@ -73,6 +75,10 @@ The full matrix, with 95% intervals, the cost shown beside each metric, and whic
 - **Against us:** 20 clips have a median error over 500 mHz: the tracker locks onto an interfering tone.
 - **Against us:** on recordings that do have hum, the tracker says NO HUM on 56.5% of readings. It refuses rather than guesses, but it refuses often.
 - On recordings with no grid signal at all, it correctly says NO HUM on 94.3% of readings (whole recordings) and 96.4% (crops).
+- **Tiers on the real grid.** The tiers are deviations from the 30 s baseline in mHz, set for the 400 Hz in-world grid. The tracker as shipped uses the same absolute mHz on a 50 Hz grid (AMBER at 50 mHz below baseline), so that is what is scored. The same tier rule runs on the mains reference, which is given NO HUM wherever the tracker had none, so both skip, calibrate and reset together; the harness checks that its copy of the rule gives the tracker's own tiers on all 130 clips. Compared: 6.27 h of tiers from 68 clips.
+- **Against us:** while the real grid stayed GREEN, the tracker showed AMBER or RED on 9.1% of readings: 37.3 false warnings an hour. 40 of the 68 clips have at least one; 28 have none.
+- Where the reference was AMBER or RED, the tracker showed GREEN on 7.7% of readings. The reference itself leaves GREEN in 56 of 130 clips (its own 30 s baseline, no gaps), so the real grid does move by the AMBER margin within these 5 to 20 minute recordings.
+- Scaled instead by 50/400 (AMBER at 6.25 mHz, the same fraction of nominal): the reference leaves GREEN in all 130 clips and the tracker's false share is 51.3% (76.6 false warnings an hour). A 50 Hz grid's normal wander is larger than that margin, so the scaled mapping would not be a usable warning.
 
 **Witness detector on GECCO 2018** (real drinking-water quality, one reading a minute; `npm run score:gecco`, `public/evidence/gecco.json`). Detector settings were not tuned. Scored on the held-out second half: 22 labelled events over 6.9 weeks.
 
@@ -137,12 +143,13 @@ Results are in the table above. Costs shown beside them, also SIMULATED:
 
 ### Sweeps: one stress varied at a time (SIMULATED, 20 seeds)
 
-`npm run harness:sweeps -- --seeds 20` writes `public/evidence/sweeps.json`. Each sweep changes one event of the seven-day script and no model constant, under both rules. The coverage matrix draws one chart per swept metric.
+`npm run harness:sweeps -- --seeds 20` writes `public/evidence/sweeps.json`. Three sweeps change one event of the seven-day script; two change one model constant through the script's optional `model` field, whose absence leaves every other run byte-identical. All run under both rules. The coverage matrix draws one chart per swept metric.
 
 - Lying surface crews, 0 to 5 of 5: STRATUM's wrong-band rate is 0.00 up to 2 lying crews and 1.00 from 3. The Directorate's is 1.00 at every point.
 - Depth of the hour-64 shortfall, 0.1 to 0.7 of capacity: heat under STRATUM rises from 0 to 42,009 person-hours, still below the Directorate at every point (40,237 to 97,010). Cuts warned fall from 0.40 to 0.20 from 0.5.
 - Outbreak size, 2 to 40 cases in each of 4 level-6 sectors: STRATUM's case-count error falls from 0.30 to 0.11; the Directorate's stays 0.79 to 0.80.
-- Not run: grid inertia and under-reporting. Both are model constants, not script events, so sweeping them needs a model change.
+- Grid inertia, H from 1 to 9 s: no figure moves. Cuts warned stay 0.40 under STRATUM and 0.00 under the Directorate at every point. The model steps every 60 s and its time constant is 1 to 9 s, so the frequency settles inside one step; the sweep shows the warning result does not hang on the assumed H, not what inertia does in the first seconds of a trip.
+- Under-reporting, capture from 0.25 to 1.5 times the model's: STRATUM's case-count error falls from 0.66 to 0.09, the Directorate's from 0.95 to 0.71. STRATUM is better at every point.
 
 ### Results we publish although they go against us
 
@@ -156,6 +163,7 @@ Results are in the table above. Costs shown beside them, also SIMULATED:
 - Fair Share adds nothing to the case estimate (ablations): 0.16 without it against 0.20 with it (contribution 0.04, 95%: -0.06 to 0.13).
 - From 3 lying crews in 5, the quorum carries the wrong band (sweeps). The staged trial still proves factor 10, at the cost of 1 breach and 8 more person-hours.
 - Small outbreaks give a poor case estimate (sweeps): error 0.30 (95%: 0.20 to 0.40) at 2 cases a sector and 0.36 (95%: 0.14 to 0.57) at 5.
+- Capture-recapture needs reports (sweeps): at a quarter of the model's capture, STRATUM's case-count error is 0.66 (95%: 0.57 to 0.74).
 
 ## How it works
 
@@ -178,13 +186,17 @@ The full list is in `docs/limits.md`. The ones that matter most:
 - The tracker needs to be close to the hum: about 30 cm in a quiet room.
 - Sound carries a few metres. The device test showed one hop, phone to a laptop gateway, at up to 3 m, and one relay hop through the phone. Multi-hop reach is simulated.
 - Public alerts are not signed. A grid alert is relayed only if the receiving phone hears the same stress or no hum at all. Any phone can send a HOLD WATER or ROUTE alert; it is relayed with no check, and one sender's alert reaches the inbox, marked unconfirmed until three different member numbers send it (those numbers can be forged too).
-- The fan-stop alert is tested on synthetic traces and in Chromium with a synthetic microphone, not on a phone with a real fan. Its quiet level is an assumption until the phone test. District 7 does not score air warnings.
+- The fan-stop alert is tested on synthetic traces and in Chromium with a synthetic microphone, not on a phone with a real fan. Its quiet level is an assumption until the phone test. District 7's air score rests on three scripted fan stops and an assumed 50% of residents near a listening phone, which sets STRATUM's gain; the stops do not raise CO2 in the model.
 - Breath Count is a decision aid that follows published thresholds for children under five. It is not a medical device. It asks five of the chart's eleven danger signs. The 60-second tap count passed in a laptop browser, not yet on the phone.
 - The ledger digest (13) is sent by the District 7 page as one sound packet carrying its first 6 bytes, and the phone's inbox shows it; this is tested in a browser, not yet on a device. Case reports for the outbreak (9) are not designed yet. Reports sent from the phone are not analysed in District 7 yet.
-- The grid-inertia and under-reporting sweeps were not run.
 - The STRATUM rule needs to be adopted, or applied by levels to the loads they control. The Directorate holds the breakers.
-- Android only. No iPhone was tested.
+- Android only. No iPhone was tested. English only.
+- Sending is audible: people nearby hear that a message was sent, and a decoder can read its type (OK, NEED) and send time, but not who sent it or its contents. The family words are stored on the phone, so anyone holding it unlocked can send as the family until **Leave family** deletes them.
 - Offline install works only after one visit with network; an update arrives on the next visit with network, and a page whose network takes more than 3 s opens the saved copy. Tested on a Galaxy Z Fold 7: installed to the home screen, then opened and listened in Airplane mode.
+
+## How it was built
+
+Built by one person under Linked-Intent Development: design, then specs, then tests, then code, with every spec cited by its tests. I chose the concept, the mechanisms and their sources, the contracts and designs, ran every device test and decided every cut. Every decision is dated in `CHANGELOG.md`. There is no AI inside the product: a rationing rule should be checkable by hand, and everything must run with the network off.
 
 ## Prior art and licences
 
@@ -200,9 +212,9 @@ Every gap we know of, in one list:
 - An on-device sound model, for example to count coughs, is not shipped.
 - No iPhone was tested.
 - Multi-hop beyond one relay hop is not shown on devices. No third device has heard a relayed copy; multi-hop reach is simulated.
-- The grid-inertia and under-reporting sweeps were not run.
+- The grid steps every 60 s, so the grid-inertia sweep cannot show the first seconds after a trip.
 - There is no case-report format, so Breath Count does not feed the outbreak estimate (9).
-- District 7 does not score air warnings.
+- District 7's air score uses scripted fan stops and an assumed share of listening phones: fan stops caused by power cuts, CO2 rising after a stop, and a measured share of phones are not modelled.
 - The fan-stop alert's phone test (run sheet Part I) is pending.
 - The 60-second tap count, the cut odds on Listen, the HOLD WATER and ROUTE alerts and the ledger digest are tested in a browser, not yet on a phone.
 - Reports sent from the phone are not analysed in District 7 yet.
@@ -212,7 +224,7 @@ Every gap we know of, in one list:
 
 ## Try it
 
-1. **Home page** (https://stratum-nine-swart.vercel.app): one result line with a loss beside it, the device-test line, and a QR code to the phone page.
+1. **Home page** (https://stratum-nine-swart.vercel.app): two headline results (STRATUM against the Directorate, SIMULATED) with the stress-week loss beside them, the device-test line (LIVE), Breath Count, and a QR code to the phone page.
 2. **Judge mode** (`/src/district/judge.html`): click **Play the 90-second story**. A drawn phone runs the real tracker and codec on a simulated hum (LOOPBACK): CALIBRATING, GREEN, AMBER, RED, NO HUM, then an OK arrives by sound. Captions carry the whole story; the ending shows the headline result and links to the coverage matrix. Works muted.
 3. **District 7** (`/src/district/`): click **Play**. The Directorate's rule is on the left and STRATUM's on the right. Switch between **Seven-day week** and **Stress week**. The ledger panel shows measured beside official, and **Send ledger digest** plays its head by sound.
 4. **Coverage matrix** (`/src/district/coverage.html`): "Results at a glance", then fifteen cards with tiers, mechanism, the 20-seed results for both rules, the REPLAY figures, the ablation and sweep charts, and the results against us.

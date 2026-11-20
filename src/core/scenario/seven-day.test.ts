@@ -105,4 +105,10 @@ describe('sevenDay over the harness seeds', () => {
       expect(flood.atH, `seed ${seed}`).toBeLessThan(late.atH + late.rampH + late.holdH);
     }
   });
+
+  // @spec SCEN-SCRIPT-009
+  it('SCEN-SCRIPT-009 holds three fan stops outside the events, kept as written on every seed', () => {
+    expect(sevenDay.fanStops).toEqual([{ atH: 40, level: 6, durH: 3 }, { atH: 101, level: 4, durH: 4 }, { atH: 140, level: 2, durH: 2 }]);
+    for (const seed of SEEDS) expect(varyScript(sevenDay, seed).fanStops).toBe(sevenDay.fanStops);
+  });
 });

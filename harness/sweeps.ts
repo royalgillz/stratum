@@ -1,5 +1,6 @@
-// Sweeps: one scripted stress varied at a time over the seven-day week, both policies (plan: "Evidence").
-// Only the script changes: no model constant moves. Each sweep keeps the metrics its stress reaches, with their beside figures (harness/beside.ts).
+// Sweeps: one stress varied at a time over the seven-day week, both policies (plan: "Evidence").
+// A sweep changes one script event, or one model constant through the script's optional `model` (its default leaves every other run as it was).
+// Each sweep keeps the metrics its stress reaches, with their beside figures (harness/beside.ts).
 // Usage: npm run harness:sweeps -- [--seeds 20] [--out public/evidence/sweeps.json]
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -19,8 +20,9 @@ interface Sweep {
   id: string; title: string; stress: string;
   x: { name: string; unit: string; values: number[] };
   metrics: AdapterId[];
-  hits(e: ScenarioEvent): boolean;
-  set(e: ScenarioEvent, x: number): ScenarioEvent;
+  hits?(e: ScenarioEvent): boolean; // an event sweep: hits and set
+  set?(e: ScenarioEvent, x: number): ScenarioEvent;
+  model?(x: number): Script['model']; // a model-constant sweep
 }
 
 const SWEEPS: Sweep[] = [
@@ -39,13 +41,21 @@ const SWEEPS: Sweep[] = [
     x: { name: 'cases seeded per sector', unit: 'cases', values: [2, 5, 10, 20, 40] }, metrics: ['p09'],
     hits: (e) => e.type === 'outbreak', set: (e, x) => ({ ...e, cases: x }),
   },
+  {
+    // Kundur 1994: typical thermal plants 2 to 9 s; 1 s stands in for a low-inertia (inverter-heavy) plant, an assumption (docs/params.md).
+    id: 'grid-inertia', title: 'Grid inertia', stress: 'the inertia constant H of every grid step (default 4 s)',
+    x: { name: 'inertia constant H', unit: 's', values: [1, 2, 4, 6, 9] }, metrics: ['p01', 'p02'],
+    model: (x) => ({ gridH: x }),
+  },
+  {
+    // A factor on every capture probability: clinic 0.6 at level 1 to 0.2 at level 6, residents 0.5 (docs/params.md). 1.5 is near the most the clinic list allows (1 / 0.6).
+    id: 'under-reporting', title: 'Under-reporting', stress: "the clinic and residents' capture of every case (default 1)",
+    x: { name: 'capture, times the default', unit: 'factor', values: [0.25, 0.5, 0.75, 1, 1.5] }, metrics: ['p09'],
+    model: (x) => ({ capture: x }),
+  },
 ];
 
-// The plan's other sweeps need a model constant changed, not the script, so they are not run.
-const SKIPPED = [
-  { id: 'grid-inertia', why: 'Grid inertia is the constant H in src/core/world/grid/grid.ts, not a script value.' },
-  { id: 'under-reporting', why: 'Clinic and resident capture are the constants CLIN_TOP, CLIN_STEP and P_REPORT in src/core/world/epidemic/epidemic.ts, not script values.' },
-];
+const SKIPPED: { id: string; why: string }[] = [];
 
 const { seeds: given = '20', out = 'public/evidence/sweeps.json' } = parseArgs<{ seeds?: string; out?: string }>({ options: { seeds: { type: 'string' }, out: { type: 'string' } } }).values;
 if (!/^[1-9]\d*$/.test(given)) {
@@ -55,12 +65,16 @@ if (!/^[1-9]\d*$/.test(given)) {
 const seeds = Array.from({ length: Number(given) }, (_, i) => i + 1);
 
 console.log(`sweeps: seven-day, seeds 1..${seeds.length}`);
-const sweeps = SWEEPS.map(({ hits, set, metrics, ...rest }) => ({
+const sweeps = SWEEPS.map(({ hits, set, model, metrics, ...rest }) => ({
   ...rest, metrics,
   points: rest.x.values.map((x) => {
     const t0 = performance.now();
-    if (!sevenDay.events.some(hits)) throw new Error(`${rest.id}: no event in the seven-day script to vary`);
-    const s: Script = { ...sevenDay, events: sevenDay.events.map((e) => (hits(e) ? set(e, x) : e)) };
+    let s: Script;
+    if (model) s = { ...sevenDay, model: model(x) };
+    else {
+      if (!hits || !set || !sevenDay.events.some(hits)) throw new Error(`${rest.id}: no event in the seven-day script to vary`);
+      s = { ...sevenDay, events: sevenDay.events.map((e) => (hits(e) ? set(e, x) : e)) };
+    }
     const policies = Object.fromEntries((['directorate', 'stratum'] as Policy[]).map((p) => {
       const extras: Beside[] = [];
       const all = finals(seeds.map((seed) => {

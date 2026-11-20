@@ -1,4 +1,5 @@
 // Pure parts of the ENF-WHU scoring for harness/enf.ts: WAV decoding, reference frequency, time alignment, error statistics.
+import type { Tier } from '../src/core/contracts.ts';
 import type { Reading } from '../src/core/tracker/tracker.ts';
 
 /** Decodes a 16-bit mono PCM WAV, the only format in ENF-WHU; anything else is rejected rather than misread. */
@@ -57,12 +58,57 @@ export function errorsMHz(readings: Reading[], ref: Float32Array, refSr: number,
   const out: number[] = [];
   for (const r of readings) {
     if (r.f === undefined) continue;
-    const a = Math.round((r.t - winS) * refSr), b = Math.round(r.t * refSr);
-    if (a < 0 || b > ref.length) continue;
-    const fr = zeroCrossingHz(ref, refSr, a, b);
-    if (Math.abs(fr - f0) <= 1) out.push(Math.abs(r.f - fr) * 1000);
+    const fr = refHzAt(r.t, ref, refSr, winS, f0);
+    if (fr !== undefined) out.push(Math.abs(r.f - fr) * 1000);
   }
   return out;
+}
+
+/** Reference grid frequency over [t - winS, t]; undefined past the reference's end or on a dropout (not within 1 Hz of f0). */
+export function refHzAt(t: number, ref: Float32Array, refSr: number, winS: number, f0: number): number | undefined {
+  const a = Math.round((t - winS) * refSr), b = Math.round(t * refSr);
+  if (a < 0 || b > ref.length) return undefined;
+  const fr = zeroCrossingHz(ref, refSr, a, b);
+  return Math.abs(fr - f0) <= 1 ? fr : undefined;
+}
+
+/**
+ * The tracker's tier rule (src/core/tracker/tracker.ts, docs/intent/tracker/tracker-design.md) replayed on a series of
+ * per-reading frequencies in Hz, undefined meaning NO HUM: 4 readings skipped after a gap, a 60-reading median baseline,
+ * median-of-5 smoothing, the 10 s fall and the hold counts. Every mHz threshold is multiplied by scale. With scale 1 it
+ * gives exactly the tracker's own tiers on the tracker's own frequencies (harness/enf.ts asserts this on every recording).
+ * undefined where the tracker reports no tier.
+ */
+export function tiersOf(fs: (number | undefined)[], scale = 1): (Tier | undefined)[] {
+  const [RED_IN, RED_OUT, AMBER_IN, AMBER_OUT, FALL] = [-150, -130, -50, -30, 50].map((m) => m * scale);
+  const median = (a: number[]) => [...a].sort((u, v) => u - v)[a.length >> 1];
+  let skip = 4, cal: number[] = [], base: number | null = null;
+  let smooth: number[] = [], hist: number[] = [], tier: Tier = 'GREEN';
+  let redIn = 0, amberIn = 0, redOut = 0, amberOut = 0;
+  const clear = () => { smooth = []; hist = []; tier = 'GREEN'; redIn = amberIn = redOut = amberOut = 0; };
+  return fs.map((f) => {
+    if (f === undefined) { skip = 4; clear(); return undefined; }
+    if (skip > 0) { skip--; return undefined; }
+    if (base === null) {
+      cal.push(f);
+      if (cal.length < 60) return undefined;
+      base = median(cal);
+      clear();
+    }
+    smooth = [...smooth, f].slice(-5);
+    const dev = (median(smooth) - base) * 1000;
+    hist = [...hist, dev].slice(-20);
+    const fall = Math.max(...hist) - dev;
+    redIn = dev <= RED_IN ? redIn + 1 : 0;
+    amberIn = dev <= AMBER_IN || fall >= FALL ? amberIn + 1 : 0;
+    redOut = dev > RED_OUT ? redOut + 1 : 0;
+    amberOut = dev > AMBER_OUT && fall < FALL ? amberOut + 1 : 0;
+    if (redIn >= 2) tier = 'RED';
+    else if (tier === 'GREEN' && amberIn >= 2) tier = 'AMBER';
+    else if (tier === 'RED' && redOut >= 20) tier = 'AMBER';
+    else if (tier === 'AMBER' && amberOut >= 20) tier = 'GREEN';
+    return tier;
+  });
 }
 
 /** Nearest-rank percentile (p in (0, 1]); null for no values. */

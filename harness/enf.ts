@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { dirname } from 'node:path';
 import { parseArgs } from 'node:util';
 import { createTracker, type Reading } from '../src/core/tracker/tracker.ts';
-import { errorsMHz, parseWav, percentile, round1 } from './enf-score.ts';
+import { errorsMHz, parseWav, percentile, refHzAt, round1, tiersOf } from './enf-score.ts';
 
 const USAGE = 'usage: npm run score:enf -- [--data <dir>] [--h <1|2|3>] [--out <path>]';
 let args: { data: string; h: string; out: string };
@@ -47,10 +47,37 @@ const noHumOf = (rs: Reading[]) => rs.filter((r) => r.state === 'NO_HUM').length
 // Recordings run up to 1 s past their reference; a shift scan of the reference by -1 to +1 s on clips 117 and 122 put the lowest error at 0 or -0.5 s, and 10 s raised it 4 to 7x.
 const all: number[] = [];
 let readings = 0, noHum = 0;
+const tierRows: ({ id: string } & Record<keyof typeof MAPPINGS, Counts>)[] = [];
+
+// Tiers on the real grid. The tiers are deviations from the 30 s baseline in mHz, set for the 400 Hz in-world grid.
+// "absolute": the same mHz at 50 Hz, which is what the shipped tracker does (it is the run above). "scaled": every
+// threshold times 50/400, the same fraction of nominal (AMBER at -6.25 mHz). The reference gets NO HUM wherever the
+// tracker had none, so both skip, calibrate and reset on the same readings and only the frequency estimate differs.
+const MAPPINGS = { absolute: 1, scaled: F0 / 400 } as const;
+type Counts = { compared: number; refGreen: number; falseAlarm: number; refAlert: number; missed: number; trackerEntries: number; falseEntries: number; refOwnAlert: number };
+const alert = (t: string | undefined) => t === 'AMBER' || t === 'RED';
+function tierCounts(trackerFs: (number | undefined)[], refFs: (number | undefined)[], scale: number): Counts {
+  const tk = tiersOf(trackerFs, scale), rm = tiersOf(trackerFs.map((f, i) => (f === undefined ? undefined : refFs[i])), scale);
+  const c: Counts = { compared: 0, refGreen: 0, falseAlarm: 0, refAlert: 0, missed: 0, trackerEntries: 0, falseEntries: 0, refOwnAlert: tiersOf(refFs, scale).filter(alert).length };
+  tk.forEach((t, i) => {
+    if (alert(t) && tk[i - 1] === 'GREEN') { c.trackerEntries++; if (rm[i] === 'GREEN') c.falseEntries++; }
+    if (t === undefined || rm[i] === undefined) return;
+    c.compared++;
+    if (rm[i] === 'GREEN') { c.refGreen++; if (alert(t)) c.falseAlarm++; }
+    else { c.refAlert++; if (t === 'GREEN') c.missed++; }
+  });
+  return c;
+}
+
 const withHum = wavs('H1').map((f) => {
   const id = f.slice(0, -4);
   const clip = track(`${dir}/H1/${f}`);
   const ref = parseWav(readFileSync(`${dir}/H1_ref/${id}_ref.wav`));
+  const trackerFs = clip.readings.map((r) => r.f);
+  const own = tiersOf(trackerFs).findIndex((t, i) => t !== clip.readings[i].tier);
+  if (own >= 0) throw new Error(`tiersOf disagrees with the tracker on ${id} at reading ${own}`);
+  const refFs = clip.readings.map((r) => refHzAt(r.t, ref.x, ref.sampleRate, WIN_S, F0));
+  tierRows.push({ id, absolute: tierCounts(trackerFs, refFs, MAPPINGS.absolute), scaled: tierCounts(trackerFs, refFs, MAPPINGS.scaled) });
   const e = errorsMHz(clip.readings, ref.x, ref.sampleRate, WIN_S, F0);
   const n = noHumOf(clip.readings);
   all.push(...e);
@@ -69,6 +96,25 @@ const noGrid = wavs('H0').map((f) => {
 const group = (rows: typeof noGrid) => {
   const r = rows.reduce((s, c) => s + c.readings, 0);
   return { clips: rows.length, readings: r, noHumShare: share(rows.reduce((s, c) => s + c.noHum, 0), r) };
+};
+
+const HOP_S = 0.5; // the tracker's hop: one reading every 0.5 s
+const pooled = (k: keyof typeof MAPPINGS) => {
+  const sum = (f: keyof Counts) => tierRows.reduce((s, r) => s + r[k][f], 0);
+  const hours = (sum('compared') * HOP_S) / 3600;
+  return {
+    scale: MAPPINGS[k],
+    amberMHz: -50 * MAPPINGS[k], redMHz: -150 * MAPPINGS[k], fallMHz: 50 * MAPPINGS[k],
+    compared: sum('compared'), comparedHours: Math.round(hours * 100) / 100,
+    refGreen: sum('refGreen'), falseAlarm: sum('falseAlarm'), falseAlarmShare: share(sum('falseAlarm'), sum('refGreen')),
+    refAlert: sum('refAlert'), missed: sum('missed'), missShare: sum('refAlert') ? share(sum('missed'), sum('refAlert')) : null,
+    trackerEntries: sum('trackerEntries'), falseEntries: sum('falseEntries'), falseEntriesPerHour: round1(sum('falseEntries') / hours),
+    clipsCompared: tierRows.filter((r) => r[k].compared > 0).length,
+    clipsTrackerAlert: tierRows.filter((r) => r[k].trackerEntries > 0).length,
+    clipsFalseEntry: tierRows.filter((r) => r[k].falseEntries > 0).length,
+    clipsRefAlertCompared: tierRows.filter((r) => r[k].refAlert > 0).length,
+    clipsRefAlert: tierRows.filter((r) => r[k].refOwnAlert > 0).length,
+  };
 };
 
 const clipMedians = withHum.flatMap((c) => (c.medianMHz === null ? [] : [c.medianMHz]));
@@ -97,13 +143,22 @@ const evidence = {
     },
     perClip: withHum,
   },
+  // Shares: falseAlarm of refGreen readings, missed of refAlert readings, both on readings where tracker and reference
+  // both show a tier. Entries: the tracker going GREEN to AMBER or RED; false when the reference is GREEN on that reading.
+  // clipsRefAlert counts recordings whose reference, tracked on its own without the tracker's gaps, ever leaves GREEN.
+  tiers: {
+    hopS: HOP_S,
+    absolute: pooled('absolute'),
+    scaled: pooled('scaled'),
+    perClip: tierRows,
+  },
   noGrid: {
     whole: group(noGrid.filter((c) => c.id.startsWith('O'))),
     crops: group(noGrid.filter((c) => !c.id.startsWith('O'))),
     perClip: noGrid.map(({ noHum, ...c }) => ({ ...c, noHumShare: share(noHum, c.readings) })),
   },
 };
-console.log(JSON.stringify({ ...evidence, withHum: { ...evidence.withHum, perClip: undefined }, noGrid: { ...evidence.noGrid, perClip: undefined } }, null, 1));
+console.log(JSON.stringify({ ...evidence, withHum: { ...evidence.withHum, perClip: undefined }, tiers: { ...evidence.tiers, perClip: undefined }, noGrid: { ...evidence.noGrid, perClip: undefined } }, null, 1));
 // Runtime goes to the console only, so the evidence file stays byte-identical across reruns.
 console.log(`runtime: ${(computeMs / 1000).toFixed(1)} s of tracker time for ${(audioS / 3600).toFixed(2)} h of audio (${(audioS / (computeMs / 1000)).toFixed(0)}x real time)`);
 mkdirSync(dirname(args.out), { recursive: true });

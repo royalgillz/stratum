@@ -1,4 +1,5 @@
 // Checks a scenario script before a run (design: docs/intent/scenario/scenario-design.md, "Script").
+import { CLIN_TOP } from '../world/epidemic/epidemic.ts';
 import type { Script } from './types.ts';
 
 /** Tracked households per sector; the generated ids are h<s>-<n> for n below this. */
@@ -61,6 +62,12 @@ export function validateScript(script: Script): void {
     if (typeof script.vary !== 'object' || script.vary === null) throw new RangeError(`script.vary is not an object: ${String(script.vary)}`);
     num('vary.shiftH', script.vary.shiftH, nonNeg);
     num('vary.scale', script.vary.scale, (v) => v >= 0 && v < 1);
+  }
+
+  if (script.model !== undefined) {
+    if (typeof script.model !== 'object' || script.model === null) throw new RangeError(`script.model is not an object: ${String(script.model)}`);
+    if (script.model.gridH !== undefined) num('model.gridH', script.model.gridH, (v) => v > 0);
+    if (script.model.capture !== undefined) num('model.capture', script.model.capture, (v) => v > 0 && CLIN_TOP * v <= 1);
   }
 
   let separates = 0;

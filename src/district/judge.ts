@@ -28,7 +28,7 @@ const CAPTIONS: [number, string][] = [
   [70, 'The shortfall deepens to 200 mHz below normal: a cut is likely soon. The phone moves to RED within a few seconds. Ana fills water and charges the phone before the cut.'],
   [CUT, 'Power cut. The hum stops, and within two seconds the phone shows NO HUM. The warning works before a cut, not during one.'],
   [OK_AT, "Ana's mother, two levels up, sends I am OK by sound. The phone decodes the 25-byte packet with the real codec and shows it in the inbox."],
-  [END, "End of the story. The tracker and the codec are the real code; the grid, the hum and the message are SIMULATED. Across a whole district, over 20 seven-day weeks, STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED."],
+  [END, "End of the story. The tracker and the codec are the real code; the grid, the hum and the message are SIMULATED. Across a whole district, over 20 seven-day weeks, STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED. If her two-year-old's breathing worries Ana, the phone's Care tab counts breaths against the WHO chart (a decision aid, not a medical device)."],
 ];
 
 const SHOW = {

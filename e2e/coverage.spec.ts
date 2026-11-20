@@ -6,6 +6,8 @@ import { expectSoundLayout } from './layout.ts';
 const cards = (page: Page) => page.locator('#matrix > li');
 const evidence = (file: string) => `public/evidence/${file}`; // Playwright runs from the repo root
 const seven = JSON.parse(readFileSync(evidence('seven-day.json'), 'utf8'));
+const tiers = JSON.parse(readFileSync(evidence('enf-whu.json'), 'utf8')).tiers.absolute;
+const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 
 for (const scheme of ['light', 'dark'] as const) {
   test.describe(`Coverage matrix, ${scheme}`, () => {
@@ -33,6 +35,10 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.locator('#matrix tbody tr:not(.beside)')).toHaveCount(31); // seven-day and stress week for each, and p09's 30-day run
       await expect(cards(page).nth(11).locator('tbody tr', { hasText: 'Stress week' })).toContainText('against STRATUM: the metric reads higher, but every level breaches');
       await expect(cards(page).nth(13).locator('tr.beside', { hasText: 'trial breaches' }).last()).toContainText('4'); // the stress week's cost is on screen
+      // Problem 1's air score from the committed evidence: one beside row, the seven-day week's fan stops only.
+      const air = seven.policies.directorate.p01.beside.airUnwarnedH;
+      await expect(cards(page).nth(0).locator('tr.beside')).toHaveCount(1);
+      await expect(cards(page).nth(0).locator('tr.beside')).toContainText(`${air.name}${show(air.mean, air.unit)}${show(seven.policies.stratum.p01.beside.airUnwarnedH.mean, air.unit)}`);
       // Problem 3 from the committed evidence: STRATUM's heat person-hours, interval below.
       await expect(cards(page).nth(2).locator('tbody td').nth(1)).toContainText(show(seven.policies.stratum.p03.final.mean, 'person-h'));
       // Problem 9's headline is the 30-day run; the small seven-day outbreak is marked as noise.
@@ -40,6 +46,8 @@ for (const scheme of ['light', 'dark'] as const) {
       // The stress week has no separations: no placeholder zeros, no tie.
       await expect(cards(page).nth(7).locator('tbody tr').nth(1)).toContainText('no separations in this script');
       await expect(cards(page).nth(0)).toContainText('REPLAY ENF-WHU, 130 real 50 Hz recordings');
+      // The tiers on the real grid, false warnings first, in the same REPLAY paragraph
+      await expect(cards(page).nth(0).locator('p', { hasText: 'REPLAY ENF-WHU' })).toContainText(`Tiers as shipped, against the grid's own record: where the grid stayed GREEN the tracker showed AMBER or RED on ${pct(tiers.falseAlarmShare)} of readings (${tiers.falseEntriesPerHour} false warnings per hour of tiers shown), and it showed GREEN on ${pct(tiers.missShare)} of readings where the grid was AMBER or RED (the grid left GREEN in ${tiers.clipsRefAlert} of the 130 recordings).`);
       await expect(cards(page).nth(3)).toContainText('REPLAY GECCO 2018, held-out half, 22 events');
       await expect(cards(page).nth(3)).toContainText('pH, Redox, conductivity, chosen on the first half'); // not the dataset's "Leit"
       // A Directorate 0 set by its own rule says so (p01: no warning tool; p07: the 06:00 bulletin only)
@@ -49,7 +57,7 @@ for (const scheme of ['light', 'dark'] as const) {
       // Results at a glance, above the cards: the cards' verdicts counted from the committed evidence, the stress-week losses linked
       const glance = page.locator('#glance');
       expect((await glance.boundingBox())!.y).toBeLessThan((await cards(page).first().boundingBox())!.y);
-      await expect(glance).toContainText('Seven-day week, 20 seeds, SIMULATED: STRATUM better on 14 of the 14 problems the week can score.');
+      await expect(glance).toContainText('Seven-day week, 20 seeds, SIMULATED: STRATUM better on 14 of the 14 problems the week can score, including power cuts warned at least 10 min ahead (STRATUM 40% vs Directorate 0%) and need met for the worst-off tenth (STRATUM 85% vs Directorate 66%).');
       const lost = glance.locator('li li');
       await expect(lost).toHaveText([
         /^1\. Warn before power or air cuts: Directorate 0%, STRATUM 0%; a tie, the warning gain is gone$/,
@@ -57,7 +65,7 @@ for (const scheme of ['light', 'dark'] as const) {
         /^3\. .*: Directorate 178,000 person‑h, STRATUM 139,000 person‑h; STRATUM still better, but its lead shrinks from 86% to 22%$/,
         /^5\. .*: Directorate 28,800 person‑h, STRATUM 20,500 person‑h; STRATUM still better, but its seven-day zero is gone$/,
         /^12\. .*: Directorate 3 days, STRATUM 5 days; against STRATUM: the metric reads higher, but every level breaches the food floor$/,
-        /^13\. .*: Directorate 0%, STRATUM 100%; Directorate better, STRATUM's verdict is wrong in every round$/,
+        /^13\. .*: Directorate 0%, STRATUM 100%; Directorate better, STRATUM's verdict is in the wrong band in every round \(wrong-band rate, lower is better\)$/,
         /^14\. .*; a tie, nothing lighter proven, 4 breaches in the planned trial under STRATUM \(Directorate 0\)$/,
       ]);
       for (const n of [12, 13]) {
@@ -104,16 +112,16 @@ for (const scheme of ['light', 'dark'] as const) {
 
       // Sweeps: one chart per swept metric, both rules drawn, SIMULATED, and where STRATUM is not better
       const sw = page.locator('#sweeps');
-      await expect(sw.locator('section.sweep h3')).toHaveText(['Surface crews that falsify their readings', 'Depth of the deep shortfall', 'Size of the outbreak seed']);
+      await expect(sw.locator('section.sweep h3')).toHaveText(['Surface crews that falsify their readings', 'Depth of the deep shortfall', 'Size of the outbreak seed', 'Grid inertia', 'Under-reporting']);
       const charts = sw.getByRole('img');
-      await expect(charts).toHaveCount(7);
+      await expect(charts).toHaveCount(10);
       for (const c of await charts.all()) {
         await expect(c).toHaveAttribute('aria-label', /, SIMULATED\. Directorate .*\. STRATUM .*\./);
         await expect(c.locator('polyline')).toHaveCount(2);
       }
       await expect(sw.locator('[data-sweep=lying-crews] li[data-id=p13]')).toContainText('Against STRATUM: STRATUM not better at 3, 4, 5 crews of 5');
       await expect(sw.locator('[data-sweep=outbreak]')).toContainText("STRATUM's worst is 36% at 5 (best 11% at 40)");
-      await expect(sw).toContainText('Not run, because each needs a model constant changed');
+      await expect(sw).not.toContainText('Not run'); // every planned sweep ran
       const table = sw.locator('[data-sweep=outbreak] details');
       expect((await table.locator('summary').boundingBox())!.height).toBeGreaterThanOrEqual(44);
       await table.locator('summary').click();
@@ -122,7 +130,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await expectSoundLayout(page);
       // Every disclosure open (the deep-shortfall heat table has the longest intervals): still no sideways scroll
       await page.locator('details').evaluateAll((ds) => ds.forEach((d) => ((d as HTMLDetailsElement).open = true)));
-      await expect(sw.locator('details[open]')).toHaveCount(7);
+      await expect(sw.locator('details[open]')).toHaveCount(10);
       await expectSoundLayout(page);
 
       await page.setViewportSize({ width: 344, height: 800 }); // the narrowest phone the site is laid out for

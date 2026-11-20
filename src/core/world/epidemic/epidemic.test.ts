@@ -165,6 +165,25 @@ describe('epidemic', () => {
     expect(run()).toEqual(run());
   });
 
+  // @spec WORLD-EPI-009
+  it('WORLD-EPI-009 scales every capture probability by an optional capture factor, 1 by default', () => {
+    const step = (capture?: number) => {
+      const s = createEpidemic(people());
+      for (let k = 0; k < 24; k++) s.E[k] = 100; // so new infectious cases reach the lists on every level
+      const r = rng(5, 'epidemic');
+      const out = epiStep(s, 0, fill(CO2_REF), fill(0), EPI_DT, r, capture);
+      return { s, out };
+    };
+    expect(step()).toEqual(step(1));
+    const a = step(0.5), b = step(1);
+    expect(a.out).toEqual(b.out); // the epidemic itself is untouched
+    const tot = (x: ReturnType<typeof step>, k: 'clinic' | 'residents') => x.s[k].flat().reduce((p, q) => p + q, 0);
+    expect(tot(a, 'clinic')).toBeLessThan(tot(b, 'clinic'));
+    expect(tot(a, 'residents')).toBeLessThan(tot(b, 'residents'));
+    for (const c of [0, -1, NaN, Infinity, 1 / CLIN_TOP + 0.01]) expect(() => step(c)).toThrow(RangeError);
+    expect(() => step(1.5)).not.toThrow();
+  });
+
   // @spec WORLD-EPI-008
   it('WORLD-EPI-008 rejects invalid input with a RangeError', () => {
     const s = createEpidemic(people());

@@ -66,7 +66,7 @@ export function createP09(policy: Policy, script: Script): Adapter {
         sectors.forEach((x, s) => (x.stock += r.shares[sectorId(s)]!));
       }
       if (t % HOUR === 0) {
-        const r = epiStep(epi, t, sectors.map((x) => x.co2), sectors.map((x) => x.stock), HOUR, rng);
+        const r = epiStep(epi, t, sectors.map((x) => x.co2), sectors.map((x) => x.stock), HOUR, rng, script.model?.capture);
         sectors.forEach((x, s) => (x.stock -= r.coursesUsed[s]!));
         truth += sum(r.newCases);
       }

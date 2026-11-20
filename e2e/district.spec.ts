@@ -27,7 +27,7 @@ test.describe('District 7 page', () => {
     await expect(nav).toHaveText(['Home', 'Judge mode', 'Coverage matrix', 'Phones in this room ↓']);
     await expect(nav.last()).toHaveAttribute('href', '#boardTitle');
     await expect(page.getByText('Press Play.', { exact: true })).toBeVisible();
-    await expect(page.locator('header')).toContainText("Watch the outlined ★ square, the demo family on level 5: on day 4, under the Directorate's rule, their level goes dark");
+    await expect(page.locator('header')).toContainText("Watch the outlined ★ square, Ana's family (the demo family) on level 5, sector B: on day 4, under the Directorate's rule, their level goes dark");
     await expect(page.locator('#act')).toContainText('The network is down · TIME-LAPSE x3600 · paused', { timeout: 15_000 });
     await expect(page.locator('#clock')).toContainText('World time day 1, 00:00');
     await expect(page.locator('#clock')).toContainText('SIMULATED');

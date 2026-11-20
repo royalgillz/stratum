@@ -46,6 +46,9 @@ Stated plainly, so nobody finds them for us.
   independently. Real lists are not independent, which biases capture-recapture.
 - Transmission rises with the rebreathed fraction of air, applied to all transmission and capped at five
   times the ventilated rate. The published relation covers ordinary indoor air, not fans switched off.
+- The grid steps every 60 s and its time constant 2H/D is 1 to 9 s for any plausible inertia, so the
+  frequency settles inside one step: the grid-inertia sweep moves no figure, and the model says nothing
+  about the first seconds after a trip, where inertia matters.
 - With fewer than 7 people on both lists, the capture-recapture estimate is noise. The seven-day outbreak
   is small, so the outbreak result comes from the 30-day run.
 - Simulated messages do not collide on air, and sound follows the tunnels one sector at a time. A
@@ -104,7 +107,8 @@ Stated plainly, so nobody finds them for us.
 - It hears a fan by its steady broadband sound (150 Hz to 1.7 kHz, the hum's frequencies left out) and alerts when that sound drops by 6 dB or more. It cannot tell why: a fan switched off for the night alerts the same as a power cut.
 - How loud a quiet room sounds depends on the phone's microphone. The quiet level is an assumption (−100 dB on the analyser's scale) until a phone test sets it: a phone with a loud quiet room may show "Fan: running" with no fan.
 - Unbroken talk louder than the fan hides a stop while the talk lasts; the alert comes in the pauses.
-- Tested on synthetic traces and in Chromium with a synthetic microphone; not yet on a phone with a real fan. District 7 does not score air warnings.
+- Tested on synthetic traces and in Chromium with a synthetic microphone; not yet on a phone with a real fan.
+- District 7 scores air warnings beside problem 1 on three scripted fan stops (seven-day week only): the Directorate warns at its 06:00 bulletin, STRATUM warns an assumed 50% of residents near a listening phone 5 s after the stop and the rest at the bulletin. The assumed share sets the gain. The stops do not raise CO2 in the air model, and a fan stopped by a power cut is not counted.
 
 ## Phone battery
 
@@ -148,12 +152,18 @@ Stated plainly, so nobody finds them for us.
 - Medicine requests are not yet case reports for outbreak tracking (problem 9).
 - Sound cannot detect contaminated water. The detector reads sensor values and residents' reports.
 
-## Who it leaves out
+## Who it leaves out, and who it could put at risk
 
 - The app must be installed once while the network is up. Spreading it phone to phone with no network is not built.
 - Family words must be agreed in person before a split, like a meeting place.
 - Tiers show a shape as well as colour (● GREEN, ▲ AMBER, ■ RED), and sound transfer needs no hearing from the user, but the app was not tested with deaf, blind or non-reading users.
 - People without a phone depend on a neighbour's phone or a shared laptop gateway.
+- Sending is audible: anyone within a few metres hears that someone sent a message. A family message's
+  contents and sender are encrypted and its group tag changes every minute, but its type (OK, NEED and
+  so on) and send time are in the clear, and public alerts are readable by anyone.
+- The family words are stored on the phone. Anyone holding the unlocked phone can read and send as the
+  family; **Leave family** deletes them (`src/phone/app.ts`, `leave()`).
+- The app is in English only. It was not translated or tested with non-English readers.
 
 ## Results that go against us
 
@@ -164,7 +174,7 @@ Stated plainly, so nobody finds them for us.
 - Sharing food at the floor lowers everyone's ration while one level is cut off, and when supply is
   below everyone's floor, everyone breaches, later but together.
 - When most surface crews lie, the quorum is confidently wrong. In the stress week STRATUM's verdict
-  is wrong in every round of the stress week, on all 20 seeds, while the Directorate's fixed verdict happens to be right.
+  is wrong in every round, on all 20 seeds, while the Directorate's fixed verdict happens to be right.
 - In this model staged trials never cost fewer exposure-hours than one direct 30-day trial: a breach is
   caught in the first hour either way. Their real value, catching harm that shows only after longer
   exposure, is not modelled.

@@ -190,6 +190,129 @@ the video never shows the real phone. About 20 minutes, same setup as Part F.
    Send the two files. I will splice them into the video in place of a screen shot, captioned "Filmed, Galaxy Z Fold 7, LIVE",
    keeping it under 3:00.
 
+## Part L (stretch features on the phone): tap count, cut odds, public alerts, ledger digest
+
+These four have passed in a browser only. About 17 minutes, same setup as Part A (phone on the table, screen up, 30 cm from the
+laptop speaker, bottom edge facing it). L5 at the end is optional and takes 15 minutes more.
+
+| Step | Device | Page | Minutes |
+| --- | --- | --- | --- |
+| L1 | Phone | `/src/phone/`, Care | 3 |
+| L2 | Laptop and phone | `/src/district/judge.html` and `/src/phone/`, Listen | 3 |
+| L3 | Laptop (three windows) and phone | `/src/phone/` on both, Report and Family | 7 |
+| L4 | Laptop and phone | `/src/district/` and `/src/phone/`, Family | 4 |
+| L5 (optional) | Laptop (three windows) and phone | as L2 and L3, then Ledger | 15 |
+
+Before you start: phone, open `/src/phone/` and pull down to reload twice (the newest version, and an empty ledger: it lives
+in the page's memory only).
+
+### L1: the 60-second tap count (phone alone)
+
+1. Phone: tap the **Care** tab. Under **1. Child's age** set **Years** to `1` (leave **Months** at "Optional").
+2. Under **2.** tap **Yes**. Under **3. Danger signs** tick nothing (untick any left from Part D).
+3. Tap **Start 60-second count**. The line reads **60 s left · 0 breaths · LIVE**. Tap the big **Tap once per breath**
+   button about 50 times, steadily (a little under one a second), starting at once and keeping on until it reads **0 s left**.
+   Do not tap **Stop**. Watch the breath count go up with each tap.
+4. Expected when the minute ends: a card **▲ AMBER: fast breathing**, the line "Fast breathing. The child needs medicine and a
+   health worker today. Send a medicine request.", then **Rate: N breaths per minute (fast is 40 or more at this age) · LIVE**,
+   where N is the count the counter showed, and a **Request medicine** button below. Do not press it. Write down N.
+5. Tap **Count again**. This time tap about 30 times, one every 2 seconds, again from the first second to the last.
+6. Expected: **● GREEN: breathing not fast**, **Rate: N breaths per minute (fast is 40 or more at this age) · LIVE**, and no
+   Request medicine button.
+
+Pass: AMBER at N of 40 or more, GREEN at N under 40, and each N matches the counter. If the rate line ends with
+"K double taps ignored", N is the counter minus K; that still passes. If the card says **↻ RECOUNT** ("Some breaths
+seem to be missing"), you started late or stopped early: tap **Count again** and tap from the first second to the last.
+
+### L2: cut odds on the Listen tab at AMBER and RED
+
+1. Phone: tap **Report**. Set **Level** to `3` and **Sector** to `A`. (The odds line shows only once a level is chosen.)
+2. Phone: tap **Listen**, then **Start listening** (allow the microphone if asked). Untick **Pass on messages for others** for
+   the rest of Part L, so the phone's own relay chirps do not talk over the laptop.
+3. Laptop: open `/src/district/judge.html`, check the button says **Sound: on**, click **Play the 90-second story**. Do not
+   press Skip.
+4. Watch the phone. Under the tier and the "mHz below normal" line:
+   - at GREEN (about 34 s): no odds line;
+   - at AMBER (about 63 s): **Level 3: no data yet (needs reports from 3 phones)**;
+   - at RED (about 75 s): the same line;
+   - at NO HUM (about 82 s): the line goes away.
+
+Pass: the line appears at AMBER and at RED, names level 3, and is gone at GREEN and NO HUM. "no data yet" is right here: a
+number needs three phones' power reports in a stress event that has ended (L5 shows one).
+
+### L3: HOLD WATER and ROUTE alerts, with a sender count
+
+The inbox counts the different member numbers that sent the same alert at the same place, and says "unconfirmed" below three.
+One laptop can act as three senders, because each browser window below gets its own member number:
+
+- **Window 1**: Chrome, a normal new tab, `/src/phone/`.
+- **Window 2**: Chrome incognito (**Ctrl+Shift+N**), `/src/phone/`.
+- **Window 3**: Microsoft Edge (or a Chrome Guest window), `/src/phone/`.
+
+Leave the phone listening from L2 (it keeps listening on every tab). Phone: tap **Family**, scroll down to **Inbox**.
+
+1. Laptop, in each of the three windows: tap **Family** and note "You are member N." The three numbers must differ (if two
+   match, close that window and open it again). Then tap **Report**, set **Level** `3` and **Sector** `A`.
+2. Window 1: under **Public alerts** click **⛔ Water looks or smells wrong: hold, do not drink**. The dialog says
+   "Level 3, sector A." and "Goes to everyone nearby." Click **Send now**. The laptop chirps about 3 s; the window then says
+   **✔ Sent "Water looks or smells wrong: hold, do not drink" to everyone nearby at HH:MM.**
+3. Phone, within about 10 s, a new row at the top of the inbox:
+   **LIVE · HH:MM · ⚠ Water looks or smells wrong: hold, do not drink from member N · level 3, sector A · public · 1 sender, unconfirmed**
+4. Window 1 again: send the same alert once more. Phone: a new row, still **1 sender, unconfirmed** (one phone sending twice
+   does not count twice).
+5. Window 2: send the same alert. Phone: **2 senders, unconfirmed**.
+6. Window 3: send the same alert. Phone: **3 senders**, with no "unconfirmed".
+7. Window 1: click **🚧 Tunnel flooded or blocked here**, **Send now**. Phone: a row
+   **LIVE · HH:MM · ⚠ Tunnel flooded or blocked here from member N · level 3, sector A · public · 1 sender, unconfirmed**
+   (a different alert has its own count).
+
+Wait for the chirps to end before the next send. If the phone shows nothing within 10 s, send again from the same window: a
+repeat from one window never raises the count. Keep the three windows open for L5.
+
+Pass: the four HOLD WATER rows read 1, 1, 2 and 3 senders, "unconfirmed" on the first three only, and the ROUTE row reads
+1 sender, unconfirmed. If you cannot open a third window (no Edge, no Guest), only the "unconfirmed" state can be shown
+(1 and 2 senders): write that in the notes.
+
+### L4: the ledger digest by sound from District 7
+
+1. Laptop: open `/src/district/` in a new tab and press **Ctrl+Shift+R** once. Leave **Sound: off**: its hum
+   would reach the listening phone and end the stress event L5 needs.
+2. Click **Play**, wait about 20 s, click **Pause**.
+3. Scroll to **Ledger: measured beside official**. On the line "Head digest, first 16 bytes of the measured chain:" write down
+   the bold part (the first 12 characters).
+4. Scroll down to **Gateway: phones in this room** and click **Send ledger digest** (no need to click Listen for phones). The
+   line under it reads **Playing digest XXXXXXXXXXXX of the SIMULATED Directorate ledger…**, the laptop chirps about 3 s, then
+   **Sent by sound: digest XXXXXXXXXXXX of the SIMULATED Directorate ledger. A listening phone shows it in its Family tab inbox.**
+   If it says "Not sent: the Directorate rule has no measured entries yet", click **Play** again, wait longer, **Pause**, and send
+   again.
+5. Phone, still on **Family**, within about 10 s, a new row at the top of the inbox:
+   **Public ledger digest heard: XXXXXXXXXXXX, compare with the District 7 screen · packet LIVE, sent HH:MM · public**
+
+Pass: the 12 characters on the phone match the bold digest and the "Sent by sound" line. Write the 12 characters in the notes.
+
+### L5 (optional, 15 minutes): a real odds number on Listen
+
+Only if time is left. It needs three senders and a stress event that has ended: an event counts 10 minutes after the hum
+falls back to GREEN. Do not reload the phone page during L5: the ledger is in its memory only.
+
+1. The stress event from L2 is still open: the phone has heard no GREEN since the RED (no judge
+   story, no District 7 sound). (If you replayed the story after L2, play
+   it once more to the end, until the phone shows NO HUM.)
+2. In each of the three windows from L3: **Report** (level 3, sector A), **🔌 Power cut here**, choose **Everyone nearby**,
+   **Send now**, waiting for the chirps to end each time.
+3. Phone: **Ledger**. Expected: **Reports heard (LIVE): ... 3 public** (more if you resent one).
+4. Laptop: in the judge tab click **Play the story again** (Sound on). Phone: **Listen**. As soon as the phone shows **● GREEN: normal** (about 34 s), close
+   the judge tab, before AMBER can come back. Note the time.
+5. Wait 11 minutes. Keep the phone screen on (tap it now and then) with Chrome and this page in front.
+6. Phone: **Ledger**. Expected: row **3**, under both **▲ AMBER** and **■ RED**: **67%** and "1 cut in 1 observed event". Other rows:
+   "no data yet".
+7. Laptop: open `/src/district/judge.html`, **Play the 90-second story**. Phone: **Listen**. At AMBER the line reads
+   **Level 3: cut in 1 of 1 past AMBER event, odds 67% · LIVE**; at RED **Level 3: cut in 1 of 1 past RED event, odds 67% · LIVE**.
+
+Pass: 67% on the Ledger tab and the same figure on the Listen line at AMBER and RED.
+
+At the end of Part L: phone, **Listen**, tick **Pass on messages for others** again.
+
 ## Results to send back
 
 Copy this table into the chat with your results. Paste the laptop's gateway log text under it.
@@ -227,3 +350,13 @@ Copy this table into the chat with your results. Paste the laptop's gateway log 
 | K | OK verified / sent | 1 m | | x / 10 |
 | K | OK verified / sent | 3 m | | x / 10 |
 | K | Clips filmed (A and F) | | | |
+| L1 | Tap count: AMBER at about 50 taps | | | N = |
+| L1 | Tap count: GREEN at about 30 taps | | | N = |
+| L2 | Odds line at AMBER and RED ("no data yet"), gone at GREEN and NO HUM | 30 cm | | |
+| L3 | HOLD WATER: 1 sender, unconfirmed | 30 cm | | |
+| L3 | HOLD WATER: same window again, still 1 sender | 30 cm | | |
+| L3 | HOLD WATER: 2 senders, unconfirmed | 30 cm | | |
+| L3 | HOLD WATER: 3 senders, no "unconfirmed" | 30 cm | | |
+| L3 | ROUTE: 1 sender, unconfirmed | 30 cm | | |
+| L4 | Ledger digest: phone shows the same 12 characters | 30 cm | | digest = |
+| L5 | Optional: 67% on Ledger and on the Listen line | 30 cm | | |

@@ -29,6 +29,11 @@ describe('harness beside figures, seven-day seed 1', () => {
     expect(runs.stratum.b.p06!.sharing!.value).toBeLessThanOrEqual(3);
   });
 
+  it('scores the seven-day fan stops: 12,000 person-hours unwarned under the Directorate, about half under STRATUM', () => {
+    expect(runs.directorate.b.p01!.airUnwarnedH!.value).toBe(12000);
+    expect(runs.stratum.b.p01!.airUnwarnedH!.value).toBeCloseTo(6000 + (3000 * 5) / 3600, 9);
+  });
+
   it('gives the trial costs of surface-design: 5,760 person-hours direct, 7,304 staged, no breach against a mask truth', () => {
     expect(runs.directorate.b.p14).toMatchObject({ exposureH: { value: 5760 }, breaches: { value: 0 } });
     expect(runs.stratum.b.p14).toMatchObject({ exposureH: { value: 7304 }, breaches: { value: 0 } });

@@ -16,7 +16,11 @@ const get = <T>(file: string): Promise<T | null> =>
 
 interface Rate { events: number; caught: number; precision: number; falseAlarmsPerWeek: number }
 interface Gecco { headline: string; results: Record<string, { kinds: string[]; firstHalf: Rate; heldOut: Rate }> }
-interface Enf { withHum: { clips: number; noHumShare: number; clipMedians: { clips: number; medianMHz: number; over500: number } }; noGrid: { whole: { clips: number; noHumShare: number } } }
+interface Enf {
+  withHum: { clips: number; noHumShare: number; clipMedians: { clips: number; medianMHz: number; over500: number } };
+  tiers: { absolute: { falseAlarmShare: number; falseEntriesPerHour: number; missShare: number; clipsRefAlert: number } };
+  noGrid: { whole: { clips: number; noHumShare: number } };
+}
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 
@@ -52,8 +56,9 @@ function rows(p: Problem): string {
 function replay(id: string, enf: Enf | null, gecco: Gecco | null): string {
   if (id === 'p01') {
     if (!enf) return '<p class="small"><span class="tag">REPLAY</span> ENF-WHU score file not found.</p>';
-    const w = enf.withHum, c = w.clipMedians;
-    return `<p class="small"><span class="tag">REPLAY</span> ENF-WHU, ${w.clips} real 50 Hz recordings: median of per-clip median errors ${c.medianMHz} mHz; ${c.over500} of the ${c.clips} clips with a median (${w.clips - c.clips} had none) are over 500 mHz (locked onto another tone); NO HUM on ${pct(w.noHumShare)} of readings with hum; NO HUM correct on ${pct(enf.noGrid.whole.noHumShare)} of readings from ${enf.noGrid.whole.clips} whole no-grid recordings.</p>`;
+    const w = enf.withHum, c = w.clipMedians, t = enf.tiers.absolute;
+    return `<p class="small"><span class="tag">REPLAY</span> ENF-WHU, ${w.clips} real 50 Hz recordings: median of per-clip median errors ${c.medianMHz} mHz; ${c.over500} of the ${c.clips} clips with a median (${w.clips - c.clips} had none) are over 500 mHz (locked onto another tone); NO HUM on ${pct(w.noHumShare)} of readings with hum; NO HUM correct on ${pct(enf.noGrid.whole.noHumShare)} of readings from ${enf.noGrid.whole.clips} whole no-grid recordings. `
+      + `Tiers as shipped, against the grid's own record: where the grid stayed GREEN the tracker showed AMBER or RED on ${pct(t.falseAlarmShare)} of readings (${t.falseEntriesPerHour} false warnings per hour of tiers shown), and it showed GREEN on ${pct(t.missShare)} of readings where the grid was AMBER or RED (the grid left GREEN in ${t.clipsRefAlert} of the ${w.clips} recordings).</p>`;
   }
   if (id === 'p04') {
     const q = gecco?.results[gecco.headline], k = gecco?.results.picked;
@@ -81,10 +86,12 @@ const glance: string[] = [];
 if (seven?.policies) {
   const scored = PROBLEMS.map((p) => ({ p, ...verdict(seven, p, p.id === 'p09' ? NOISE : '') })).filter((x) => x.w);
   const rest = scored.filter((x) => x.w !== 'STRATUM').map((x) => `${card(x.p)}: ${x.w === 'tie' ? 'a tie' : 'Directorate better'}`);
-  glance.push(`Seven-day week, ${seven.seeds.length} seeds, <strong>SIMULATED</strong>: STRATUM better on <strong>${scored.filter((x) => x.w === 'STRATUM').length} of the ${scored.length}</strong> problems the week can score${rest.length ? ` (${rest.join('; ')})` : ''}. Problem 9's outbreak is too small to score in a week: see its 30-day run.`);
+  const vs = (id: Problem['id'], what: string) => { const x = scored.find((y) => y.p.id === id); return x ? [`${what} (STRATUM ${show(x.s!.final.mean, x.s!.unit)} vs Directorate ${show(x.d!.final.mean, x.d!.unit)})`] : []; };
+  const wins = [...vs('p01', 'power cuts warned at least 10 min ahead'), ...vs('p02', 'need met for the worst-off tenth')];
+  glance.push(`Seven-day week, ${seven.seeds.length} seeds, <strong>SIMULATED</strong>: STRATUM better on <strong>${scored.filter((x) => x.w === 'STRATUM').length} of the ${scored.length}</strong> problems the week can score${rest.length ? ` (${rest.join('; ')})` : ''}${wins.length ? `, including ${wins.join(' and ')}` : ''}. Problem 9's outbreak is too small to score in a week: see its 30-day run.`);
 }
 // What each stress-week loss means, in words the cards do not print.
-const AGAINST: Partial<Record<Problem['id'], string>> = { p01: 'the warning gain is gone', p13: "STRATUM's verdict is wrong in every round", p14: 'nothing lighter proven' };
+const AGAINST: Partial<Record<Problem['id'], string>> = { p01: 'the warning gain is gone', p13: "STRATUM's verdict is in the wrong band in every round (wrong-band rate, lower is better)", p14: 'nothing lighter proven' };
 /** STRATUM's lead over the Directorate as a share of the Directorate's figure, or null when there is none to shrink. */
 const lead = (e: Evidence | null, p: Problem) => {
   const d = e?.policies?.directorate?.[p.id]?.final.mean, s = e?.policies?.stratum?.[p.id]?.final.mean;
@@ -120,7 +127,7 @@ document.getElementById('dumbbells')!.innerHTML = PROBLEMS.map((p) => {
 document.getElementById('engines')!.innerHTML = ablations?.conditions ? engines(ablations)
   : '<p class="small">The ablation file was not found: run npm run harness:ablations -- --seeds 20.</p>';
 document.getElementById('sweeps')!.innerHTML = sweeps?.sweeps ? sweeps.sweeps.map((w) => sweep(w, sweeps.seeds.length)).join('')
-  + `<p class="small">Not run, because each needs a model constant changed rather than the script: ${sweeps.skipped.map((k) => k.why).join(' ')}</p>`
+  + (sweeps.skipped?.length ? `<p class="small">Not run, because each needs a model constant changed rather than the script: ${sweeps.skipped.map((k) => k.why).join(' ')}</p>` : '')
   : '<p class="small">The sweep file was not found: run npm run harness:sweeps -- --seeds 20.</p>';
 
 document.getElementById('matrix')!.innerHTML = PROBLEMS.map((p, i) => `<li class="card" id="problem-${i + 1}" data-id="${p.id}">

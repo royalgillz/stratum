@@ -42,6 +42,10 @@ One factor per event keeps a shortfall's `from` below its `to` and a contaminati
 
 The seven-day script's deep shortfall (fixed) ramps loss from 4% to 30% at 2% an hour from hour 64. Deepest-first cuts one more sector each time the load no longer fits, and leaves 17 sectors lit once loss passes 27.1%, so sector 17, the demo family's, goes dark in the step at 75:35. The real-time act "Level 5 goes dark: deepest first" runs from hour 75.55 for 4 minutes, so the cut lands about two minutes in and the silence holds for about two. Under STRATUM the same supply leaves every sector about 72% of its demand: the side-by-side shows level 5 dark under one rule and lit under the other.
 
+## Fan stops
+
+The seven-day script lists three ventilation-fan failures in `fanStops`, not in `events`: hour 40 on level 6 for 3 h, hour 101 on level 4 for 4 h (across the 06:00 bulletin at hour 102), hour 140 on level 2 for 2 h. Only p01's air figure reads them (`docs/intent/adapters/power`), and `varyScript` keeps them as written, so they move no other number. The stress week has none.
+
 ## The stress week
 
 `stressWeek` is a seven-day script, `vary: { shiftH: 1, scale: 0.2 }`, the same demo household, one time-lapse act "A week below the floor":
@@ -60,7 +64,7 @@ The seven-day script's deep shortfall (fixed) ramps loss from 4% to 30% at 2% an
 
 ## Interface
 
-`varyScript(script, seed)`, `stressWeek`, and on the types: `Script.vary?: { shiftH: number; scale: number }`, an optional `fixed?: boolean` on every event (only `true` holds an event fixed), and the event types `farm-cut`, `care` and `surface`.
+`varyScript(script, seed)`, `stressWeek`, and on the types: `Script.vary?: { shiftH: number; scale: number }`, an optional `fixed?: boolean` on every event (only `true` holds an event fixed), the event types `farm-cut`, `care` and `surface`, and `Script.fanStops?: FanStop[]` (`atH`, `level`, `durH`).
 
 ## Decisions & Alternatives
 

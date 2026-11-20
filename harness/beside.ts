@@ -1,7 +1,9 @@
 // Figures the rung 4 designs ask the harness to report beside some metrics, from public core functions only:
 // p06 contact cost (spacecare-design "p06"), p12 cost to other levels (lightfood-design "Food metric"),
-// p14 exposure-hours and breaches, p15 each level's mean wait (surface-design "p14", "p15").
+// p14 exposure-hours and breaches, p15 each level's mean wait (surface-design "p14", "p15"),
+// p01 person-hours with a stopped fan before a warning (power-design "p01: air").
 import type { AdapterId, World } from '../src/core/contracts.ts';
+import { airUnwarned } from '../src/core/adapters/p01.ts';
 import { census } from '../src/core/adapters/p06.ts';
 import { FOOD_SUPPLY } from '../src/core/adapters/p02.ts';
 import { createP14 } from '../src/core/adapters/p14.ts';
@@ -67,8 +69,12 @@ export function beside(world: World, script: Script, seed: number, policy: Polic
 
   const plan = replayP14(world, script, seed, policy);
 
-  const waits = levelWaits(createWorld(seed, script), policy, seed);
+  const start = createWorld(seed, script);
+  const waits = levelWaits(start, policy, seed);
+  // p01 air: only for a script with fan stops, so the other evidence files keep their bytes.
+  const air = script.fanStops?.length ? { p01: { airUnwarnedH: { name: 'person-hours with a stopped fan, not yet warned', unit: 'person-h', value: airUnwarned(start, script, policy) } } } : {};
   return {
+    ...air,
     p06: { sharing: { name: 'households sleeping in one space a day', unit: 'households', value: sharing } },
     p12: { otherStore: { name: 'store left on levels no farm cut-off covers', unit: 'days', value: store } },
     p14: {

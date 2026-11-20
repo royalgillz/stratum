@@ -14,7 +14,7 @@ It is for the Hollow, a city underground where the Directorate controls power an
 
 Installed once while the network is up, it needs no signal or account. Families agree six secret words in person. Signed messages such as "I am OK" pass phone to phone by sound, encrypted, so a listener cannot read or follow them. A breathing-rate aid helps parents decide when a small child needs care.
 
-One loop (hear, prove, pass on, share fairly) answers all fifteen problems: four tested in part on a real phone, eleven modelled in District 7.
+One loop (hear, prove, pass on, share fairly) addresses all fifteen problems: four tested in part on a real phone, eleven modelled in District 7.
 
 Real: on a Galaxy Z Fold 7, hum warnings at 30 cm; a signed "I am OK" verified 3 m away (LIVE, one trial).
 
@@ -34,7 +34,7 @@ Tested on a Galaxy Z Fold 7.
 
 ## Why did you choose to build this? What was your thinking?
 
-Governments do cut networks during unrest, and power cuts rarely fall evenly. The Hollow takes that to its end.
+Governments do cut networks during unrest, as in Myanmar in 2021 and Iran in 2022, and power cuts rarely fall evenly.
 
 The authorities control the infrastructure, so we started from what the Directorate cannot control: physics. Every powered machine hums at the grid frequency, and the pitch sags before supply runs out. Every phone has a microphone and a speaker. So a phone can hear trouble coming and talk to the next phone with no network.
 

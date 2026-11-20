@@ -42,7 +42,7 @@ The model is linear and is used only inside the tracker band (±2.5 Hz). A short
 
 ## Interface
 
-`capacityAt(events, t, nominalMW)`, `steadyDeviation(capMW, loadMW)`, `swing(f, capMW, loadMW, dt) → { f, rocof }`, `tierOf(f, previous)`, and the type `GridEvent` (`type`, `atH` and the optional loss and duration fields), which any scenario event satisfies. The constants `F0`, `H`, `D` are exported for the emitter, and `CAP_MARGIN` for the adapters.
+`capacityAt(events, t, nominalMW)`, `steadyDeviation(capMW, loadMW)`, `swing(f, capMW, loadMW, dt, h = H) → { f, rocof }` (`h` lets the inertia sweep change `H` for one run), `tierOf(f, previous)`, and the type `GridEvent` (`type`, `atH` and the optional loss and duration fields), which any scenario event satisfies. The constants `F0`, `H`, `D` are exported for the emitter, and `CAP_MARGIN` for the adapters.
 
 ## Decisions & Alternatives
 

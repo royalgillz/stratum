@@ -80,6 +80,8 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | GECCO alarm merge | 30 | min | harness (gecco) | | true | Detector openings within 30 min of the previous alarm are the same alarm. Used only to count alarms and false alarms, so a false alarm just before an event cannot swallow the opening that catches it |
 | GECCO split | first half / second half | rows | harness (gecco) | https://zenodo.org/records/3884398 | true | The published CSV is the challenge's training file, so there is no official test split. Detector settings are not tuned |
 | GECCO picked-sensor precision | 0.5 | ratio | harness (gecco) | | true | "picked" keeps the quality sensors whose own first-half precision is at least 0.5; scored on the second half only |
+| Grid-inertia sweep points | 1, 2, 4, 6, 9 | s | harness (sweeps) | | true | 2 to 9 s is the typical thermal-plant range (Kundur 1994) and 4 s the model's `H`; 1 s stands in for a low-inertia, inverter-heavy plant below that range |
+| Under-reporting sweep points | 0.25, 0.5, 0.75, 1, 1.5 | x every capture probability | harness (sweeps) | | true | 1 is the model (clinic 0.6 at level 1 to 0.2 at level 6, residents 0.5). 0.25 leaves a clinic list of 0.05 to 0.15 and residents 0.125; 1.5 is near the most the clinic list allows (1 / 0.6) |
 | Kernel world time step | 60 | s | kernel | | true | Fixed; 43,200 steps for 30 simulated days |
 | Kernel time-lapse scale | 3600 | world s per real s | kernel | | true | One simulated hour per real second, from docs/plan.md |
 | Kernel steps per advance, cap | 600 | steps | kernel | | true | Excess owed time is dropped so a stalled tab cannot freeze on resume |
@@ -106,6 +108,9 @@ All values below are SIMULATED inputs. Each is defined once in its model or adap
 | Shed threshold (SHED_HZ) | 1.0 | Hz below 400 | adapters | | true | Kept inside the tracker band of 2.5 Hz so a phone hears the whole sag |
 | Shed reserve (RESERVE) | 2 | % | adapters | | true | Target load is capacity / 1.02 while shedding |
 | Warning lead (WARN_LEAD) | 10 | min | adapters | | true | A cut counts as warned with at least this much AMBER or RED before it |
+| Residents near a listening phone (LISTEN_SHARE) | 50 | % | adapters (p01 air) | | true | Share warned by the fan-stop alert under STRATUM; STRATUM's air figure scales with it (about 1 minus this share of the Directorate's) |
+| Fan-stop alert delay (FAN_ALERT_S) | 5 | s | adapters (p01 air) | | true | AIR-FAN-010's bound; 2.0 s after a sudden stop on synthetic traces |
+| Fan stops in sevenDay (`fanStops`) | hour 40 level 6 for 3 h; hour 101 level 4 for 4 h; hour 140 level 2 for 2 h | - | scenario | | true | Read only by p01's air figure; not varied by seed; the hour-101 stop spans the 06:00 bulletin |
 | Rock temperature at level 1 (ROCK_TOP) | 25 | deg C | air-heat | | true | |
 | Rock temperature step (ROCK_STEP) | 3 | deg C per level | air-heat | | true | About 30 deg C/km with 100 m per level |
 | Internal heat gain (GAIN) | 2 | deg C | air-heat | | true | People and equipment |

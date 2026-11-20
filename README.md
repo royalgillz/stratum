@@ -11,7 +11,7 @@
 **Judge in 5 minutes:** play judge mode; open the coverage matrix's "Results at a glance"; read [docs/device-results.md](docs/device-results.md) and [docs/limits.md](docs/limits.md).
 
 
-A citizen toolkit for the Hollow (Patriot HackFest Fall 2026, track "Life Underground") with one loop: hear, prove, pass on, share fairly. A phone hears the grid's hum sag before a power cut, passes short signed messages by sound with no network, and a fair-share rule divides what there is. District 7, a simulated district of 6 levels by 4 sectors, tests all of it against the Directorate's rule.
+A citizen toolkit for the Hollow (Patriot HackFest Fall 2026, track "Life Underground") with one loop: hear, prove, pass on, share fairly. A phone hears the grid's hum sag before a power cut, passes short signed messages by sound with no network, and a fair-share rule divides what there is. District 7, a simulated district of 6 levels by 4 sectors, tests all of it against the Directorate's rule. The same physics holds wherever the network is shut down and power is rationed: a phone hears the hum and talks to the next phone by sound.
 
 Write-up: [docs/writeup.md](docs/writeup.md).
 
@@ -57,8 +57,8 @@ The main ones (full list: [docs/limits.md](docs/limits.md)):
 - District 7 is a simulation; its heat, water, disease, food and surface values are model outputs.
 - Sound carries a few metres. Devices showed one hop at up to 3 m and one relay hop; multi-hop reach is simulated.
 - Public alerts are not signed, and one sender can pose as several.
-- Android only; no iPhone was tested. The fan alert's phone test is pending, and District 7 does not score air warnings.
-- No case-report format yet; the grid-inertia and under-reporting sweeps were not run; no on-device sound model (such as cough counting) is shipped.
+- Android only; no iPhone was tested. The fan alert's phone test is pending, and District 7 scores air warnings only on scripted fan stops and an assumed share of listening phones.
+- No case-report format yet; the 60 s grid step cannot show the first seconds after a trip, so the grid-inertia sweep moves nothing; no on-device sound model (such as cough counting) is shipped.
 
 ## Run it
 
@@ -92,8 +92,12 @@ An ablation switches one engine off: the adapters mapped to it run the Directora
 The two replays of real data (REPLAY). Fetch the ENF-WHU recordings first, as [data/README.md](data/README.md) says (the GECCO file is committed):
 
 ```
-npm run score:enf     # tracker on ENF-WHU, writes public/evidence/enf-whu.json
+npm run score:enf     # tracker and its tiers on ENF-WHU, writes public/evidence/enf-whu.json
 npm run score:gecco   # Witness detector on GECCO 2018, writes public/evidence/gecco.json
 ```
 
 Both report figures that go against us: the tracker says NO HUM on 56.5% of readings that have hum, and the detector on all six water sensors raises about 159 false alarms a week.
+
+## How it was built, licences
+
+Built by one person, who made every decision and ran the device tests; every decision is dated in [CHANGELOG.md](CHANGELOG.md). No AI runs in the product. Code: MIT. Data: ENF-WHU (MIT), GECCO 2018 (CC BY 4.0, Moritz et al., DOI 10.5281/zenodo.3884398). ggwave: MIT.

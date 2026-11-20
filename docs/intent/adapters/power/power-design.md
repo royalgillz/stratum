@@ -23,6 +23,17 @@ Each step, in this order:
 
 *What sets this number.* Under the Directorate it is 0 by rule. Under STRATUM a cut is warned only when the loss ramps slower than about 2.7% of nominal capacity per hour (AMBER at about 4.79% loss, the shed at about 5.24%, ten minutes apart), so the script's ramp rates set it. In the seven-day script the hour-30 and hour-64 shortfalls are warned. The real-time act "The hum sags" shows the hum falling, but its shed lands under a minute later, too short to count.
 
+## p01: air
+
+The phone's fan-stop alert (`docs/intent/air`) is scored beside p01's metric, not as a second metric: an adapter has one. `airUnwarned(world, script, policy)` is a pure function of the script's `fanStops` (fan failures on a level, kept apart from `events` so no world model, kernel step or other adapter sees them) and each level's people.
+
+- *Directorate:* nobody is warned until the next daily 06:00 bulletin (p07's `BULLETIN`), or the fan restarts first.
+- *STRATUM:* a share `LISTEN_SHARE` of the level is near a phone with the Listen tab on and is warned `FAN_ALERT_S` after the stop (AIR-FAN-010's bound), or by the bulletin if that comes first; the rest wait for the bulletin, which keeps running.
+
+**Figure:** "person-hours with a stopped fan, not yet warned", unit `person-h`, reported by the harness beside p01 (`harness/beside.ts`) for a script that has fan stops.
+
+*What sets this number.* The script's stop lengths and the bulletin hour set the Directorate's figure; STRATUM's is about `1 − LISTEN_SHARE` of it, so the assumed share sets the gain. The stops do not change CO2 or heat in the air model, and a fan that stops because its sector's power is cut is not counted.
+
 ## p02: power, water and food
 
 **Shedding.** Shedding starts in a step where `grid.f ≤ F0 − SHED_HZ` and stops in a step where capacity covers the full demand with the reserve: `capacity ≥ DEMAND_MW × (1 + RESERVE)`. While shedding, the power to hand out is `target = capacity / (1 + RESERVE)`; otherwise every sector gets its full demand.
@@ -47,7 +58,9 @@ Each step, in this order:
 | Water and power | Directorate pipes water only to powered sectors | Water independent of power | Pumps and recyclers need power; this is the physical reason deep cuts also take water |
 | Food under a farm cut-off | STRATUM shares deliveries over all sectors | Leave the cut-off level out of the food term; pool food again in `p12` | One allocation per good; leaving the level out would hide its hunger from problem 2 |
 | Metric | Mean of three goods, worst 10% of people | Minimum over goods; Jain index | Readable as "the worst-off got this share"; the others are deferred secondary metrics |
-| Warning under the Directorate | None counted | Credit the hum anyway | Without the toolkit nobody reads the hum, and the Directorate announces nothing |
+| Warning under the Directorate | None counted | Credit the hum anyway | Without the toolkit nobody reads the hum, and the Directorate never announces a cut ahead (its 06:00 bulletin reports a stopped fan only after the fact) |
+| Air warnings | A beside figure from scripted fan stops in their own script field | A fan-stop event in `events`; a second p01 metric; CO2 rising after the stop | A new event would shift seed variation and every existing number; `Adapter` returns one metric; coupling CO2 changes p03 and p09 |
+| Directorate air warning | The 06:00 bulletin | No warning at all | The bulletin is the Directorate's stated daily channel; never warning would be a straw man |
 
 ## Open Questions & Future Decisions
 

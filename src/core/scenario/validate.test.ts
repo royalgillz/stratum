@@ -52,6 +52,20 @@ describe('validateScript', () => {
   });
 
   // @spec SCEN-001
+  it('SCEN-001 accepts model constants above 0, capture up to 1 / CLIN_TOP, and rejects the rest', () => {
+    const s: Script = { ...good(), model: { gridH: 0.5, capture: 1 / 0.6 } };
+    expect(() => validateScript(s)).not.toThrow();
+    expect(() => validateScript({ ...good(), model: {} })).not.toThrow();
+    bad('model', (s) => (s.model = null));
+    bad('model', (s) => (s.model = 4));
+    bad('model.gridH', (s) => (s.model = { gridH: 0 }));
+    bad('model.gridH', (s) => (s.model = { gridH: NaN }));
+    bad('model.capture', (s) => (s.model = { capture: 0 }));
+    bad('model.capture', (s) => (s.model = { capture: 1.7 }));
+    bad('model.capture', (s) => (s.model = { capture: Infinity }));
+  });
+
+  // @spec SCEN-001
   it('SCEN-001 rejects days that are not a positive integer', () => {
     bad('days', (s) => (s.days = 0));
     bad('days', (s) => (s.days = 1.5));

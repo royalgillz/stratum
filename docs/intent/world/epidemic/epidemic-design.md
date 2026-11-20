@@ -22,7 +22,7 @@ Per sector, integer compartments `S, E, I, R` and the number of treated cases `T
 
 ## The two lists
 
-Every new infectious case is one person. It joins the clinic list with probability `pClinic(level) = CLIN_TOP − CLIN_STEP × (level − 1)` (clinics are fewer and further away in the deep levels) and the residents' list with probability `P_REPORT`, independently. For `k` new infectious cases in a sector, three binomials give the same joint result as two draws per case: clinic `n1 = Bin(k, pClinic)`, both `m = Bin(n1, P_REPORT)`, residents `n2 = m + Bin(k − n1, P_REPORT)`. The model adds them to the sector's counts for day `floor(t / 86400)`, so an adapter can take a recent window.
+Every new infectious case is one person. It joins the clinic list with probability `pClinic(level) = CLIN_TOP − CLIN_STEP × (level − 1)` (clinics are fewer and further away in the deep levels) and the residents' list with probability `P_REPORT`, independently. For `k` new infectious cases in a sector, three binomials give the same joint result as two draws per case: clinic `n1 = Bin(k, pClinic)`, both `m = Bin(n1, P_REPORT)`, residents `n2 = m + Bin(k − n1, P_REPORT)`. The model adds them to the sector's counts for day `floor(t / 86400)`, so an adapter can take a recent window. An optional `capture` factor (default 1) multiplies every capture probability, so the under-reporting sweep can change capture for one run.
 
 Independence between lists is what Chapman's estimator assumes. It is true here by construction and stated as a limit for the real world.
 

@@ -104,6 +104,14 @@ describe('grid', () => {
     expect(tierOf(F0 - 0.029, 'RED')).toBe('GREEN');
   });
 
+  // @spec WORLD-GRID-009
+  it('WORLD-GRID-009 takes an optional inertia constant h, H by default, and rejects one not above 0', () => {
+    expect(swing(399.8, 10, 10.5, 2)).toEqual(swing(399.8, 10, 10.5, 2, H));
+    const dss = steadyDeviation(10, 10.5);
+    expect(swing(399.8, 10, 10.5, 2, 9).f).toBeCloseTo(F0 + dss + (399.8 - F0 - dss) * Math.exp(-2 / ((2 * 9) / D)), 12);
+    for (const h of [0, -1, NaN, Infinity]) expect(() => swing(F0, 1, 1, 1, h)).toThrow(RangeError);
+  });
+
   // @spec WORLD-GRID-008
   it('WORLD-GRID-008 throws RangeError on bad inputs', () => {
     const bad = [NaN, Infinity, -Infinity];
