@@ -19,11 +19,11 @@ Devices:
 | A | NO HUM after the cut | 30 cm | Pass | NO HUM at about 80 s (the sheet said about 82 s) |
 | B | Phone passed on the laptop's report | 30 cm | Pass | The phone received the laptop tab's public "Power cut here" report (inbox shows it, LIVE, public) and passed it on: its Listen tab showed "Passed on 1 message this session" (one relay hop). No third device was set up to hear the relayed copy |
 | B | Ledger shows 1 public report | | Not reported | |
-| C | Family board row for the other member | not reported | Pass | Laptop tab and phone in one family (words chosen by the human). The laptop tab's "I am OK" (family only) reached the phone's Family board and inbox, LIVE, signed with the family key by the shipped codec |
+| C | Family board row for the other member | not reported | Pass | Laptop tab and phone in one family (words chosen by the human). The laptop tab's "I am OK" (family only) reached the phone's Family board and inbox, LIVE, signed with the family key by the shipped codec. See [screenshot](device/device-phone-family-board.png). |
 | D | AMBER after about 50 taps | | Pass, in a browser | Age 1 year, cough yes, 50 taps in 60 s gave AMBER (fast is 40 or more), labelled LIVE. Run in the laptop browser, not on the phone |
 | D | RED at once on a danger sign | | Pass, in a browser | Ticking Convulsions turned it RED at once. Laptop browser, not the phone |
 | E | Judge mode plays end to end | | Pass | On the laptop: the drawn phone went through every tier and the OK arrived in its inbox. The real phone showed NO HUM during E because judge mode was muted, as expected |
-| F | OK verified, LIVE on board | 30 cm | Pass | The phone's "I am OK" (family only), a signed v3 packet from the shipped codec, verified by the District 7 gateway on the laptop: "Verified OK from member 232 · LIVE". The LIVE row appeared on "Family board: the demo family" while the run was paused |
+| F | OK verified, LIVE on board | 30 cm | Pass | The phone's "I am OK" (family only), a signed v3 packet from the shipped codec, verified by the District 7 gateway on the laptop: "Verified OK from member 232 · LIVE". The LIVE row appeared on "Family board: the demo family" while the run was paused. See [screenshot](device/device-gateway-verified.png). |
 | F | OK verified | 1 m | Pass | Same packet and gateway |
 | F | OK verified | 3 m | Pass | Same packet and gateway |
 | F | Row stays when switching rule | | Pass | The row stayed when switching STRATUM rule and Directorate rule, when playing, and after the week ended |

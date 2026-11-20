@@ -21,6 +21,7 @@ a.cta { display: inline-flex; align-items: center; min-height: 48px; padding: 8p
 a.cta:hover { text-decoration: underline; }
 .row { display: flex; flex-wrap: wrap; align-items: center; }
 .muted { color: var(--muted); }
+.lede { font-size: 1.15rem; }
 .small { font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .note { border: 2px dashed var(--amber); padding: 8px; font-weight: 600; }
 code { overflow-wrap: anywhere; }
@@ -39,7 +40,7 @@ html { overflow-anchor: none; }
 .stage h2 { font-size: 0.95rem; margin: 12px 0 4px; }
 .phone { width: 100%; max-width: 260px; min-height: 420px; padding: 24px 14px; border: 10px solid var(--case); border-radius: 32px; background: var(--screen); overflow-wrap: anywhere; }
 .phone .tag { margin: 0 0 8px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--muted); text-align: center; }
-#tier { font-size: 1.3rem; font-weight: 700; margin: 8px 0 4px; }
+#tier { font-size: 1.6rem; font-weight: 700; margin: 8px 0 4px; }
 #tier[data-tier=GREEN] { color: var(--green); }
 #tier[data-tier=AMBER] { color: var(--amber); }
 #tier[data-tier=RED] { color: var(--red); }

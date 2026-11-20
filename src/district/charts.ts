@@ -92,7 +92,7 @@ export function engines(a: Ablations): string {
   });
   return `<p class="small">Seven-day week, ${a.seeds.length} seeds, <strong>SIMULATED</strong>. One engine is switched off by running its problems under the Directorate's rule and the rest under STRATUM's. Each change is paired by seed, with a 95% interval.</p>`
     + `<p class="small"><b>Against STRATUM:</b> the engines barely interact. ${own} of the ${own + cross.length} changes are in the switched engine's own problems, so the ablation shows each problem's rule, not a loop worth more than its parts. Cross effects: ${cross.join('; ') || 'none'}.${flat.length ? ` No clear change, the interval spans 0: ${flat.join('; ')}.` : ''} Where the Directorate's figure is set by its stated rule (problems 1, 7, 8, 10, 13 and 14), switching Witness or Mesh off returns that figure, so the change shows the mechanism, not a measured gain.</p>`
-    + parts.join('');
+    + `<details class="small"><summary>Each engine, problem by problem</summary>${parts.join('')}</details>`;
 }
 
 /** A round number at or above v: the top gridline of a line chart. */

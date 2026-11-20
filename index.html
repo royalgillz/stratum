@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STRATUM</title>
+  <meta name="description" content="A free phone app that hears a blackout coming in the grid's hum and lets families say I am OK by sound, with no network." />
+  <meta property="og:title" content="STRATUM" />
+  <meta property="og:description" content="A free phone app that hears a blackout coming in the grid's hum and lets families say I am OK by sound, with no network." />
   <link rel="stylesheet" href="/src/district/judge.css" />
   <style>
     /* The home page shares judge mode's colours, type and buttons; only its own layout is here. */
@@ -18,6 +21,9 @@
     .facts strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .facts .proof strong { font-size: inherit; }
     .facts .loss { border-left: 4px solid var(--amber); padding-left: 10px; }
+    .facts .lead .big { display: block; }
+    .facts .lead strong, .facts .loss strong { font-size: 1.8rem; line-height: 1.15; }
+    .facts .lead .caveat { display: block; margin-top: 4px; }
     .pages { list-style: none; padding: 0; margin: 0; }
     .pages li { margin: 0 0 8px; }
     /* A block link with padding: a 44 px target without the 44 px line-height that split wrapped lines apart. */
@@ -31,8 +37,8 @@
 <body>
   <header>
     <h1>STRATUM</h1>
-    <p class="lede">In the Hollow, a city underground, the Directorate holds the breakers and the network. The network is down, and power cuts come with no warning.</p>
-    <p>STRATUM is a phone app that hears the grid weaken before a power cut, and passes short family messages by sound. No network needed.</p>
+    <p class="lede">A warning before the power is cut, and word that your family is safe, with no network.</p>
+    <p>In the Hollow, a city underground, the Directorate holds the breakers and the network. The network is down, and power cuts come with no warning. STRATUM is a phone app that hears the grid weaken before a power cut, and passes short family messages by sound. No network needed.</p>
   </header>
 
   <main>
@@ -41,10 +47,12 @@
 
     <h2>What it changes</h2>
     <ul class="facts">
-      <li><strong>40% vs 0%</strong> of power cuts warned at least 10 minutes ahead, STRATUM against the Directorate's rule. Worst-off tenth: <strong>85% vs 66%</strong> of need met. Seven-day week, 20 seeds · SIMULATED</li>
-      <li class="loss">Against us: in the stress week the warning gain is gone, 0% vs 0% · SIMULATED</li>
+      <li class="lead"><span class="big"><strong>40% vs 0%</strong> of power cuts warned at least 10 minutes ahead</span> <span class="big"><strong>85% vs 66%</strong> of need met for the worst-off tenth</span> <span class="caveat">STRATUM against the Directorate's rule (the Directorate's rule issues no warnings, so its 0% is by rule; with Fair Share switched off, STRATUM warns 15%). Seven-day week, 20 seeds · SIMULATED</span></li>
+      <li class="loss">Against us: in the stress week the warning gain is gone, <strong>0% vs 0%</strong> · SIMULATED</li>
       <li class="proof"><strong>Tested on a real phone</strong> (Galaxy Z Fold 7, Nov 19 2026): hum tiers at 30&nbsp;cm, a signed family OK to the District 7 gateway at 30&nbsp;cm, 1&nbsp;m and 3&nbsp;m, one relay hop, and installed and listening in Airplane mode · LIVE</li>
+      <li><strong>Care:</strong> a decision aid, not a medical device, for children under five. A parent counts breaths and ticks five of the WHO chart's danger signs, gets GREEN, AMBER or RED, and can request medicine by sound. Danger-sign RED and the request tested on the Fold 7 · LIVE; the 60-second count in a laptop browser</li>
     </ul>
+    <p class="small">One loop, all fifteen problems: <strong>hear and prove</strong> (hum tracker, Witness ledger) 1, 4, 9, 13, 14; <strong>pass on</strong> (Mesh) 7, 8, 10; <strong>share fairly</strong> (Fair Share) 2, 3, 5, 6, 11, 12, 15 · details in the coverage matrix.</p>
 
     <h2>More</h2>
     <ul class="pages">

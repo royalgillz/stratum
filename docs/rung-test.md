@@ -18,7 +18,7 @@ Site: `https://stratum-nine-swart.vercel.app` (all links below start with it).
 2. Phone: open `/src/phone/`.
 3. Phone: tap the **Listen** tab, then **Start listening**. If Chrome asks, tap **Allow** for the
    microphone.
-4. Laptop: click **Play the 90-second story**. Check that the button next to it says **Sound: on**.
+4. Laptop: click **Play the 90-second story**. Check that the button next to it says **Sound: on**. Do not press Skip: the listening phone needs the full 30 s calibration.
 5. Watch the phone. Do not move it. Expected, roughly:
    - 0 to 30 s: CALIBRATING
    - about 34 s: GREEN
@@ -175,6 +175,21 @@ The cough counter is not on the live site yet. It goes live only if this test pa
 
 Pass: 8 or more of the 10 coughs counted, and at most 1 count during the 5 minutes (clap and drop included).
 
+## Part K (judges' top asks): repeat sends and a short real-phone clip
+
+Three judge reviews agreed on two gaps only you can close: the shipped codec has one send per distance (no success rate), and
+the video never shows the real phone. About 20 minutes, same setup as Part F.
+
+1. **Repeat sends.** Laptop: `/src/district/`, gateway words set, **Listen for phones**. Phone: Report, **I am OK**, **Family only**,
+   **Send now**, 10 times at 1 m, then 10 times at 3 m, waiting for the chirps to end each time. Count the
+   `Verified OK from member ...` lines in the gateway log (repeats say "Repeat of", count those too). Write "verified / sent"
+   for each distance.
+2. **Film two short clips** with a second phone or the laptop webcam, landscape, the Fold's screen readable:
+   - about 15 s of Part A: the Fold on Listen going GREEN, AMBER, RED while judge mode plays with Sound on;
+   - about 10 s of Part F: the Fold sending OK, then the laptop's District 7 board adding the LIVE row.
+   Send the two files. I will splice them into the video in place of a screen shot, captioned "Filmed, Galaxy Z Fold 7, LIVE",
+   keeping it under 3:00.
+
 ## Results to send back
 
 Copy this table into the chat with your results. Paste the laptop's gateway log text under it.
@@ -209,3 +224,6 @@ Copy this table into the chat with your results. Paste the laptop's gateway log 
 | I | Fan off while talking: alert | 1 m | | |
 | J | Coughs counted (of 10) | 1 m | | |
 | J | False counts in 5 min of talk, clap, drop | 1 m | | |
+| K | OK verified / sent | 1 m | | x / 10 |
+| K | OK verified / sent | 3 m | | x / 10 |
+| K | Clips filmed (A and F) | | | |

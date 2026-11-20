@@ -1,6 +1,6 @@
 # Known limits
 
-Stated plainly, so nobody finds them for us. Copy this section into the README before submission.
+Stated plainly, so nobody finds them for us.
 
 ## What is simulated
 
@@ -97,6 +97,7 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 - The tracker needs to be close to the hum. With the phone 30 cm from the source it followed a slow
   ramp within 4 mHz. At 1 m in a room where people moved, echoes made the reading wander by
   ±15 mHz even after smoothing, so the warning levels sit well above that.
+- The replay on real recordings scores frequency error only. How often a steady real grid would show a false AMBER or RED was not measured.
 
 ## Air watch (fan-stop alert)
 
@@ -116,7 +117,7 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
 
 ## Sound messages
 
-- Sound carries a few metres in one room. The device test showed one hop, phone to a laptop gateway, at up to 3 m (`docs/device-results.md`). The phone also passed a laptop tab's report on (one relay hop). Multi-hop reach is simulated.
+- Sound carries a few metres in one room. The device test showed one hop, phone to a laptop gateway, at up to 3 m (`docs/device-results.md`). Each distance was one send with the shipped codec, not a repeated trial; the 20/20 counts are from the earlier spike code (docs/spikes.md). The phone also passed a laptop tab's report on (one relay hop). Multi-hop reach is simulated.
 - A packet takes about 2 to 3 seconds. This is for status and short codes, not chat.
 - Phones relay other families' messages without being able to check them, so well-formed junk can cost air time. Each phone relays any one message at most once and at most 4 hops, but an attacker can make endless new messages, and phones carry each one up to 4 hops of rooms beyond the attacker's speaker.
 - Anyone who hears a message can replay it marked "no hops left", so phones that hear the replay first never pass the real message on.
@@ -146,6 +147,13 @@ Stated plainly, so nobody finds them for us. Copy this section into the README b
   breath intervals is caught.
 - Medicine requests are not yet case reports for outbreak tracking (problem 9).
 - Sound cannot detect contaminated water. The detector reads sensor values and residents' reports.
+
+## Who it leaves out
+
+- The app must be installed once while the network is up. Spreading it phone to phone with no network is not built.
+- Family words must be agreed in person before a split, like a meeting place.
+- Tiers show a shape as well as colour (● GREEN, ▲ AMBER, ■ RED), and sound transfer needs no hearing from the user, but the app was not tested with deaf, blind or non-reading users.
+- People without a phone depend on a neighbour's phone or a shared laptop gateway.
 
 ## Results that go against us
 

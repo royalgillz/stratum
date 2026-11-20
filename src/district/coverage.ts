@@ -81,7 +81,7 @@ const glance: string[] = [];
 if (seven?.policies) {
   const scored = PROBLEMS.map((p) => ({ p, ...verdict(seven, p, p.id === 'p09' ? NOISE : '') })).filter((x) => x.w);
   const rest = scored.filter((x) => x.w !== 'STRATUM').map((x) => `${card(x.p)}: ${x.w === 'tie' ? 'a tie' : 'Directorate better'}`);
-  glance.push(`Seven-day week, ${seven.seeds.length} seeds, <strong>SIMULATED</strong>: STRATUM better on ${scored.filter((x) => x.w === 'STRATUM').length} of the ${scored.length} problems the week can score${rest.length ? ` (${rest.join('; ')})` : ''}. Problem 9's outbreak is too small to score in a week: see its 30-day run.`);
+  glance.push(`Seven-day week, ${seven.seeds.length} seeds, <strong>SIMULATED</strong>: STRATUM better on <strong>${scored.filter((x) => x.w === 'STRATUM').length} of the ${scored.length}</strong> problems the week can score${rest.length ? ` (${rest.join('; ')})` : ''}. Problem 9's outbreak is too small to score in a week: see its 30-day run.`);
 }
 // What each stress-week loss means, in words the cards do not print.
 const AGAINST: Partial<Record<Problem['id'], string>> = { p01: 'the warning gain is gone', p13: "STRATUM's verdict is wrong in every round", p14: 'nothing lighter proven' };
@@ -126,15 +126,22 @@ document.getElementById('sweeps')!.innerHTML = sweeps?.sweeps ? sweeps.sweeps.ma
 document.getElementById('matrix')!.innerHTML = PROBLEMS.map((p, i) => `<li class="card" id="problem-${i + 1}" data-id="${p.id}">
   <h2>${i + 1}. ${p.title}</h2>
   <p class="tiers">${badges(p.tier).map((b) => `<span class="badge">${b}</span>`).join(' ')} <span class="small muted">${p.tier}</span></p>
-  <p class="small"><b>Mechanism:</b> ${p.mechanism}</p>
-  <p class="small"><b>Metric:</b> ${p.metric}, ${p.better} is better</p>
-  <table class="small">
+  ${replay(p.id, enf, gecco)}
+  <details class="small"><summary>Mechanism, figures and label</summary>
+  <p><b>Mechanism:</b> ${p.mechanism}</p>
+  <p><b>Metric:</b> ${p.metric}, ${p.better} is better</p>
+  <table>
     <thead><tr><th scope="col">District 7 <span class="tag">SIMULATED</span></th><th scope="col">Directorate</th><th scope="col">STRATUM</th></tr></thead>
     <tbody>${rows(p)}</tbody>
   </table>
-  ${replay(p.id, enf, gecco)}
-  <p class="small label"><b>Label:</b> ${p.labels}</p>
+  <p class="label"><b>Label:</b> ${p.labels}</p>
+  </details>
 </li>`).join('');
+// A link to a card (glance, dumbbells, engines) opens its folded body.
+const openCard = (h: string) => { if (/^#problem-\d+$/.test(h)) document.querySelector(`${h} details`)?.setAttribute('open', ''); };
+openCard(location.hash); addEventListener('hashchange', () => openCard(location.hash));
+// A link to a card the reader closed leaves the hash unchanged (no hashchange), so the click opens it too.
+addEventListener('click', (e) => openCard((e.target as Element).closest?.('a')?.getAttribute('href') ?? ''));
 document.getElementById('status')!.textContent = [
   seven ? '' : 'The seven-day evidence file was not found: run npm run harness -- --seeds 20.',
   timedOut.length ? `Timed out loading ${timedOut.join(', ')}: reload to try again.` : '',

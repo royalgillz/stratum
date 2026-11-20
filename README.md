@@ -1,5 +1,16 @@
 # STRATUM
 
+[![CI](https://github.com/royalgillz/stratum/actions/workflows/ci.yml/badge.svg)](https://github.com/royalgillz/stratum/actions/workflows/ci.yml)
+
+**Live demo:** https://stratum-nine-swart.vercel.app/ · **Judge mode (90 s):** https://stratum-nine-swart.vercel.app/src/district/judge.html
+
+| Judge mode, drawn phone at RED (SIMULATED) | Real phone, Galaxy Z Fold 7: a family OK arrived (LIVE) |
+| --- | --- |
+| <img src="docs/screenshots/phone-red.png" width="300" alt="Judge mode's drawn phone at RED"> | <img src="docs/device/device-phone-family-board.png" width="300" alt="Family board on a Galaxy Z Fold 7"> |
+
+**Judge in 5 minutes:** play judge mode; open the coverage matrix's "Results at a glance"; read [docs/device-results.md](docs/device-results.md) and [docs/limits.md](docs/limits.md).
+
+
 A citizen toolkit for the Hollow (Patriot HackFest Fall 2026, track "Life Underground") with one loop: hear, prove, pass on, share fairly. A phone hears the grid's hum sag before a power cut, passes short signed messages by sound with no network, and a fair-share rule divides what there is. District 7, a simulated district of 6 levels by 4 sectors, tests all of it against the Directorate's rule.
 
 Write-up: [docs/writeup.md](docs/writeup.md).
@@ -24,7 +35,7 @@ On a real phone and laptop, follow the run sheet [docs/rung-test.md](docs/rung-t
 Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real public recordings) or **SIMULATED** (District 7, and judge mode's drawn phone).
 
 - Real code: the hum tracker, the 25-byte sound packets and their cryptography, the relay, the ledger and the allocator.
-- Tested on a real phone (Galaxy Z Fold 7, Chrome 158, results in [docs/device-results.md](docs/device-results.md)): the shipped hum tracker went GREEN, AMBER, RED and NO HUM at 30 cm; the phone's signed family OK was verified by the District 7 gateway on a laptop at 30 cm, 1 m and 3 m; a laptop tab's family OK reached the phone's family board. Earlier spikes T1 to T3 (spike code, [docs/spikes.md](docs/spikes.md)) measured the tracker's error and 20/20 packets at 1 m and 3 m. The phone passed a laptop tab's report on (one relay hop), installed to the home screen and opened and listened in Airplane mode. On the phone, a Breath Count danger sign gave RED and its medicine request by sound was verified by the District 7 gateway; the 60-second tap count was tested in a laptop browser. No iPhone was tested.
+- Tested on a real phone (Galaxy Z Fold 7, Chrome 158, results in [docs/device-results.md](docs/device-results.md)): the shipped hum tracker went GREEN, AMBER, RED and NO HUM at 30 cm; the phone's signed family OK was verified by the District 7 gateway on a laptop at 30 cm, 1 m and 3 m (one send at each distance); a laptop tab's family OK reached the phone's family board. Earlier spikes T1 to T3 (spike code, [docs/spikes.md](docs/spikes.md)) measured the tracker's error and 20/20 packets at 1 m and 3 m. The phone passed a laptop tab's report on (one relay hop), installed to the home screen and opened and listened in Airplane mode. On the phone, a Breath Count danger sign gave RED and its medicine request by sound was verified by the District 7 gateway; the 60-second tap count was tested in a laptop browser. No iPhone was tested.
 - Tested in a browser only, not yet on a phone: the fan-stop alert, the cut odds on Listen, the HOLD WATER and ROUTE alerts, and the ledger digest by sound.
 - Scored on real data (REPLAY): the tracker on 130 ENF-WHU grid recordings, the water detector on GECCO 2018.
 - Simulated: District 7 and everything in it.
@@ -37,7 +48,7 @@ Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real
 
 The phone sends real reports for 2, 4, 5, 9 and 12, but District 7 does not analyse them yet. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md).
 
-Headline (SIMULATED, seven-day week, 20 seeds): cuts warned 10 min ahead, Directorate 0.00, STRATUM 0.40; worst-decile served fraction, Directorate 0.66, STRATUM 0.85. Against us: in the stress week the warning gain is gone (0.00 under both), and from 3 lying surface crews in 5 the quorum carries the wrong band.
+Headline (SIMULATED, seven-day week, 20 seeds): cuts warned 10 min ahead, Directorate 0.00, STRATUM 0.40 (the Directorate's rule issues no warnings, so its 0.00 is by rule; with Fair Share off, STRATUM warns 0.15); worst-decile served fraction, Directorate 0.66, STRATUM 0.85. Against us: in the stress week the warning gain is gone (0.00 under both), and from 3 lying surface crews in 5 the quorum carries the wrong band.
 
 ## Limits
 

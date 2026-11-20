@@ -19,15 +19,15 @@ const offset = (t: number) =>
 // Tier captions follow what the tracker shows on this fixed signal (GREEN at 33.5 s, AMBER 63 s, RED 75.5 s, NO HUM 82 s),
 // so a caption never claims a tier before the drawn phone shows it.
 const CAPTIONS: [number, string][] = [
-  [0, 'Every powered machine hums at the grid frequency. In the Hollow the grid runs at 400 Hz, so the hum is 400 and 800 Hz. The phone listens and learns this grid\'s normal pitch: about 30 seconds of calibration.'],
+  [0, "Level 5, sector B: Ana Reyes, her two-year-old, and her mother two levels up. Ana's phone listens to the hum of the grid and learns its normal pitch: about 30 seconds of calibration."],
   [10, 'Where: the Hollow, a city underground. The Directorate holds the breakers and the network, and the network is down. Power cuts come with no warning.'],
-  [22, 'Why sound: every phone has a microphone, and the hum reaches places a signal cannot. The phone is still calibrating.'],
+  [22, 'Why sound: every phone has a microphone, and the hum reaches places a signal cannot. Every powered machine hums at the grid frequency; in the Hollow the grid runs at 400 Hz, so the hum is 400 and 800 Hz. The phone is still calibrating.'],
   [34, 'The phone finishes calibrating and shows GREEN: the grid is normal. In a real test on Nov 19 2026, a phone 30 cm from a laptop playing this story read these tiers · LIVE.'],
   [50, 'Demand outgrows supply. The generators slow and the hum starts to sag, 100 mHz over 20 seconds. Watch the phone: it smooths its reading, so it trails the truth by a few seconds.'],
   [63, 'The phone sees the sag and warns: AMBER, the grid is under strain.'],
-  [70, 'The shortfall deepens to 200 mHz below normal: a cut is likely soon. The phone moves to RED within a few seconds. Fill water, save charge, move to the light.'],
+  [70, 'The shortfall deepens to 200 mHz below normal: a cut is likely soon. The phone moves to RED within a few seconds. Ana fills water and charges the phone before the cut.'],
   [CUT, 'Power cut. The hum stops, and within two seconds the phone shows NO HUM. The warning works before a cut, not during one.'],
-  [OK_AT, 'A family member sends OK by sound. The phone decodes the 25-byte packet with the real codec and shows it in the inbox.'],
+  [OK_AT, "Ana's mother, two levels up, sends I am OK by sound. The phone decodes the 25-byte packet with the real codec and shows it in the inbox."],
   [END, "End of the story. The tracker and the codec are the real code; the grid, the hum and the message are SIMULATED. Across a whole district, over 20 seven-day weeks, STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED."],
 ];
 
@@ -114,7 +114,7 @@ async function deliverOk(family: KeySet) {
   }
   const p = r.payload, time = new Date(r.minute * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const li = document.createElement('li');
-  li.innerHTML = `<strong>✓ I am OK</strong> from family member ${p.member} · level ${p.level}, sector ${String.fromCharCode(65 + p.sector)} · power ${p.flags & 1 ? 'on' : 'off'} · sent ${time} · SIMULATED<br><code class="small"></code>`;
+  li.innerHTML = `<strong>✓ I am OK</strong> from family member ${p.member} (Ana's mother) · level ${p.level}, sector ${String.fromCharCode(65 + p.sector)} · power ${p.flags & 1 ? 'on' : 'off'} · sent ${time} · SIMULATED<br><code class="small"></code>`;
   li.querySelector('code')!.textContent = `${bytes.length} bytes: ${[...bytes].map((b) => b.toString(16).padStart(2, '0')).join(' ')}`;
   inbox.replaceChildren(li);
 }
@@ -140,12 +140,23 @@ play.onclick = async () => {
   const tracker = createTracker({ sampleRate: SR, label: 'SIMULATED' });
   const noise = rng(1, 'judge');
   let p1 = 0, p2 = 0, n = 0, caption = -1, delivered = false;
-  const t0 = performance.now();
+  let t0 = performance.now();
+  const skip = $<HTMLButtonElement>('skip');
+  skip.hidden = false;
+  $('skipNote').hidden = true;
+  skip.onclick = () => {
+    // The next tick feeds the remaining SIMULATED hum through the same tracker at once. min(): never step back in time.
+    t0 = Math.min(t0, performance.now() - 34000 / speed);
+    skip.hidden = true;
+    $('skipNote').hidden = false;
+    story.focus();
+  };
 
   const tick = () => {
-    const t = Math.min(END, ((performance.now() - t0) / 1000) * speed);
+    const target = Math.min(END, ((performance.now() - t0) / 1000) * speed);
     // Hum synthesized exactly as src/core/tracker/tracker.test.ts does, sample by sample up to now.
-    const x = new Float32Array(Math.floor(t * SR) - n);
+    // At most 4 s of hum a tick: after a Skip, the 34 s catch up over about a second without freezing the page.
+    const x = new Float32Array(Math.min(4 * SR, Math.floor(target * SR) - n));
     for (let i = 0; i < x.length; i++, n++) {
       const off = offset(n / SR);
       if (off === null) continue; // power cut: digital silence
@@ -154,6 +165,8 @@ play.onclick = async () => {
       x[i] = 0.15 * Math.sin(p1) + 0.3 * Math.sin(p2) + 0.01 * (noise() * 2 - 1);
     }
     tracker.push(x).forEach(showReading);
+    const t = n / SR; // story time of the hum fed so far, so no caption runs ahead of the tracker
+    if (t >= 34) skip.hidden = true;
 
     const off = offset(t);
     sound.set(off);

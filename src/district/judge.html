@@ -9,17 +9,18 @@
 <body>
   <header>
     <h1>STRATUM judge mode</h1>
-    <p class="muted">See the whole warning loop in 90 seconds, on a laptop or a phone. No microphone and no second device needed.</p>
+    <p class="lede">Ana Reyes lives on level 5 of the Hollow, and the network is down. Press Play and watch her phone hear the grid sag and warn AMBER, then RED, before the power is cut. Then her mother's OK arrives by sound.</p>
+    <p class="small muted">90 seconds, on a laptop or a phone. No microphone and no second device needed.</p>
     <p><a class="go" href="/">Home</a> · <a class="go" href="./">District 7</a> · <a class="go" href="./coverage.html">Coverage matrix</a></p>
   </header>
   <p id="speedNote" class="note" hidden></p>
 
   <main>
-    <p>A drawn phone runs the real hum tracker and the real message codec. Its sound comes from a <strong>SIMULATED</strong> grid, fed in by a <strong>LOOPBACK</strong> connection instead of a microphone. Captions carry the whole story, so it works muted.</p>
     <div class="row">
       <button id="play" class="primary">Play the 90-second story</button>
       <button id="mute">Sound: on</button>
     </div>
+    <p>A drawn phone runs the real hum tracker and the real message codec. Its sound comes from a <strong>SIMULATED</strong> grid, fed in by a <strong>LOOPBACK</strong> connection instead of a microphone. Captions carry the whole story, so it works muted.</p>
 
     <section id="story" hidden aria-label="The story">
       <div class="stage">
@@ -34,6 +35,8 @@
         <div class="side">
           <p id="time" class="small"></p>
           <p id="caption" aria-live="polite"></p>
+          <button id="skip" hidden>Skip the 30 s calibration</button>
+          <p id="skipNote" class="small" hidden>Calibration fast-forwarded: the tracker still processed all 30 s of SIMULATED hum, in about a second. A real phone listening needs the full 30 s, so play without skipping for that.</p>
           <p id="next" hidden><a class="cta" href="./coverage.html">Next: the fifteen problems and results</a></p>
           <p id="offset" class="small muted"></p>
           <h2>What the phone showed, in order</h2>
@@ -46,7 +49,7 @@
       <h2>Try it on a real phone</h2>
       <p class="muted">On a second phone (Android, in Chrome), scan the code or open the address, tap Listen, then Start listening. Hold it about 30 cm from this speaker and play the story here with Sound on. The phone shows its own tiers as the hum sags.</p>
       <div class="qr"><img src="/qr-phone.svg" width="164" height="164" alt="QR code that opens the phone app at stratum-nine-swart.vercel.app/src/phone/" /><p class="small">Scan with a second phone's camera, or type:<br /><code>stratum-nine-swart.vercel.app/src/phone/</code></p></div>
-      <p class="small">Or copy this page's own address:</p>
+      <p class="small">Or copy the phone app's address:</p>
       <p><code id="addr"></code></p>
       <button id="copy">Copy address</button>
       <p id="copied" class="small" role="status"></p>

@@ -161,7 +161,12 @@ test('home page says where and what STRATUM is, judge mode first, one result wit
   // Every number keeps its label, and the loss sits beside the win.
   await expect(page.locator('.facts li').nth(0)).toContainText(/40% vs 0%.*85% vs 66%.*20 seeds · SIMULATED$/);
   await expect(page.locator('.facts li').nth(1)).toHaveText('Against us: in the stress week the warning gain is gone, 0% vs 0% · SIMULATED');
+  // The caveats on the big numbers are not set smaller than the page's body text
+  const [note, body] = await page.locator('.facts .lead .caveat').evaluate((e) => [getComputedStyle(e).fontSize, getComputedStyle(document.body).fontSize]);
+  expect(parseFloat(note)).toBeGreaterThanOrEqual(parseFloat(body));
   await expect(page.locator('.facts li').nth(2)).toContainText(/^Tested on a real phone \(Galaxy Z Fold 7, Nov 19 2026\).* · LIVE$/);
+  await expect(page.locator('.facts li').nth(3)).toContainText(/^Care: a decision aid, not a medical device, for children under five\..* · LIVE/);
+  await expect(page.getByText('One loop, all fifteen problems')).toBeVisible();
   const links = page.locator('a:visible');
   await expect(links).toHaveText(['Start here: Judge mode', 'Coverage matrix', 'Phone app', 'District 7']);
   // The way in is the filled button at the top of the first screen.

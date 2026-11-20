@@ -75,12 +75,27 @@ test.describe('judge mode', () => {
     }
     expect(seen.some(([c]) => c.includes('warns: AMBER'))).toBe(true);
     // The first 34 s carry the premise, not a blank wait, and claim no tier.
+    // The opening caption appears on the first tick, before or as the tracker starts CALIBRATING.
+    expect(seen.some(([c, tier]) => c.startsWith('Level 5, sector B') && ['', 'CALIBRATING'].includes(tier))).toBe(true);
     expect(seen.some(([c, tier]) => c.startsWith('Where: the Hollow') && tier === 'CALIBRATING')).toBe(true);
     expect(seen.some(([c, tier]) => c.startsWith('Why sound') && tier === 'CALIBRATING')).toBe(true);
     // The story ends on the headline result, with its label and the stress-week loss, then points to the results.
     await expect(page.locator('#caption')).toContainText("STRATUM warned 40% of power cuts at least 10 minutes ahead; the Directorate's rule warned 0%. In the stress week both warn 0% · SIMULATED.");
     await expect(page.getByRole('link', { name: 'Next: the fifteen problems and results' })).toHaveAttribute('href', './coverage.html');
     await expect(page.locator('#seq li')).toHaveCount(5); // nothing flickered after the cut
+    await expectSoundLayout(page);
+  });
+
+  test('Skip fast-forwards calibration through the same tracker and says so', async ({ page }) => {
+    await page.goto('/src/district/judge.html', { waitUntil: 'domcontentloaded' }); // real speed
+    await page.getByRole('button', { name: 'Sound: on' }).click();
+    await page.getByRole('button', { name: 'Play the 90-second story' }).click();
+    await expect(page.locator('#seq li').first()).toHaveText(/CALIBRATING/, { timeout: 10_000 });
+    await page.getByRole('button', { name: 'Skip the 30 s calibration' }).click();
+    await expect(page.locator('#seq li')).toHaveText([/CALIBRATING/, /^● GREEN/], { timeout: 5_000 });
+    await expect(page.locator('#caption')).toContainText('shows GREEN');
+    await expect(page.locator('#skipNote')).toContainText('fast-forwarded');
+    await expect(page.getByRole('button', { name: 'Skip the 30 s calibration' })).toBeHidden();
     await expectSoundLayout(page);
   });
 });

@@ -27,6 +27,7 @@ test.describe('District 7 page', () => {
     await expect(nav).toHaveText(['Home', 'Judge mode', 'Coverage matrix', 'Phones in this room ↓']);
     await expect(nav.last()).toHaveAttribute('href', '#boardTitle');
     await expect(page.getByText('Press Play.', { exact: true })).toBeVisible();
+    await expect(page.locator('header')).toContainText("Watch the outlined ★ square, the demo family on level 5: on day 4, under the Directorate's rule, their level goes dark");
     await expect(page.locator('#act')).toContainText('The network is down · TIME-LAPSE x3600 · paused', { timeout: 15_000 });
     await expect(page.locator('#clock')).toContainText('World time day 1, 00:00');
     await expect(page.locator('#clock')).toContainText('SIMULATED');
@@ -149,7 +150,18 @@ test.describe('District 7 page', () => {
       await expect(page.locator('#metrics tr').nth(7).locator('td')).toHaveText(['not started', 'not started']); // no placeholder 0 h
       await expect(page.locator('#map rect.food-track')).toHaveCount(24);
       await expect(page.getByText('food store, bottom edge', { exact: false })).toBeVisible();
-      await expect(page.getByRole('link', { name: 'coverage matrix' })).toHaveAttribute('href', './coverage.html');
+      // The one line that matters stays open; the definitions fold under a 44 px summary
+      await expect(page.getByText('Where the Directorate has no such tool its figure is 0 by rule, not measured.')).toBeVisible();
+      // and it points from this one seed to the 20-seed results
+      await expect(page.locator('#metricsTitle ~ p', { hasText: 'One seed, this run so far; the 20-seed results are in the coverage matrix.' }).getByRole('link', { name: 'coverage matrix' })).toHaveAttribute('href', './coverage.html');
+      const howTo = page.getByText('How to read this table', { exact: true });
+      await expect(howTo).toBeVisible();
+      expect((await howTo.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      const defs = page.getByText(/^Directorate rule: how the district's authority runs things today/);
+      await expect(defs).toBeHidden();
+      await howTo.click();
+      await expect(defs).toBeVisible();
+      await expect(page.getByRole('navigation', { name: 'Pages' }).getByRole('link', { name: 'Coverage matrix' })).toHaveAttribute('href', './coverage.html');
 
       const seven = page.getByRole('button', { name: 'Seven-day week' }), stress = page.getByRole('button', { name: 'Stress week' });
       await expect(seven).toHaveAttribute('aria-pressed', 'true');

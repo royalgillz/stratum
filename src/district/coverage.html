@@ -11,28 +11,47 @@
     <h1>Coverage matrix</h1>
     <p class="muted">Fifteen problems, one loop. Each has a mechanism, a metric and a place on screen, with its tier printed.</p>
     <p><a class="go" href="/">Home</a> · <a class="go" href="./">District 7</a></p>
-    <ul class="legend small">
-      <li><span class="badge">Live</span> runs on a real phone</li>
-      <li><span class="badge">Modelled</span> an algorithm in the simulated District 7, measured against the Directorate's rule</li>
-      <li><span class="badge">Thin</span> one rule or chart on assumed parameters</li>
-      <li><span class="badge">Roadmap</span> write-up only</li>
-    </ul>
-    <p class="small">District 7 figures are means over the published seeds from <code>npm run harness</code>, with 95% intervals, all <strong>SIMULATED</strong>. Figures scored on real public recordings are <strong>REPLAY</strong>. Where a rule alone sets the Directorate's figure (no warnings, a daily lab, a daily bulletin), the gap shows the mechanism, not a measured gain.</p>
   </header>
 
   <main>
     <p id="status" class="small" role="status">Loading the evidence files…</p>
     <section aria-labelledby="glanceTitle">
       <h2 id="glanceTitle">Results at a glance</h2>
-      <ul id="glance" class="list small"></ul>
+      <ul id="glance" class="list"></ul>
       <p class="small">Tier = how far it is built; label (LIVE, REPLAY, SIMULATED) = where the number came from.</p>
+      <p class="small">Where a rule alone sets the Directorate's figure (no warnings, a daily lab, a daily bulletin), the gap shows the mechanism, not a measured gain.</p>
       <h3 id="dbTitle">STRATUM against the Directorate, seven-day week <span class="tag">SIMULATED</span></h3>
-      <p class="small">One row per problem, each on its own scale: 0 at the left, the larger value at the right (100% for shares). Means over the published seeds; the 95% intervals are on the cards. A ring marks the better value by the problem's direction.</p>
+      <p class="small">One row per problem, each on its own scale: 0 at the left, the larger value at the right (100% for shares). Means over the published seeds; the 95% intervals are in each card under Mechanism, figures and label. A ring marks the better value by the problem's direction.</p>
       <ul class="legend small" aria-label="Chart key">
         <li><svg class="mk" width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true" focusable="false"><rect class="mk-d" x="-5.5" y="-5.5" width="11" height="11" rx="1"/></svg> Directorate</li>
         <li><svg class="mk" width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true" focusable="false"><circle class="mk-s" r="6"/></svg> STRATUM</li>
       </ul>
       <ul id="dumbbells" class="db-list"></ul>
+    </section>
+
+    <section aria-labelledby="againstTitle">
+      <h2 id="againstTitle">Results against us <span class="tag">SIMULATED</span></h2>
+      <ul class="list small">
+        <li>Lamps cannot feed a level: one person's food-floor calories need about 210 kWh of electricity a day with lettuce and over 400 kWh with grain.</li>
+        <li>Shift-sharing of sleeping space raises contact rates.</li>
+        <li>Shafts are not the limit on the return to the surface. Surface reception is.</li>
+        <li>Sharing food at the floor lowers everyone's ration while one level is cut off; when supply is below everyone's floor, everyone breaches, later but together.</li>
+        <li>When most surface crews lie, the quorum is confidently wrong. In the stress week STRATUM's verdict is wrong in every round, on all 20 seeds, while the Directorate's fixed verdict happens to be right.</li>
+        <li>In this model staged trials never cost fewer exposure-hours than one direct 30-day trial: a breach is caught in the first hour either way. Their real value, catching harm that shows only after longer exposure, is not modelled.</li>
+        <li>Heat is not held at zero: STRATUM's heat person-hours are above zero in the seven-day week, and when supply is below every life floor (the stress week) Fair Share breaches every floor equally and they rise far higher.</li>
+        <li>A sudden plant trip gives no warning: the hum helps only with slow shortfalls.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="problemsTitle">
+      <h2 id="problemsTitle">The fifteen problems</h2>
+      <ul class="legend small">
+        <li><span class="badge">Live</span> runs on a real phone</li>
+        <li><span class="badge">Modelled</span> an algorithm in the simulated District 7, measured against the Directorate's rule</li>
+        <li><span class="badge">Thin</span> one rule or chart on assumed parameters</li>
+        <li><span class="badge">Roadmap</span> write-up only</li>
+      </ul>
+      <p class="small">District 7 figures are means over the published seeds from <code>npm run harness</code>, with 95% intervals, all <strong>SIMULATED</strong>. Figures scored on real public recordings are <strong>REPLAY</strong>. Open a card for its mechanism, figures and label.</p>
     </section>
     <ol id="matrix" class="cards"></ol>
 
@@ -50,20 +69,6 @@
         <li>vertical whisker: 95% interval</li>
       </ul>
       <div id="sweeps"></div>
-    </section>
-
-    <section aria-labelledby="againstTitle">
-      <h2 id="againstTitle">Results against us <span class="tag">SIMULATED</span></h2>
-      <ul class="list small">
-        <li>Lamps cannot feed a level: one person's food-floor calories need about 210 kWh of electricity a day with lettuce and over 400 kWh with grain.</li>
-        <li>Shift-sharing of sleeping space raises contact rates.</li>
-        <li>Shafts are not the limit on the return to the surface. Surface reception is.</li>
-        <li>Sharing food at the floor lowers everyone's ration while one level is cut off; when supply is below everyone's floor, everyone breaches, later but together.</li>
-        <li>When most surface crews lie, the quorum is confidently wrong. In the stress week STRATUM's verdict is wrong in every round, on all 20 seeds, while the Directorate's fixed verdict happens to be right.</li>
-        <li>In this model staged trials never cost fewer exposure-hours than one direct 30-day trial: a breach is caught in the first hour either way. Their real value, catching harm that shows only after longer exposure, is not modelled.</li>
-        <li>Heat is not held at zero: STRATUM's heat person-hours are above zero in the seven-day week, and when supply is below every life floor (the stress week) Fair Share breaches every floor equally and they rise far higher.</li>
-        <li>A sudden plant trip gives no warning: the hum helps only with slow shortfalls.</li>
-      </ul>
     </section>
   </main>
 

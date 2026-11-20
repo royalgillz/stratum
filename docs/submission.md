@@ -8,15 +8,17 @@ STRATUM
 
 ## What is your project?
 
-STRATUM is for the people of the Hollow, a city underground where the Directorate controls power and has cut the network. Power cuts come without warning; families lose track of each other.
+STRATUM is a free phone app that hears a blackout coming in the grid's hum and lets families say "I am OK" by sound.
 
-STRATUM is a free phone app. It needs no signal or account, and works offline after one visit. The phone hears the grid's hum sag before a cut and warns. Families share six secret words and pass short signed messages by sound ("I am OK", "we need medicine"). A breathing-rate aid helps parents decide when a small child needs care.
+It is for the Hollow, a city underground where the Directorate controls power and has cut the network. Cuts come without warning; families split across levels cannot tell who is safe.
 
-What is real: on a Galaxy Z Fold 7, the phone showed hum warnings at 30 cm, and its signed "I am OK" was verified 3 m away (LIVE). The hum tracker is scored on 130 real grid recordings (REPLAY).
+Installed once while the network is up, it needs no signal or account. Families agree six secret words in person. Signed messages such as "I am OK" pass phone to phone by sound, encrypted, so a listener cannot read or follow them. A breathing-rate aid helps parents decide when a small child needs care.
 
-In District 7, a simulated district, over 20 runs (SIMULATED), 40% of power cuts are warned 10 minutes ahead, against 0% under the Directorate's rule. The worst-off tenth gets 85% of its need instead of 66%. Against us: in a stress week the warning gain is gone.
+One loop (hear, prove, pass on, share fairly) answers all fifteen problems: four tested in part on a real phone, eleven modelled in District 7.
 
-Start with Judge mode on the home page: https://stratum-nine-swart.vercel.app/src/district/judge.html (90 seconds, works muted).
+Real: on a Galaxy Z Fold 7, hum warnings at 30 cm; a signed "I am OK" verified 3 m away (LIVE, one trial).
+
+In District 7 (SIMULATED, 20 runs): 40% of cuts warned 10 minutes ahead; the Directorate warns no one (0% by rule). The worst-off tenth gets 85% of its need, not 66%. Against us: a stress week erases the warning gain.
 
 ## How did you build it?
 
@@ -32,13 +34,13 @@ Tested on a Galaxy Z Fold 7.
 
 ## Why did you choose to build this? What was your thinking?
 
+Governments do cut networks during unrest, and power cuts rarely fall evenly. The Hollow takes that to its end.
+
 The authorities control the infrastructure, so we started from what the Directorate cannot control: physics. Every powered machine hums at the grid frequency, and the pitch sags before supply runs out. Every phone has a microphone and a speaker. So a phone can hear trouble coming and talk to the next phone with no network.
 
 We built one loop instead of fifteen apps: hear what is happening, prove it, pass it on, share fairly. One packet, one ledger and one fairness rule serve power, families, water, medicine, food and the return to the surface.
 
 We cared most about honesty. Every number says where it came from: LIVE, REPLAY or SIMULATED. We built a stress week where STRATUM also loses, and show those losses beside the wins. We switched each engine off to see what it adds, and publish that the engines barely interact. We varied one stress at a time: from 3 lying surface crews in 5, STRATUM's surface verdict is wrong. A tool people rely on in a crisis must not oversell itself.
-
-There is no AI in the product. A rationing rule should be checkable by hand, and everything must run offline.
 
 ## Who built what? How did you collaborate?
 
@@ -50,7 +52,7 @@ https://github.com/royalgillz/stratum
 
 ## Submit your Demo Video Link
 
-(Paste the YouTube Unlisted or Google Drive "anyone with the link" address of `stratum-video.mp4`.)
+(Paste the YouTube Unlisted or Google Drive "anyone with the link" address of video/stratum-video-v3.mp4 (2:54). Before pasting, open the link in a private window and check it plays and shows 2:54.)
 
 ## Submit a Demo URL
 

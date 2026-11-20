@@ -67,6 +67,9 @@ tbody th { font-weight: 400; }
 .card th[scope=row] { width: 40%; }
 /* Values wrap between number and unit, so a long figure never widens a narrow screen. */
 .card td, #metrics td { white-space: normal; }
+/* Result first: the glance's lead line larger, the stress-week losses framed in amber at the same weight. */
+#glance > li:first-child, #glance > li:has(> ul) { font-size: 1.15rem; }
+#glance > li:has(> ul) { border-left: 4px solid var(--amber); padding-left: 10px; }
 /* Wider fonts (Linux CI) can make one long word wider than a 369 px column: let it break there. */
 @media (max-width: 480px) {
   tbody th { overflow-wrap: anywhere; hyphens: none; } /* column heads are single words; a hyphen mid-word ("wa- ter") reads as a typo */
@@ -108,7 +111,7 @@ header > h1, header > nav { display: inline-block; vertical-align: middle; margi
 .sw-svg .hit { fill: transparent; }
 .sw-chart td { white-space: normal; } /* a long 95% interval wraps at its spaces, so an open table fits its card */
 .sw-svg .tie { fill: none; stroke: var(--s-d); stroke-width: 2; }
-.sw-chart summary { min-height: 44px; line-height: 44px; cursor: pointer; } /* a 44 px touch target that keeps its disclosure triangle */
+summary { min-height: 44px; line-height: 44px; cursor: pointer; } /* a 44 px touch target that keeps its disclosure triangle */
 /* High Contrast: the shapes keep identity in system colours, the Directorate's square hollow and its line dashed. */
 @media (forced-colors: active) {
   .mk, .db-svg, .sw-svg { forced-color-adjust: none; }

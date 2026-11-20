@@ -71,7 +71,7 @@ for (const scheme of ['light', 'dark'] as const) {
 
       await page.getByRole('link', { name: 'District 7' }).click();
       await expect(page.getByRole('heading', { name: 'District 7', level: 1 })).toBeVisible();
-      await page.getByRole('link', { name: 'coverage matrix' }).click();
+      await page.getByRole('navigation', { name: 'Pages' }).getByRole('link', { name: 'Coverage matrix' }).click();
       await expect(cards(page)).toHaveCount(15, { timeout: 15_000 }); // the page script still comes from the preview server, which stalls under load
     });
 
@@ -125,6 +125,48 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(sw.locator('details[open]')).toHaveCount(7);
       await expectSoundLayout(page);
 
+      await page.setViewportSize({ width: 344, height: 800 }); // the narrowest phone the site is laid out for
+      await expectSoundLayout(page);
+    });
+
+    test('result first: the glance and the results against us above the cards; each card shows its verdict row and folds the rest; a link opens its card', async ({ page }) => {
+      await page.goto('/src/district/coverage.html', { waitUntil: 'domcontentloaded' });
+      await expect(cards(page)).toHaveCount(15, { timeout: 15_000 }); // the page script still comes from the preview server, which stalls under load
+      const p12 = page.locator('#problem-12');
+      await expect(p12.locator('h2')).toBeVisible();
+      await expect(p12.locator('.badge').first()).toBeVisible();
+      await expect(p12.locator('table')).toBeHidden();
+      expect((await p12.locator('summary').boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      // The REPLAY scores stay outside the fold, with their label, including the GECCO result against us
+      await expect(cards(page).nth(0).locator('p', { hasText: 'REPLAY ENF-WHU' })).toBeVisible();
+      const gecco = cards(page).nth(3).locator('p', { hasText: 'REPLAY GECCO 2018' });
+      await expect(gecco).toBeVisible();
+      await expect(gecco).toContainText('but caught only');
+      // The results against us come before the fifteen cards; the badge legend sits with the cards
+      const y = async (name: RegExp) => (await page.getByRole('heading', { name, level: 2 }).boundingBox())!.y;
+      expect(await y(/^Results against us/)).toBeLessThan(await y(/^The fifteen problems$/));
+      expect(await y(/^The fifteen problems$/)).toBeLessThan((await cards(page).first().boundingBox())!.y);
+      await expect(page.getByText("Where a rule alone sets the Directorate's figure (no warnings, a daily lab, a daily bulletin), the gap shows the mechanism, not a measured gain.")).toBeVisible();
+      // Engines: the result against us stays open, the per-engine detail folds
+      await expect(page.getByText('Against STRATUM: the engines barely interact')).toBeVisible();
+      await expect(page.locator('#engines section.engine').first()).toBeHidden();
+      await expectSoundLayout(page);
+      // A glance link opens the folded card it points to
+      await page.locator('#glance a[href="#problem-12"]').click();
+      await expect(p12.locator('details')).toHaveAttribute('open', '');
+      await expect(p12.locator('tbody tr', { hasText: 'Stress week' })).toBeVisible();
+      // Closed by the reader, the same link opens it again (the hash does not change, so no hashchange)
+      await p12.locator('summary').click();
+      await expect(p12.locator('details')).not.toHaveAttribute('open', '');
+      await page.locator('#glance a[href="#problem-12"]').click();
+      await expect(p12.locator('details')).toHaveAttribute('open', '');
+      // The stress-week losses are set at the same size as the win above them
+      const size = (sel: string) => page.locator(sel).evaluate((e) => getComputedStyle(e).fontSize);
+      expect(await size('#glance > li:has(> ul)')).toBe(await size('#glance > li:first-child'));
+      // So does arriving on a card's address
+      await page.goto('/src/district/coverage.html#problem-13', { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('#problem-13 details')).toHaveAttribute('open', '', { timeout: 15_000 });
+      await expect(page.locator('#problem-13 table')).toBeVisible();
       await page.setViewportSize({ width: 344, height: 800 }); // the narrowest phone the site is laid out for
       await expectSoundLayout(page);
     });

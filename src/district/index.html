@@ -10,8 +10,8 @@
   <header>
     <h1>District 7</h1>
     <nav aria-label="Pages"><a class="go" href="/">Home</a> · <a class="go" href="./judge.html">Judge mode</a> · <a class="go" href="./coverage.html">Coverage matrix</a> · <a class="go" href="#boardTitle">Phones in this room ↓</a></nav>
-    <p class="muted">A <strong>SIMULATED</strong> week of District 7 (6 levels, 4 sectors each) under two rules, with the same supply. Real phones nearby can send OK by sound: those messages are <strong>LIVE</strong>.</p>
-    <p><strong>Press Play.</strong> Each row of the results compares today's rule with STRATUM on the same supply. The table fills as the week plays; the 20-seed results are in the coverage matrix.</p>
+    <p><strong>Press Play.</strong> Same supply, two rules. Watch the outlined ★ square, the demo family on level 5: on day 4, under the Directorate's rule, their level goes dark, deepest first. Switch Drawing to see STRATUM's rule on the same week. <span class="tag">SIMULATED</span></p>
+    <p class="small muted">6 levels, 4 sectors each. Real phones nearby can send OK by sound: those messages are <strong>LIVE</strong>.</p>
   </header>
 
   <div class="row">
@@ -58,8 +58,11 @@
       <section aria-labelledby="metricsTitle">
         <h2 id="metricsTitle">Results so far, fifteen problems <span class="tag">SIMULATED</span></h2>
         <p id="scriptNote" class="small"></p>
-        <p class="small muted">One seed, this run so far. Tier badges as in the coverage matrix; read each row by which way is better.</p>
-        <p class="small">Directorate rule: how the district's authority runs things today (fixed cuts, daily bulletins, no mesh). STRATUM rule: the same supply run by STRATUM's real allocator and mesh code. Where the Directorate has no such tool its figure is 0 by rule, not measured.</p>
+        <p class="small">One seed, this run so far; the 20-seed results are in the <a href="./coverage.html">coverage matrix</a>. Where the Directorate has no such tool its figure is 0 by rule, not measured.</p>
+        <details class="small"><summary>How to read this table</summary>
+          <p>Tier badges as in the coverage matrix; read each row by which way is better.</p>
+          <p>Directorate rule: how the district's authority runs things today (fixed cuts, daily bulletins, no mesh). STRATUM rule: the same supply run by STRATUM's real allocator and mesh code.</p>
+        </details>
         <table id="results" data-shown="directorate">
           <thead><tr><th scope="col">Problem</th><th scope="col" id="head-directorate">Directorate</th><th scope="col" id="head-stratum">STRATUM</th></tr></thead>
           <tbody id="metrics"></tbody>
