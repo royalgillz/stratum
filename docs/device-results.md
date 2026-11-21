@@ -68,7 +68,7 @@ The same phone and laptop, the live site at main `d0a9670`, run sheet Parts I to
 | L5 | Optional: 67% on Ledger and on the Listen line | | Not run | |
 | M | Sick report row, 3 people from 1 sender | 30 cm | Pass | "People coughing or sick · level 2, sector A: 1 report from 1 sender, unconfirmed ..." and "Cases heard by sound: 3 people from 1 sender" |
 | M | Fan stopped row, 1 sender, unconfirmed | 30 cm | Pass | The fan row on top, the sick row second |
-| N | Buzz once at AMBER, three times at RED | 30 cm | Pass, weak | One buzz at AMBER and three at RED were felt, but weak. The pulses were then lengthened from 200 ms to 500 ms (commit `b1a31eb`); the longer pulses are not yet retested on the phone |
+| N | Buzz once at AMBER, three times at RED | 30 cm | Pass | First run: felt but weak at 200 ms pulses. The pulses were lengthened to 500 ms (commit `b1a31eb`); retested the same evening: clearly felt, one buzz at AMBER and three at RED |
 
 Gateway log, Part K (laptop, District 7): 10 consecutive lines "Verified OK from member 232 · LIVE", 5 s apart, from 6:59:28 pm to 7:00:18 pm, with no rejects.
 
@@ -78,6 +78,5 @@ Also seen: on District 7, at the end of day 7 the clock line ("World time end of
 
 - A third device hearing a relayed copy.
 - The fan-stop alert with talk and noise near the phone, and a stop while someone talks (run sheet Part I steps 6 and 7): not reported.
-- The 500 ms vibration pulses (Part N): not retested.
 - Real odds on Listen (Part L5, optional): not run.
 - The cough counter's false counts during talk (Part J): not reported; the counter failed its coughs check.

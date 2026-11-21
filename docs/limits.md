@@ -161,7 +161,7 @@ Stated plainly, so nobody finds them for us.
 - Family words must be agreed in person before a split, like a meeting place.
 - Tiers show a shape as well as colour (● GREEN, ▲ AMBER, ■ RED), and sound transfer needs no hearing from the user.
   In Chrome on Android the phone also vibrates while the page is on screen (not with the screen off; on the Galaxy
-  Z Fold 7 the buzz was felt but weak, and the pulses lengthened since, 200 ms to 500 ms, are not retested): once at AMBER, three times at RED, once for a fan stop, a family need or the first
+  Z Fold 7 the 200 ms buzz felt weak; the 500 ms pulses now shipped were clearly felt on a retest): once at AMBER, three times at RED, once for a fan stop, a family need or the first
   public water or route alert at a place (**Vibrate on alerts** on the Listen tab). A screen reader announces the
   same events on any tab, a public alert with its sender count (`src/phone/alerts.ts`). iPhone browsers and Firefox
   for Android have no web vibration. The app was not tested with

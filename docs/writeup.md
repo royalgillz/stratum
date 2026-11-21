@@ -104,7 +104,7 @@ Second session, Fri Nov 20 (same phone and laptop):
 - Cut odds on Listen: "Level 3: no data yet (needs reports from 3 phones)" at AMBER and RED, gone at GREEN and NO HUM.
 - HOLD WATER rows read 1, 1, 2 and 3 senders, "unconfirmed" on the first three only; a ROUTE alert read 1 sender, unconfirmed.
 - District 7's tally of heard reports: the phone's sick report (3 people) and fan report each listed with 1 sender, unconfirmed.
-- Vibration: one buzz at AMBER and three at RED, felt but weak. The pulses were then lengthened from 200 ms to 500 ms, not yet retested.
+- Vibration: one buzz at AMBER and three at RED. At 200 ms the buzz felt weak; with the pulses lengthened to 500 ms it was clearly felt on a retest.
 - Repeat sends: the gateway verified 10 of 10 OK sends at 1 m and 10 of 10 at 3 m, with no rejects (shipped codec).
 - Ledger digest by sound, STRATUM rule: the laptop sent digest fd297d64609f of the SIMULATED ledger, and the phone's inbox showed the same 12 characters (packet LIVE). The first try used the Directorate rule, which keeps no measured record, so nothing was sent; the run sheet now says STRATUM rule.
 - **Against us:** an experimental cough counter (a separate preview, not shipped) counted about 2 of 10 coughs, even at close range.
@@ -226,7 +226,6 @@ Every gap we know of, in one list:
 - Case reports (the phone's "People coughing or sick" report, with a people count) are counted per place on District 7, but do not feed the outbreak estimate (9): a Chapman estimate needs a clinic list and the people on both lists, and Breath Count requests are not case reports.
 - District 7's air score uses scripted fan stops and an assumed share of listening phones: fan stops caused by power cuts, CO2 rising after a stop, and a measured share of phones are not modelled.
 - The fan-stop alert's checks with talk and noise near the phone (run sheet Part I steps 6 and 7) were not reported.
-- The vibration pulses were lengthened from 200 ms to 500 ms after the phone's buzz felt weak; not yet retested.
 - Stairwell relays: cheap battery nodes so a message can cross levels.
 - A real surface sniffer, instead of simulated crews' readings.
 - A field test of the packets in a real tunnel.

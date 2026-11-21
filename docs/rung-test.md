@@ -394,4 +394,4 @@ Fill in this table, then copy it into docs/device-results.md with the laptop's g
 | L5 | Optional: 67% on Ledger and on the Listen line | 30 cm | Not run | |
 | M | Optional: sick report row, 3 people from 1 sender | 30 cm | Pass | Nov 20 |
 | M | Optional: fan stopped row, 1 sender, unconfirmed | 30 cm | Pass | Nov 20, on top |
-| N | Buzz once at AMBER, three times at RED | 30 cm | Pass, weak | Nov 20, felt but weak at 200 ms; pulses now 500 ms, not retested |
+| N | Buzz once at AMBER, three times at RED | 30 cm | Pass | Nov 20, weak at 200 ms; retested at 500 ms: clearly felt |
