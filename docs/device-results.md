@@ -69,6 +69,7 @@ The same phone and laptop, the live site at main `d0a9670`, run sheet Parts I to
 | M | Sick report row, 3 people from 1 sender | 30 cm | Pass | "People coughing or sick · level 2, sector A: 1 report from 1 sender, unconfirmed ..." and "Cases heard by sound: 3 people from 1 sender" |
 | M | Fan stopped row, 1 sender, unconfirmed | 30 cm | Pass | The fan row on top, the sick row second |
 | N | Buzz once at AMBER, three times at RED | 30 cm | Pass | First run: felt but weak at 200 ms pulses. The pulses were lengthened to 500 ms (commit `b1a31eb`); retested the same evening: clearly felt, one buzz at AMBER and three at RED |
+| N2 | Alert patterns, repeat every 30 s until Seen, screen flash, screen kept awake | 30 cm | Pass | Nov 20, about 22:45 ET, after commit `7fff19d`: works on the Galaxy Z Fold 7 |
 
 Gateway log, Part K (laptop, District 7): 10 consecutive lines "Verified OK from member 232 · LIVE", 5 s apart, from 6:59:28 pm to 7:00:18 pm, with no rejects.
 
@@ -80,4 +81,3 @@ Also seen: on District 7, at the end of day 7 the clock line ("World time end of
 - The fan-stop alert with talk and noise near the phone, and a stop while someone talks (run sheet Part I steps 6 and 7): not reported.
 - Real odds on Listen (Part L5, optional): not run.
 - The cough counter's false counts during talk (Part J): not reported; the counter failed its coughs check.
-- The per-alert buzz patterns, the RED and fan-stop repeat until Seen, the screen flash and the screen kept awake while listening: tested in a browser only.

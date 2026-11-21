@@ -166,8 +166,8 @@ Stated plainly, so nobody finds them for us.
   public water or route alert at a place (**Vibrate on alerts** on the Listen tab). RED and a fan stop buzz again every
   30 s until **Seen** is tapped in the banner at the top of the page, or the alert clears. AMBER flashes the screen amber,
   RED and a fan stop flash it red (a static border under reduced motion). The screen is kept awake while listening,
-  where the browser allows it. These patterns, the repeat, the flash and the wake lock were tested in a browser, not
-  on a phone; the buzz strength is set by the phone's own settings. A screen reader announces the
+  where the browser allows it. These patterns, the repeat, the flash and the wake lock were tested on the Galaxy Z Fold 7
+  and work; the buzz strength is set by the phone's own settings. A screen reader announces the
   same events on any tab, a public alert with its sender count (`src/phone/alerts.ts`). iPhone browsers and Firefox
   for Android have no web vibration. The app was not tested with
   deaf, blind or non-reading users.
