@@ -52,7 +52,9 @@ https://github.com/royalgillz/stratum
 
 ## Submit your Demo Video Link
 
-(Paste the YouTube Unlisted or Google Drive "anyone with the link" address of the uploaded video (video/stratum-video-v5.mp4, 2:54, or the trailer if chosen). Before pasting, open the link in a private window and check it plays to the end.)
+https://drive.google.com/file/d/1xv4Fl43ie-gg3OUvyiaOGWCtj_tV1Qjh/view?usp=drive_link
+
+(The 2:38 trailer, shared on Google Drive with anyone who has the link.)
 
 ## Submit a Demo URL
 

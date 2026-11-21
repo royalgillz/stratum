@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/royalgillz/stratum/actions/workflows/ci.yml/badge.svg)](https://github.com/royalgillz/stratum/actions/workflows/ci.yml)
 
-**Live demo:** https://stratum-nine-swart.vercel.app/ · **Judge mode (90 s):** https://stratum-nine-swart.vercel.app/src/district/judge.html
+**Video (2:38):** https://drive.google.com/file/d/1xv4Fl43ie-gg3OUvyiaOGWCtj_tV1Qjh/view?usp=drive_link · **Live demo:** https://stratum-nine-swart.vercel.app/ · **Judge mode (90 s):** https://stratum-nine-swart.vercel.app/src/district/judge.html
 
 | Judge mode, drawn phone at RED (SIMULATED) | Real phone, Galaxy Z Fold 7: a family OK arrived (LIVE) |
 | --- | --- |
