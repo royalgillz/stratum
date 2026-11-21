@@ -226,6 +226,7 @@ Every gap we know of, in one list:
 - Case reports (the phone's "People coughing or sick" report, with a people count) are counted per place on District 7, but do not feed the outbreak estimate (9): a Chapman estimate needs a clinic list and the people on both lists, and Breath Count requests are not case reports.
 - District 7's air score uses scripted fan stops and an assumed share of listening phones: fan stops caused by power cuts, CO2 rising after a stop, and a measured share of phones are not modelled.
 - The fan-stop alert's checks with talk and noise near the phone (run sheet Part I steps 6 and 7) were not reported.
+- Vibrate with the screen off, through notifications or an app wrapper: a web page can buzz only while it is on screen, and the motor's strength is set by the phone's own settings.
 - Stairwell relays: cheap battery nodes so a message can cross levels.
 - A real surface sniffer, instead of simulated crews' readings.
 - A field test of the packets in a real tunnel.

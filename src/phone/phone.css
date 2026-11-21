@@ -91,3 +91,12 @@ h3 { font-size: 1rem; margin: 16px 0 4px; }
 .result .head { font-size: 1.3rem; font-weight: 700; margin: 8px 0; }
 .result.GREEN { border-color: var(--green); } .result.AMBER { border-color: var(--amber); } .result.RED, .result.REFER_YOUNG { border-color: var(--red); }
 .result.RED .head, .result.REFER_YOUNG .head { color: var(--red); }
+/* Alerts (src/phone/alerts.ts): the Seen banner, and a brief flash that never takes a tap. */
+#alertBanner { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 8px 0 0; padding: 4px 12px; border: 2px solid var(--red); border-left-width: 8px; }
+#alertBanner p { flex: 1 1 12rem; margin: 4px 0; font-weight: 700; color: var(--red); overflow-wrap: anywhere; }
+#seenBtn { min-width: 88px; font-weight: 700; }
+#flash { --c: transparent; position: fixed; inset: 0; pointer-events: none; z-index: 3; }
+#flash.AMBER { --c: var(--amber); } #flash.RED { --c: var(--red); }
+#flash.AMBER, #flash.RED { animation: flash 600ms ease-out forwards; }
+@keyframes flash { from { background: color-mix(in srgb, var(--c) 60%, transparent); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { #flash.AMBER, #flash.RED { animation: none; box-shadow: inset 0 0 0 8px var(--c); } }

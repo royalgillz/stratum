@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="./phone.css" />
 </head>
 <body>
+  <!-- RED or a fan stop (src/phone/alerts.ts): buzzes again every 30 s until Seen or the alert clears. -->
+  <div id="alertBanner" role="alert" hidden>
+    <p id="alertBannerText"></p>
+    <button id="seenBtn">Seen</button>
+  </div>
+  <div id="flash" aria-hidden="true"></div>
   <header>
     <h1>STRATUM</h1>
     <p class="muted">Hear the grid, tell your family you are OK. Sound only: no network needed.</p>

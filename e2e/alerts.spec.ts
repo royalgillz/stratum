@@ -19,7 +19,7 @@ const fire = (page: Page, type: 'reading' | 'packet', detail: object) =>
   page.evaluate(([type, detail]) => (window as unknown as { testApp: EventTarget }).testApp.dispatchEvent(new CustomEvent(type, { detail })), [type, detail] as const);
 const reading = (tier: string) => ({ t: 0, state: 'LIVE', snrDb: 20, label: 'LIVE', tier, deviationMHz: -60 });
 const buzz = (page: Page) => page.evaluate(() => (window as unknown as { buzz: unknown[] }).buzz);
-const ONE = [500], THREE = [500, 200, 500, 200, 500];
+const AMBER = [700], RED = [150, 100, 150, 100, 150, 250, 500, 150, 500, 150, 500], MESSAGE = [200, 150, 200];
 
 test.describe('alerts beyond the screen', () => {
   test.beforeEach(async ({ page }) => {
@@ -27,22 +27,29 @@ test.describe('alerts beyond the screen', () => {
     await page.goto('/src/phone/#listen', { waitUntil: 'domcontentloaded' });
   });
 
-  test('buzzes once at AMBER and three times at RED, only on a change, and announces on any tab', async ({ page }) => {
+  test('buzzes its own pattern at AMBER and at RED, only on a change, and announces on any tab', async ({ page }) => {
     const box = page.getByRole('checkbox', { name: 'Vibrate on alerts' });
     await expect(box).toBeChecked();
     await expectSoundLayout(page);
     for (const t of ['GREEN', 'AMBER', 'AMBER', 'RED', 'RED']) await fire(page, 'reading', reading(t));
     await expect(page.locator('#tier')).toHaveText('■ RED: DANGER, cut likely soon');
-    expect(await buzz(page)).toEqual([ONE, THREE]);
+    expect(await buzz(page)).toEqual([AMBER, RED]);
     await expect(page.locator('#alertNow')).toHaveText('■ RED: DANGER, cut likely soon'); // assertive: says it even over #tier
     await expect(page.locator('#alertSoon')).toBeEmpty(); // AMBER was already said by #tier on the open Listen tab
+    // RED repeats until Seen: the banner holds a 44 px Seen button; the flash never takes a tap.
+    const seen = page.getByRole('button', { name: 'Seen' });
+    await expect(page.locator('#alertBanner')).toBeVisible();
+    expect((await seen.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await expect(page.locator('#flash')).toHaveCSS('pointer-events', 'none');
+    await seen.click();
+    await expect(page.locator('#alertBanner')).toBeHidden();
 
     // On another tab the Listen tab's live region is hidden and silent: the page-wide one speaks.
     await page.getByRole('tab', { name: 'Report' }).click();
     await fire(page, 'reading', reading('GREEN'));
     await fire(page, 'reading', reading('AMBER'));
     await expect(page.locator('#alertSoon')).toHaveText('▲ AMBER: WARNING, grid under strain');
-    expect(await buzz(page)).toEqual([ONE, THREE, ONE]);
+    expect(await buzz(page)).toEqual([AMBER, RED, AMBER]);
   });
 
   test('a public water alert buzzes once and is announced; the setting turns buzzing off and is kept', async ({ page }) => {
@@ -52,11 +59,11 @@ test.describe('alerts beyond the screen', () => {
     // Said as the inbox row says it: LIVE label and sender count, so a forgeable alert is never stated as fact.
     await expect(page.locator('#alertSoon')).toHaveText(/^Public alert: LIVE · .*⚠ Water looks or smells wrong: hold, do not drink from member 9 .* · public · 1 sender, unconfirmed$/);
     await fire(page, 'packet', { decoded: { ...alert, duplicate: true, timesHeard: 2 }, bytes: [], at: Date.now() }); // a relayed copy
-    expect(await buzz(page)).toEqual([ONE]);
+    expect(await buzz(page)).toEqual([MESSAGE]);
     // A second sender of the same alert at the same place is announced, but does not buzz again.
     await fire(page, 'packet', { decoded: { ...alert, payload: { ...alert.payload, member: 10 } }, bytes: [], at: Date.now() });
     await expect(page.locator('#alertSoon')).toHaveText(/ · 2 senders, unconfirmed$/);
-    expect(await buzz(page)).toEqual([ONE]);
+    expect(await buzz(page)).toEqual([MESSAGE]);
 
     await page.getByRole('checkbox', { name: 'Vibrate on alerts' }).uncheck();
     await page.reload({ waitUntil: 'domcontentloaded' });

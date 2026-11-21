@@ -24,6 +24,14 @@ function micError(e: unknown) {
   return 'The microphone could not be opened. Close other apps using it and try again.';
 }
 
+/** Keeps the screen on while listening, where the browser can; a refusal (low battery, say) changes nothing else. */
+async function keepAwake() {
+  if (!('wakeLock' in navigator)) return;
+  try { await navigator.wakeLock.request('screen'); } catch { /* not allowed now: listening goes on */ }
+}
+// The browser drops the lock when the page is hidden: take it again on return. Listening has no stop, so the lock ends with the page.
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && app.listening) void keepAwake(); });
+
 export function mountListen(root: HTMLElement) {
   root.innerHTML = `
     <h2>Listen to the grid</h2>
@@ -44,7 +52,7 @@ export function mountListen(root: HTMLElement) {
     <p id="relayCount" role="status" aria-live="polite">Relaying starts when you tap Start listening.</p>
     <p class="muted">With no network, phones carry each other's messages a few metres at a time; this phone never decodes other families' messages, it only repeats them.</p>
     <label class="check"><input type="checkbox" id="vibrateOn" /> Vibrate on alerts</label>
-    <p class="muted">Buzzes once at AMBER, three times at RED, and once for a fan stop, a family need or a public water or route alert. Phones without a vibration motor (and iPhones) skip it; the alert still shows and is read out by a screen reader.</p>`;
+    <p class="muted">A different pattern for each alert: one long buzz at AMBER; three short and three long at RED; long, short, long for a fan stop; two short taps for a family need or a public water or route alert. RED and a fan stop buzz again every 30 s until you tap Seen. The screen stays on while listening. Phones without a vibration motor (and iPhones) skip the buzz; the alert still shows and is read out by a screen reader.</p>`;
   const btn = $<HTMLButtonElement>('#listenBtn', root);
 
   const relayOn = $<HTMLInputElement>('#relayOn', root);
@@ -67,6 +75,7 @@ export function mountListen(root: HTMLElement) {
     try {
       const s = await app.listen();
       btn.textContent = 'Listening';
+      void keepAwake();
       $('#micinfo', root).textContent = s.echoCancellation || s.noiseSuppression || s.autoGainControl
         ? 'Warning: this browser kept some microphone processing on; readings may be less accurate.'
         : '';

@@ -80,3 +80,4 @@ Also seen: on District 7, at the end of day 7 the clock line ("World time end of
 - The fan-stop alert with talk and noise near the phone, and a stop while someone talks (run sheet Part I steps 6 and 7): not reported.
 - Real odds on Listen (Part L5, optional): not run.
 - The cough counter's false counts during talk (Part J): not reported; the counter failed its coughs check.
+- The per-alert buzz patterns, the RED and fan-stop repeat until Seen, the screen flash and the screen kept awake while listening: tested in a browser only.
