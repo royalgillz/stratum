@@ -1,5 +1,6 @@
 # STRATUM build plan
 
+Exported Nov 14, 2026 from the plan doc. This file holds the parts needed to build from.
 
 ## The problem, clause by clause
 
@@ -187,14 +188,14 @@ At the 8 to 16 bytes a second ggwave states, one packet is about 2 to 3 seconds 
 | Layer | Choice | Status |
 | --- | --- | --- |
 | Language and build | TypeScript, Vite 8, Vitest 5 | Versions 8.3.8 and 5.1 were confirmed in the earlier audit. Pin on Saturday with `npm view <pkg> version` |
-| Rendering | Canvas 2D, hand-written SVG charts | Built in |
+| Rendering | Canvas 2D, SVG charts with no chart library | Built in |
 | Audio | Web Audio with an AudioWorklet | Built in. Test on iPhone before relying on it |
 | Sound packets | ggwave 0.4.0, vendored behind `modem.ts` | MIT. Unmaintained on npm since 2022, so the fallback is defined |
 | Cryptography | WebCrypto: HMAC-SHA-256, HKDF, SHA-256, ECDSA P-256 | Built in. HKDF on iOS Safari is unverified; spike T2 checks it |
 | Storage | IndexedDB for the ledger and the seen-set | Built in |
 | Sound model | `@mediapipe/tasks-audio`, pinned, with the YAMNet file hosted in the repo and loaded on demand | Optional until spike T4 passes |
-| Offline | Service worker with a versioned cache | Hand-written, about 40 lines |
-| Hosting | Vercel, static, Hobby plan | Switched from Cloudflare Pages on Nov 14 (human decision). HTTPS is required for the microphone |
+| Offline | Service worker with a versioned cache | No library, about 40 lines |
+| Hosting | Vercel, static, Hobby plan | Switched from Cloudflare Pages on Nov 14. HTTPS is required for the microphone |
 
 Cost is $0. There is no backend, no account, no analytics and no network call at run time.
 
@@ -234,10 +235,13 @@ Run T1 and T2 on the Android phone first. If the iPhone fails either, drop it fr
 
 ### Hour budget
 
+| Day | Hours | Main track | Second track |
 | --- | --- | --- | --- |
+| Sat 14 | 6 | Email the organizers (0.5). Scaffold and deploy (1.5). Spikes T1 to T3 (3). Contracts merged to main (1) | Packet codec and crypto, Fair Share, Witness detector, kernel and seeded random numbers, each with tests |
 | Sun 15 | 10 | Tracker and tier screen on the phone (4). Emitter with a scripted trace (1.5). Packet send and receive on both devices (3). Review and merge (1.5) | ENF-WHU scoring harness. World models for grid, heat and air, water, tunnels, epidemic |
 | Mon 16 | 10 | Report grid, family board, Shed Ledger, Breath Count (4.5). Relay and gateway (2). Judge mode (2). T4 (0.5). Review and merge (1) | World models for light and food, space, care delivery, surface and return. GECCO scoring harness. Experiment harness |
 | Tue 17 | 10 | Kernel, two clocks, scripted scenario (2.5). Cross-section and overlays (4.5). Phone packets into the district (1.5). Review and merge (1.5) | Chart components, per-problem adapters and metrics, tests. Evidence runs overnight |
+| Wed 18 | 10 | Remaining adapters and coverage matrix (3.5). Evidence check (0.5). Sound model, time-boxed (3.5). Reviewer fixes (2). Video script (0.5) | Review passes. Charts from the results |
 | Thu 19 | 10 | Fix list (2). README, write-up, screenshots (2). Film the phones (1.5). Screen capture (1). Edit and captions (2.5). Submit a draft and test in a clean browser (1) | Final check of README claims against the code |
 | Fri 20 | 2 | Final check, and submission by 23:00 (hard deadline 11:00 PM) |  |
 
@@ -293,6 +297,7 @@ Every number shown or spoken comes from harness output or a live reading. None i
 - **Is the phone just a tuner?** A tuner shows pitch. This tracks millihertz changes in a hum, rejects windows with no signal, and is scored against reference traces on 130 real recordings.
 - **Frequency is the same everywhere. How does it warn my level?** Alone, it doesn't. The hum says when. The ledger of neighbours' power reports says who. A steady hum while your level is dark is the evidence.
 - **Can the Directorate forge messages?** Family messages carry a 64-bit authentication code under a key that never travels. A grid alert is passed on only if the receiving phone hears the same stress.
+- **Where is the AI?** A small sound model on the phone that counts coughs and hears a fan stop, with the network off. A rationing rule is not something to let a language model improvise.
 - **Why trust the numbers?** Twenty seeds per condition, intervals shown, every parameter listed with a source or marked as an assumption, and three results published that go against us.
 - **Who enforces the fair plan?** Nobody can force the Directorate. The tool proves the pattern and lets a level share fairly what it controls.
 - **Is Breath Count medical advice?** No. It applies published thresholds for community health workers and tells you when to seek help.
@@ -304,6 +309,7 @@ If the sound model does not ship, the answer to "Where is the AI?" becomes: almo
 
 - [ ] Video of 2:45 or less, with captions and no third-party music
 - [ ] Public repo with an MIT licence and the data licences listed (ENF-WHU: MIT. GECCO 2018: CC BY 4.0. ggwave: MIT)
+- [ ] README: what is real, the tier table, run steps, seeds, limits, prior art
 - [ ] Live address tested in a private window on a laptop and on a phone
 - [ ] Five screenshots: phone at RED, family board, cross-section, fairness chart, coverage matrix
 - [ ] Write-up: inspiration, what it does, how it works, evidence, real against simulated, prior art, limits, what is next

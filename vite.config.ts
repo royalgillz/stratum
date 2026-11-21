@@ -56,7 +56,7 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: [...configDefaults.exclude, '.*/**', 'e2e/**'], // worktrees hold copies; e2e/ belongs to Playwright
+    exclude: [...configDefaults.exclude, '.*/**', 'e2e/**'], // local hidden folders can hold worktree copies; e2e/ belongs to Playwright
     // The wall-time specs (SCEN-009) run alone, after every other file, so parallel test files do not slow them.
     projects: [
       { extends: true, test: { name: 'unit', exclude: ['**/speed.test.ts'] } },

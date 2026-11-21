@@ -43,4 +43,4 @@ Write each decision here with the date, so nobody reopens it.
 - Nov 15: T3 passes. The hum and the packets coexist, so there is no 12 dB ducking.
 - Nov 15: No iPhone available. The plan is Android-only.
 - Nov 15: Warning thresholds must sit well above about 15 mHz, the room noise at 1 m after smoothing. They are set in the tracker design.
-- Hosting moved from Cloudflare Pages to Vercel (Nov 14, human decision).
+- Hosting moved from Cloudflare Pages to Vercel (Nov 14).

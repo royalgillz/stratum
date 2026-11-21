@@ -10,6 +10,7 @@
 
 **Judge in 5 minutes:** play judge mode; open the coverage matrix's "Results at a glance"; read [docs/device-results.md](docs/device-results.md) and [docs/limits.md](docs/limits.md).
 
+**Docs map.** For judges: [writeup](docs/writeup.md), [coverage](docs/coverage.md), [limits](docs/limits.md), [device results](docs/device-results.md). Process: [plan](docs/plan.md). Internal working notes: handoff, rung-test, spikes, intent/.
 
 A citizen toolkit for the Hollow (Patriot HackFest Fall 2026, track "Life Underground") with one loop: hear, prove, pass on, share fairly. A phone hears the grid's hum sag before a power cut, passes short signed messages by sound with no network, and a fair-share rule divides what there is. District 7, a simulated district of 6 levels by 4 sectors, tests all of it against the Directorate's rule. The same physics holds wherever the network is shut down and power is rationed: a phone hears the hum and talks to the next phone by sound.
 
@@ -35,8 +36,8 @@ On a real phone and laptop, follow the run sheet [docs/rung-test.md](docs/rung-t
 Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real public recordings) or **SIMULATED** (District 7, and judge mode's drawn phone).
 
 - Real code: the hum tracker, the 25-byte sound packets and their cryptography, the relay, the ledger and the allocator.
-- Tested on a real phone (Galaxy Z Fold 7, Chrome 158, results in [docs/device-results.md](docs/device-results.md)): the shipped hum tracker went GREEN, AMBER, RED and NO HUM at 30 cm; the phone's signed family OK was verified by the District 7 gateway on a laptop at 30 cm, 1 m and 3 m (one send at each distance); a laptop tab's family OK reached the phone's family board. Earlier spikes T1 to T3 (spike code, [docs/spikes.md](docs/spikes.md)) measured the tracker's error and 20/20 packets at 1 m and 3 m. The phone passed a laptop tab's report on (one relay hop), installed to the home screen and opened and listened in Airplane mode. On the phone, a Breath Count danger sign gave RED and its medicine request by sound was verified by the District 7 gateway; the 60-second tap count was tested in a laptop browser. No iPhone was tested.
-- Tested in a browser only, not yet on a phone: the fan-stop alert, the cut odds on Listen, the HOLD WATER and ROUTE alerts, and the ledger digest by sound.
+- Tested on a real phone (Galaxy Z Fold 7, Chrome 158, results in [docs/device-results.md](docs/device-results.md)): the shipped hum tracker went GREEN, AMBER, RED and NO HUM at 30 cm; the phone's signed family OK was verified by the District 7 gateway on a laptop at 30 cm, 1 m and 3 m (one send at each distance); a laptop tab's family OK reached the phone's family board. Earlier spikes T1 to T3 (spike code, [docs/spikes.md](docs/spikes.md)) measured the tracker's error and 20/20 packets at 1 m and 3 m. The phone passed a laptop tab's report on (one relay hop), installed to the home screen and opened and listened in Airplane mode. On the phone, a Breath Count danger sign gave RED and its medicine request by sound was verified by the District 7 gateway. A second session (Nov 20) passed on the phone: the 60-second tap count (AMBER at 47, GREEN at 35), the cut odds line on Listen at AMBER and RED, HOLD WATER and ROUTE alerts with their sender counts, District 7's tally of the phone's reports, a buzz at AMBER and RED (felt, but weak), the fan-stop alert with a real fan 3 m away (alert about 5 s after the stop), repeat OK sends (10 of 10 verified at 1 m and 10 of 10 at 3 m, no rejects) and the ledger digest by sound under the STRATUM rule (the laptop sent the digest of the SIMULATED ledger, fd297d64609f, and the phone's inbox showed the same 12 characters, packet LIVE). No iPhone was tested.
+- Not yet passed on a phone: the longer vibration pulses (not retested). The cough counter failed its phone test (about 2 of 10 coughs counted) and is not shipped.
 - Scored on real data (REPLAY): the tracker on 130 ENF-WHU grid recordings, the water detector on GECCO 2018.
 - Simulated: District 7 and everything in it.
 
@@ -44,9 +45,9 @@ Every number on screen carries a label: **LIVE** (real device), **REPLAY** (real
 | --- | --- |
 | Live (a part runs on a real phone) | 1 (power warning), 7 (messages without the network), 8 (families), 10 (Breath Count and the medicine request) |
 | Modelled (algorithm in District 7 against the Directorate's rule) | 2, 3, 4, 5, 6, 9, 10 (delivery), 11, 12, 13, 14, 15 |
-| Thin or Roadmap | none. The air half of problem 1 is a fan-stop alert on the phone, built, phone test pending |
+| Thin or Roadmap | none. The air half of problem 1 is a fan-stop alert on the phone, tested once with a real fan at 3 m |
 
-The phone sends real reports for 2, 4, 5, 9 and 12. District 7 tallies the reports it hears for 2, 4, 5 and 9 by type and place, with the number of different senders (LIVE; tested in a browser, not yet on a device); food requests (12) are NEED messages, which the tally does not count. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md).
+The phone sends real reports for 2, 4, 5, 9 and 12. District 7 tallies the reports it hears for 2, 4, 5 and 9 by type and place, with the number of different senders (LIVE; tested with the phone's reports); food requests (12) are NEED messages, which the tally does not count. Each row, its metric, its value and its label: [docs/coverage.md](docs/coverage.md).
 
 Headline (SIMULATED, seven-day week, 20 seeds): cuts warned 10 min ahead, Directorate 0.00, STRATUM 0.40 (the Directorate's rule issues no warnings, so its 0.00 is by rule; with Fair Share off, STRATUM warns 0.15); worst-decile served fraction, Directorate 0.66, STRATUM 0.85. Against us: in the stress week the warning gain is gone (0.00 under both), and from 3 lying surface crews in 5 the quorum carries the wrong band.
 
@@ -57,8 +58,8 @@ The main ones (full list: [docs/limits.md](docs/limits.md)):
 - District 7 is a simulation; its heat, water, disease, food and surface values are model outputs.
 - Sound carries a few metres. Devices showed one hop at up to 3 m and one relay hop; multi-hop reach is simulated.
 - Public alerts are not signed, and one sender can pose as several.
-- Android only; no iPhone was tested. The fan alert's phone test is pending, and District 7 scores air warnings only on scripted fan stops and an assumed share of listening phones.
-- Case reports heard by sound are counted, not turned into an outbreak estimate (that needs a clinic list); the 60 s grid step cannot show the first seconds after a trip, so the grid-inertia sweep moves nothing; no on-device sound model (such as cough counting) is shipped.
+- Android only; no iPhone was tested. The fan alert was tested once on a phone, at 3 m, and District 7 scores air warnings only on scripted fan stops and an assumed share of listening phones.
+- Case reports heard by sound are counted, not turned into an outbreak estimate (that needs a clinic list); the 60 s grid step cannot show the first seconds after a trip, so the grid-inertia sweep moves nothing; no on-device sound model is shipped (a cough counter failed its phone test).
 
 ## Run it
 
@@ -100,4 +101,4 @@ Both report figures that go against us: the tracker says NO HUM on 56.5% of read
 
 ## How it was built, licences
 
-Built by one person, who made every decision and ran the device tests; every decision is dated in [CHANGELOG.md](CHANGELOG.md). No AI runs in the product. Code: MIT. Data: ENF-WHU (MIT), GECCO 2018 (CC BY 4.0, Moritz et al., DOI 10.5281/zenodo.3884398). ggwave: MIT.
+Built by one person, who made every decision and ran the device tests. No AI runs in the product. Code: MIT. Data: ENF-WHU (MIT), GECCO 2018 (CC BY 4.0, Moritz et al., DOI 10.5281/zenodo.3884398). ggwave: MIT.

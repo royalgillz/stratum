@@ -1,5 +1,6 @@
 # STRATUM handoff brief
 
+The compact version of `docs/plan.md`: concept, stack, contracts, sound plan, packet layout, ladder and tiers.
 
 ```
 STRATUM: handoff brief
@@ -69,17 +70,17 @@ Modelled in District 7: 2, 3, 4, 5, 6, 9, 11, 12, 13, 14, 15.
 Real reports feed 2, 4, 5, 9, 12.
 Real data: tracker on ENF-WHU, water detector on GECCO 2018.
 
-FIRST TEN TASKS (today)
+FIRST NINE TASKS (today)
  1 Email directors@ and hello@patriothackfest.com: rubric, deadline time and zone,
    platform, prizes.
  2 Create the repo with a Vite + TypeScript scaffold and an MIT licence.
    Deploy a hello page to Vercel.
- 4 Write src/core/contracts.ts and rng.ts. Commit to main.
- 5 Emitter page v0: 400 + 800 Hz, a slider for offset, a button for a 0.1 Hz step.
- 6 Listener page v0: microphone with processing off -> AudioWorklet -> tone bank -> number on screen.
- 7 Run T1 on the Android phone, then the iPhone. Record results in docs/spikes.md.
- 8 Load the vendored ggwave. Send and receive a 25-byte payload. Run T2, then T3.
- 9 Spawn four logic-builders in worktrees: packet codec and keys, fairShare,
+ 3 Write src/core/contracts.ts and rng.ts. Commit to main.
+ 4 Emitter page v0: 400 + 800 Hz, a slider for offset, a button for a 0.1 Hz step.
+ 5 Listener page v0: microphone with processing off -> AudioWorklet -> tone bank -> number on screen.
+ 6 Run T1 on the Android phone, then the iPhone. Record results in docs/spikes.md.
+ 7 Load the vendored ggwave. Send and receive a 25-byte payload. Run T2, then T3.
+ 8 Build four core modules on separate branches: packet codec and keys, fairShare,
    witness detector, kernel.
-10 Choose fallbacks from the spike results before stopping tonight.
+ 9 Choose fallbacks from the spike results before stopping tonight.
 ```

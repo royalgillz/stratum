@@ -1,5 +1,5 @@
 // Alerts beyond the screen: a vibration and a screen-reader announcement for the events that matter,
-// on whichever tab is open (the tab's own live regions are silent while their panel is hidden). Outside LID scope.
+// on whichever tab is open (the tab's own live regions are silent while their panel is hidden). Outside src/core.
 import { TYPES, type Decoded } from '../core/packet/codec.ts';
 import type { FanReading } from '../core/air/fan.ts';
 import type { Tier } from '../core/contracts.ts';
@@ -10,7 +10,7 @@ import { TIER_TEXT } from './tiers.ts';
 
 /** `where`: the tab's own polite live region that already says this while its tab is open. */
 export interface Cue { buzz: number[]; say: string; urgent: boolean; where?: string }
-export const ONE = [200], THREE = [200, 100, 200, 100, 200];
+export const ONE = [500], THREE = [500, 200, 500, 200, 500]; // long pulses: a 200 ms pulse was hard to feel on the Fold 7
 export const VIBRATE_KEY = 'stratum.vibrate';
 
 /** A change into AMBER (one pulse) or RED (three pulses); nothing while the tier stays the same or on a way down to GREEN. */

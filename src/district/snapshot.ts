@@ -1,5 +1,5 @@
 // What the district worker posts to the page: one policy's run, reduced to what the screen draws.
-// Pure: no browser APIs, so it is unit-tested in Node. Outside LID scope (reads core, writes nothing).
+// Pure: no browser APIs, so it is unit-tested in Node. Outside src/core (reads core, writes nothing).
 import type { AdapterId, MeshMessage, Metric, Tier, World } from '../core/contracts.ts';
 import { FOOD_SUPPLY } from '../core/adapters/p02.ts';
 import { served } from '../core/adapters/p03.ts';

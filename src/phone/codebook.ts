@@ -1,5 +1,5 @@
 // The phone's message set: what each codebook byte means. The codec only carries the byte
-// (packet design: codebook values belong to the phone, not the codec). Outside LID scope.
+// (packet design: codebook values belong to the phone, not the codec). Outside src/core.
 import { TYPES, type Payload } from '../core/packet/codec.ts';
 
 export type KeyChoice = 'family' | 'public';

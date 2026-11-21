@@ -1,5 +1,5 @@
 // Judge mode (docs/plan.md "Judge mode"): a 90 s scripted story that feeds SIMULATED hum through the
-// real tracker and a real OK packet through the real codec. No microphone. Outside LID scope.
+// real tracker and a real OK packet through the real codec. No microphone. Outside src/core.
 import { createTracker, type Reading } from '../core/tracker/tracker.ts';
 import { createDecoder, encode, TYPES } from '../core/packet/codec.ts';
 import { deriveKeys, publicKeys, type KeySet } from '../core/packet/keys.ts';

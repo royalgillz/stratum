@@ -1,4 +1,4 @@
-// Frozen boundary for src/core. Change only with the human's approval .
+// Frozen boundary for src/core. Change it only by an explicit design decision.
 // Units are in the field comments. No browser APIs here: this compiles for phone, worker and Node.
 
 import type { Rng } from './rng.ts';

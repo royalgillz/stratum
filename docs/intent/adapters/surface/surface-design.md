@@ -73,7 +73,7 @@ prefix: ADAPT-SURFACE
 ### Deferred
 1. The ledger digest broadcast over the simulated mesh, and the share of people who receive it.
 2. Real crews' readings as packets from the room.
-3. Health-based exclusions from trials, which need a ranking rule the human has not set.
+3. Health-based exclusions from trials, which need a ranking rule that is not yet set.
 4. Readings needed to decide (problem 13) and the total length of the return (problem 15), as figures beside the metrics.
 5. Unsafe-verdict rounds (a band below the truth) beside the wrong-band rate.
 

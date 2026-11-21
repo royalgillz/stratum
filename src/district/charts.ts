@@ -1,5 +1,5 @@
-// Coverage-page charts as HTML and hand-written SVG strings, built from the evidence files: a dumbbell per problem,
-// the ablation list and one small line chart per swept metric. Pure: no DOM, so the unit tests run in Node. Outside LID scope.
+// Coverage-page charts as HTML and SVG strings (no chart library), built from the evidence files: a dumbbell per problem,
+// the ablation list and one small line chart per swept metric. Pure: no DOM, so the unit tests run in Node. Outside src/core.
 import type { Final } from '../../harness/summary.ts';
 import type { AdapterId } from '../core/contracts.ts';
 import { PROBLEMS, show, winner, type Problem } from './problems.ts';

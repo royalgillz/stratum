@@ -19,7 +19,7 @@ const fire = (page: Page, type: 'reading' | 'packet', detail: object) =>
   page.evaluate(([type, detail]) => (window as unknown as { testApp: EventTarget }).testApp.dispatchEvent(new CustomEvent(type, { detail })), [type, detail] as const);
 const reading = (tier: string) => ({ t: 0, state: 'LIVE', snrDb: 20, label: 'LIVE', tier, deviationMHz: -60 });
 const buzz = (page: Page) => page.evaluate(() => (window as unknown as { buzz: unknown[] }).buzz);
-const ONE = [200], THREE = [200, 100, 200, 100, 200];
+const ONE = [500], THREE = [500, 200, 500, 200, 500];
 
 test.describe('alerts beyond the screen', () => {
   test.beforeEach(async ({ page }) => {

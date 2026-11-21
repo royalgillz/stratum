@@ -1,6 +1,6 @@
 // District 7 page (docs/plan.md "Architecture"): the SIMULATED week from the worker, a policy switch, the hum
 // emitter, and the gateway that turns a real phone's OK, heard by the microphone, into a LIVE board entry.
-// Outside LID scope.
+// Outside src/core.
 import { createDecoder, digestPayload, encode, TYPES, type Decoded } from '../core/packet/codec.ts';
 import { tally } from '../core/tally/tally.ts';
 import { deriveKeys, publicKeys } from '../core/packet/keys.ts';
@@ -237,7 +237,9 @@ const sent: number[][] = []; // test seam: the bytes of each packet played
 $('sendDigest').onclick = async () => {
   const btn = $<HTMLButtonElement>('sendDigest'), status = $('sendStatus'), v = snap?.views[shown];
   if (!v) return;
-  if (!v.ledger.measured) return put(status, `Not sent: the ${NAMES[shown]} rule has no measured entries yet, so its digest is only the empty chain's starting value. Press Play, or show the STRATUM rule.`);
+  if (!v.ledger.measured) return put(status, shown === 'directorate'
+    ? "Not sent: the Directorate rule keeps no measured record, only its own figures, so its digest is the empty chain's starting value. Click STRATUM rule at the top, then send."
+    : "Not sent: the STRATUM rule has no measured entries yet, so its digest is only the empty chain's starting value. Press Play, wait, then send.");
   btn.disabled = true;
   const hexed = v.ledger.digest.slice(0, 12), rule = NAMES[shown];
   try {

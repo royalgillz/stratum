@@ -192,7 +192,7 @@ the video never shows the real phone. About 20 minutes, same setup as Part F.
 
 ## Part L (stretch features on the phone): tap count, cut odds, public alerts, ledger digest
 
-These four have passed in a browser only. About 17 minutes, same setup as Part A (phone on the table, screen up, 30 cm from the
+These four passed in a browser first. About 17 minutes, same setup as Part A (phone on the table, screen up, 30 cm from the
 laptop speaker, bottom edge facing it). L5 at the end is optional and takes 15 minutes more.
 
 | Step | Device | Page | Minutes |
@@ -277,14 +277,14 @@ Pass: the four HOLD WATER rows read 1, 1, 2 and 3 senders, "unconfirmed" on the 
 
 1. Laptop: open `/src/district/` in a new tab and press **Ctrl+Shift+R** once. Leave **Sound: off**: its hum
    would reach the listening phone and end the stress event L5 needs.
-2. Click **Play**, wait about 20 s, click **Pause**.
+2. Click **STRATUM rule** at the top (the Directorate rule keeps no measured record, so it has no digest to send). Click
+   **Play**, wait about 20 s, click **Pause**.
 3. Scroll to **Ledger: measured beside official**. On the line "Head digest, first 16 bytes of the measured chain:" write down
    the bold part (the first 12 characters).
 4. Scroll down to **Gateway: phones in this room** and click **Send ledger digest** (no need to click Listen for phones). The
-   line under it reads **Playing digest XXXXXXXXXXXX of the SIMULATED Directorate ledger…**, the laptop chirps about 3 s, then
-   **Sent by sound: digest XXXXXXXXXXXX of the SIMULATED Directorate ledger. A listening phone shows it in its Family tab inbox.**
-   If it says "Not sent: the Directorate rule has no measured entries yet", click **Play** again, wait longer, **Pause**, and send
-   again.
+   line under it reads **Playing digest XXXXXXXXXXXX of the SIMULATED STRATUM ledger…**, the laptop chirps about 3 s, then
+   **Sent by sound: digest XXXXXXXXXXXX of the SIMULATED STRATUM ledger. A listening phone shows it in its Family tab inbox.**
+   If it says "Not sent: ...", check that **STRATUM rule** is shown, click **Play** again, wait longer, **Pause**, and send again.
 5. Phone, still on **Family**, within about 10 s, a new row at the top of the inbox:
    **Public ledger digest heard: XXXXXXXXXXXX, compare with the District 7 screen · packet LIVE, sent HH:MM · public**
 
@@ -345,53 +345,53 @@ Pass: both rows appear, each says 1 sender and unconfirmed, and the sick row say
 
 Pass: one buzz at AMBER and three at RED. If there is no buzz at all, turn Do Not Disturb off and play again; note it. (An iPhone has no web vibration: skip Part N on one.)
 
-## Results to send back
+## Results
 
-Copy this table into the chat with your results. Paste the laptop's gateway log text under it.
+Fill in this table, then copy it into docs/device-results.md with the laptop's gateway log text under it. Filled in below from the runs of Nov 19 and Nov 20; details in docs/device-results.md.
 
 | Part | Check | Distance | Pass / fail | Notes (times, tier, text seen) |
 | --- | --- | --- | --- | --- |
-| A | GREEN after calibration | 30 cm | | |
-| A | AMBER | 30 cm | | |
-| A | RED | 30 cm | | |
-| A | NO HUM after the cut | 30 cm | | |
-| B | Phone passed on the laptop's report | 30 cm | | |
-| B | Ledger shows 1 public report | | | |
-| C | Family board row for the other member | 30 cm | | |
-| D | AMBER after about 50 taps | | | |
-| D | RED at once on a danger sign | | | |
-| E | Judge mode plays end to end | | | |
-| F | OK verified, LIVE on board | 30 cm | | |
-| F | OK verified | 1 m | | |
-| F | OK verified | 3 m | | |
-| F | Row stays when switching rule | | | |
-| G | Fifteen rows, badges, labels (laptop) | | | |
-| G | Week plays to the end (laptop) | | | |
-| G | Stress week caption and losses | | | |
-| G | Coverage matrix, fifteen cards | | | |
-| G | Same pages on the phone, no sideways scroll | | | |
-| H | Installed to the home screen | | | |
-| H | Opens and listens in Airplane mode | | | |
-| I | Quiet room: not "running" | | | |
-| I | Fan on: "running" | 1 m | | |
-| I | Fan off: alert within 5 s (x3) | 1 m | | |
-| I | Talk and noise: no alert | 1 m | | |
-| I | Fan off while talking: alert | 1 m | | |
-| J | Coughs counted (of 10) | 1 m | | |
-| J | False counts in 5 min of talk, clap, drop | 1 m | | |
-| K | OK verified / sent | 1 m | | x / 10 |
-| K | OK verified / sent | 3 m | | x / 10 |
-| K | Clips filmed (A and F) | | | |
-| L1 | Tap count: AMBER at about 50 taps | | | N = |
-| L1 | Tap count: GREEN at about 30 taps | | | N = |
-| L2 | Odds line at AMBER and RED ("no data yet"), gone at GREEN and NO HUM | 30 cm | | |
-| L3 | HOLD WATER: 1 sender, unconfirmed | 30 cm | | |
-| L3 | HOLD WATER: same window again, still 1 sender | 30 cm | | |
-| L3 | HOLD WATER: 2 senders, unconfirmed | 30 cm | | |
-| L3 | HOLD WATER: 3 senders, no "unconfirmed" | 30 cm | | |
-| L3 | ROUTE: 1 sender, unconfirmed | 30 cm | | |
-| L4 | Ledger digest: phone shows the same 12 characters | 30 cm | | digest = |
-| L5 | Optional: 67% on Ledger and on the Listen line | 30 cm | | |
-| M | Optional: sick report row, 3 people from 1 sender | 30 cm | | |
-| M | Optional: fan stopped row, 1 sender, unconfirmed | 30 cm | | |
-| N | Buzz once at AMBER, three times at RED | 30 cm | | |
+| A | GREEN after calibration | 30 cm | Pass | Nov 19 |
+| A | AMBER | 30 cm | Pass | Nov 19 |
+| A | RED | 30 cm | Pass | Nov 19 |
+| A | NO HUM after the cut | 30 cm | Pass | Nov 19, at about 80 s |
+| B | Phone passed on the laptop's report | 30 cm | Pass | Nov 19, one relay hop |
+| B | Ledger shows 1 public report | | Not reported | |
+| C | Family board row for the other member | 30 cm | Pass | Nov 19 |
+| D | AMBER after about 50 taps | | Pass, in a browser | Nov 19; on the phone in L1 |
+| D | RED at once on a danger sign | | Pass | Nov 19, on the phone, medicine request verified |
+| E | Judge mode plays end to end | | Pass | Nov 19 |
+| F | OK verified, LIVE on board | 30 cm | Pass | Nov 19 |
+| F | OK verified | 1 m | Pass | Nov 19 |
+| F | OK verified | 3 m | Pass | Nov 19 |
+| F | Row stays when switching rule | | Pass | Nov 19 |
+| G | Fifteen rows, badges, labels (laptop) | | Pass | Nov 19 |
+| G | Week plays to the end (laptop) | | Pass | Nov 19 |
+| G | Stress week caption and losses | | Pass | Nov 19 |
+| G | Coverage matrix, fifteen cards | | Pass | Nov 19 |
+| G | Same pages on the phone, no sideways scroll | | Pass | Nov 19 |
+| H | Installed to the home screen | | Pass | Nov 19 |
+| H | Opens and listens in Airplane mode | | Pass | Nov 19 |
+| I | Quiet room: not "running" | | Pass | Nov 20, stayed on "listening" with the fan off |
+| I | Fan on: "running" | 1 m | Pass at 3 m | Nov 20, fan 3 m away |
+| I | Fan off: alert within 5 s (x3) | 1 m | Pass at 3 m, x3 not reported | Nov 20, fan 3 m away, one stop alert timed at about 5 s; fan log shows two stops and two restarts in its last 300 s |
+| I | Talk and noise: no alert | 1 m | Not reported | |
+| I | Fan off while talking: alert | 1 m | Not reported | |
+| J | Coughs counted (of 10) | 1 m | Fail | Nov 20, about 2 of 10, even at close range |
+| J | False counts in 5 min of talk, clap, drop | 1 m | Not reported | |
+| K | OK verified / sent | 1 m | Pass | Nov 20, 10 / 10, no rejects |
+| K | OK verified / sent | 3 m | Pass | Nov 20, 10 / 10, no rejects |
+| K | Clips filmed (A and F) | | Done | Nov 20, tiers.mp4 and send.mp4 |
+| L1 | Tap count: AMBER at about 50 taps | | Pass | N = 47 |
+| L1 | Tap count: GREEN at about 30 taps | | Pass | N = 35 |
+| L2 | Odds line at AMBER and RED ("no data yet"), gone at GREEN and NO HUM | 30 cm | Pass | Nov 20 |
+| L3 | HOLD WATER: 1 sender, unconfirmed | 30 cm | Pass | Nov 20 |
+| L3 | HOLD WATER: same window again, still 1 sender | 30 cm | Pass | Nov 20 |
+| L3 | HOLD WATER: 2 senders, unconfirmed | 30 cm | Pass | Nov 20 |
+| L3 | HOLD WATER: 3 senders, no "unconfirmed" | 30 cm | Pass | Nov 20 |
+| L3 | ROUTE: 1 sender, unconfirmed | 30 cm | Pass | Nov 20 |
+| L4 | Ledger digest: phone shows the same 12 characters | 30 cm | Pass | Nov 20, STRATUM rule: digest fd297d64609f on the laptop and in the phone's inbox (packet LIVE). The first try used the Directorate rule, which has no digest to send |
+| L5 | Optional: 67% on Ledger and on the Listen line | 30 cm | Not run | |
+| M | Optional: sick report row, 3 people from 1 sender | 30 cm | Pass | Nov 20 |
+| M | Optional: fan stopped row, 1 sender, unconfirmed | 30 cm | Pass | Nov 20, on top |
+| N | Buzz once at AMBER, three times at RED | 30 cm | Pass, weak | Nov 20, felt but weak at 200 ms; pulses now 500 ms, not retested |

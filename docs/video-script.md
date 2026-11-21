@@ -6,7 +6,7 @@ Two cuts: the full video (2:55, under the platform's 3:00 limit) and a 90-second
 
 ## Before filming
 
-- Run `docs/rung-test.md` first. Film a real-phone shot only if its part passed: Part A (tiers), Part C (family board), Part D (Breath Count), Part F (OK reaches District 7). Part D's 60-second tap count passed only in a laptop browser; the danger-sign RED and the medicine request ran on the phone. If a part failed, use the fallback shot given in that row and change the narration as noted.
+- Run `docs/rung-test.md` first. Film a real-phone shot only if its part passed: Part A (tiers), Part C (family board), Part D (Breath Count), Part F (OK reaches District 7). The 60-second tap count (Part L1), the danger-sign RED and the medicine request all passed on the phone. If a part failed, use the fallback shot given in that row and change the narration as noted.
 - Phone: Android Chrome, Do Not Disturb on, media volume about 70%, about 30 cm from the laptop speaker, microphone edge facing it. Laptop: Chrome, volume about 70%, speakers on.
 - Phone joined to the demo family: **Family** tab, type `abandon ability able about above absent`, **Join family**. The District 7 gateway uses the same words by default.
 - Phone **Report** tab: **Level** `5`, **Sector** `B` (the demo family's sector on the cross-section).
@@ -61,8 +61,8 @@ What it shows and how it is labelled:
 
 - Judge mode is a drawn phone (LOOPBACK, SIMULATED), not a filmed phone. Its caption keeps "drawn phone" and SIMULATED through AMBER, RED and NO HUM; only when the voice reaches the Fold 7 sentence does it change to "Drawn phone, SIMULATED. The same tracker read these tiers on a real Galaxy Z Fold 7 at 30 cm (LIVE, device test Nov 19 2026)."
 - The two device stills are real screenshots from the device test, captioned "Real screenshot, device test on a Galaxy Z Fold 7, Nov 19 2026."; the gateway one carries the side label "The laptop's District 7 gateway, verifying the Fold 7's signed OK."
-- Breath Count is a screen recording in a laptop browser (automated taps, sped up), labelled SCREEN RECORDING, NOT A PHONE. Its caption says the danger-sign RED and its medicine request were tested on the Fold 7 and the tap count only in a browser.
-- The ledger digest is shown with its caption "tested in a browser, not on a phone". The fan-stop alert is not shown.
+- Breath Count is a screen recording in a laptop browser (automated taps, sped up), labelled SCREEN RECORDING, NOT A PHONE. Its caption says the danger-sign RED and its medicine request were tested on the Fold 7 and the tap count on the phone (Part L1, Nov 20).
+- The ledger digest is shown with its caption "tested in a browser; phone retest pending", written before the phone retest; it passed on the phone on Nov 20 (run sheet Part L4, digest fd297d64609f, packet LIVE). The fan-stop alert is not shown.
 - No third-party music. Voice: synthetic (text to speech), said on the closing card.
 
 ### Full cut, 2:53.9

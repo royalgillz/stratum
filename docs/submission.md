@@ -16,7 +16,7 @@ Installed once while the network is up, it needs no signal or account. Families 
 
 One loop (hear, prove, pass on, share fairly) addresses all fifteen problems: four tested in part on a real phone, eleven modelled in District 7.
 
-Real: on a Galaxy Z Fold 7, hum warnings at 30 cm; a signed "I am OK" verified 3 m away (LIVE, one trial).
+Real: on a Galaxy Z Fold 7, hum warnings at 30 cm; a signed "I am OK" verified 3 m away (LIVE).
 
 In District 7 (SIMULATED, 20 runs): 40% of cuts warned 10 minutes ahead; the Directorate warns no one (0% by rule). The worst-off tenth gets 85% of its need, not 66%. Against us: a stress week erases the warning gain.
 
@@ -24,7 +24,7 @@ In District 7 (SIMULATED, 20 runs): 40% of cuts warned 10 minutes ahead; the Dir
 
 A TypeScript web app (Vite, no server) on Vercel, offline through a service worker. The phone page, the District 7 worker and the Node harness share one `src/core`, so the demo runs the code scored on real data. No AI, no network call at run time.
 
-- Hearing: an AudioWorklet feeds a tone bank on the hum's 800 Hz component; the sag becomes GREEN, AMBER, RED or NO HUM. On 130 ENF-WHU grid recordings: median per-clip error 31.2 mHz (REPLAY). A second detector hears a fan stop (phone test pending).
+- Hearing: an AudioWorklet feeds a tone bank on the hum's 800 Hz component; the sag becomes GREEN, AMBER, RED or NO HUM. On 130 ENF-WHU grid recordings: median per-clip error 31.2 mHz (REPLAY). A second detector hears a fan stop (tested on the phone at 3 m).
 - Messages: a 25-byte sound packet (ggwave). Six family words give keys through HKDF; each packet carries an 8-byte HMAC, its own time and a hop count. Phones relay each packet once, at most 4 hops. Public HOLD WATER and ROUTE alerts.
 - Witness: one change detector and a hash-chained ledger. On GECCO 2018 water data: 22/22 held-out events caught, precision 0.017 (REPLAY).
 - Fair Share: life floors first, then raise the worst-off, rotate what cannot be split.
@@ -52,7 +52,7 @@ https://github.com/royalgillz/stratum
 
 ## Submit your Demo Video Link
 
-(Paste the YouTube Unlisted or Google Drive "anyone with the link" address of video/stratum-video-v4.mp4 (2:54). Before pasting, open the link in a private window and check it plays and shows 2:54.)
+(Paste the YouTube Unlisted or Google Drive "anyone with the link" address of the uploaded video (video/stratum-video-v5.mp4, 2:54, or the trailer if chosen). Before pasting, open the link in a private window and check it plays to the end.)
 
 ## Submit a Demo URL
 

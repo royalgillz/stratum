@@ -1,5 +1,5 @@
 // The fifteen problems as the District 7 page and the coverage matrix print them. Tiers and labels follow
-// docs/coverage.md; metric direction follows docs/intent/adapters/adapters-design.md. Outside LID scope.
+// docs/coverage.md; metric direction follows docs/intent/adapters/adapters-design.md. Outside src/core.
 import type { AdapterId } from '../core/contracts.ts';
 import { NO_PROOF } from '../core/adapters/p14.ts';
 import type { ScenarioEvent } from '../core/scenario/types.ts';
@@ -19,7 +19,7 @@ const p = (id: AdapterId, title: string, tier: string, mechanism: string, metric
   ({ id, title, tier, mechanism, metric, better, labels });
 
 export const PROBLEMS: Problem[] = [
-  p('p01', 'Warn before power or air cuts', 'Live (power); air: fan-stop alert built, phone test pending', 'A phone hears the grid hum sag (GREEN, AMBER, RED); neighbours\' power reports say which level is cut', 'share of power cuts warned at least 10 min ahead', 'higher', 'LIVE (phone); REPLAY (ENF-WHU); SIMULATED (district)'),
+  p('p01', 'Warn before power or air cuts', 'Live (power); air: fan-stop alert tested on a phone at 3 m', 'A phone hears the grid hum sag (GREEN, AMBER, RED); neighbours\' power reports say which level is cut', 'share of power cuts warned at least 10 min ahead', 'higher', 'LIVE (phone); REPLAY (ENF-WHU); SIMULATED (district)'),
   p('p02', 'Share power, water, food fairly', 'Modelled, real requests', 'Fair Share: life floors first, then raise the worst-off, same supply and same trigger', 'share of need met (power, water, food) for the worst-off tenth of residents', 'higher', 'LIVE (requests); SIMULATED (district)'),
   p('p03', 'Keep lower levels livable', 'Modelled', 'Fair Share cooling with a floor that cools a refuge room in every sector', 'person-hours (people times hours) above the 27.5 °C wet-bulb heat limit', 'lower', 'SIMULATED (district)'),
   p('p04', 'Catch bad water before people drink it', 'Modelled, real data, real reports', 'Witness (STRATUM\'s change detector) on every recycler channel, HOLD WATER for the level', 'person-hours of unsafe water drunk', 'lower', 'LIVE (reports); REPLAY (GECCO 2018); SIMULATED (district)'),
@@ -28,10 +28,10 @@ export const PROBLEMS: Problem[] = [
   p('p07', 'Organize without the network', 'Live', '25-byte signed packets carried by sound, relayed sector to sector (at most 4 hops)', 'share of messages delivered within 60 min', 'higher', 'LIVE (phone); SIMULATED (district)'),
   p('p08', 'Reconnect families', 'Live', 'OK beacons under a family key, relayed by strangers\' phones, shown on a family board', 'mean hours until a separated member\'s status is known', 'lower', 'LIVE (phone); SIMULATED (district)'),
   p('p09', 'Track the real outbreak, route supplies', 'Modelled, real reports', 'Chapman estimate (a case count from how much two lists overlap) from the clinic list and residents\' reports; medicine follows the estimate', 'relative error of the case count acted on', 'lower', 'LIVE (reports); SIMULATED (district)'),
-  p('p10', 'Basic care for people who cannot reach a clinic', 'Live (danger-sign RED and medicine request tested on the phone), Modelled (delivery)', 'Breath Count on the phone; requests over the mesh to two pop-up care points, RED before AMBER', 'median hours from a RED request to first care', 'lower', 'LIVE (aid); SIMULATED (district)'),
+  p('p10', 'Basic care for people who cannot reach a clinic', 'Live (tap count, danger-sign RED and medicine request tested on the phone), Modelled (delivery)', 'Breath Count on the phone; requests over the mesh to two pop-up care points, RED before AMBER', 'median hours from a RED request to first care', 'lower', 'LIVE (aid); SIMULATED (district)'),
   p('p11', 'Track and treat life without sunlight', 'Modelled', 'Whole 4 h bright-light sessions rotated by debt; grow rooms count as bright rooms', 'share of person-days with 4 h of daytime light', 'higher', 'SIMULATED (district)'),
   p('p12', 'Grow and share neighbourhood food', 'Modelled, real requests', 'Farm deliveries shared over every level, a cut-off one included; stores top up to the floor only', 'days the food floor held after a farm cut-off', 'higher', 'LIVE (requests); SIMULATED (district)'),
-  p('p13', 'Prove whether the surface is safe, tell everyone', 'Modelled (digest packet built, not device-tested)', 'Witness quorum over independent crews\' readings gives an exposure band, beside the official verdict', 'share of reading rounds with the wrong band', 'lower', 'SIMULATED (district)'),
+  p('p13', 'Prove whether the surface is safe, tell everyone', 'Modelled (digest sent by sound to a phone, LIVE)', 'Witness quorum over independent crews\' readings gives an exposure band, beside the official verdict', 'share of reading rounds with the wrong band', 'lower', 'SIMULATED (district)'),
   p('p14', 'Which option works, who goes first', 'Modelled', 'Trials staged 1 h to 30 days with stop rules; volunteers by lottery, one stage each', 'assigned protection factor (APF: how many times a mask or suit cuts what you breathe in) a planned 30-day trial would prove, worked out on paper, not run (a lower APF proves a lighter option)', 'lower', 'SIMULATED (district)'),
   p('p15', 'Plan the mass return', 'Modelled', 'Daily return slots by lottery, with debt that starts higher for deeper levels, families whole', 'the worst level\'s mean wait for a slot', 'lower', 'SIMULATED (district)'),
 ];

@@ -1,6 +1,7 @@
 # Parameters
 
 Every number a model or engine uses is listed here. A parameter has either a source URL
+or `assumption: true`.
 
 | Parameter | Value | Unit | Module | Source URL | Assumption | Note |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -31,6 +32,7 @@ Every number a model or engine uses is listed here. A parameter has either a sou
 | Fast breathing, age 12 months to 5 years | 40 | breaths/min | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart: "In a child age 12 months up to 5 years, 40 breaths or more per minute". An age of exactly 12 months takes 40 |
 | Breath count length | 60 | s | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart, "Identify problems: ASK and LOOK": "If cough, count breaths in 1 minute". A shorter count gives no rate (no extrapolation) |
 | Breath Count youngest age | 2 | months | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart, title page: "child age 2 months up to 5 years"; younger infants are referred |
+| Breath Count oldest age (exclusive) | 60 | months | care/breath | https://iris.who.int/handle/10665/44398 | false | Same chart (up to 5 years: under five only); no classification at 60 months or more |
 | Breath tap debounce | 250 | ms | care/breath | | true | A tap closer than this to the last counted tap is a double tap; allows up to 240 per minute |
 | Breath plausible rate | 10 to 120 | breaths/min | care/breath | | true | Outside this band, without a danger sign, the card asks for a recount |
 | Breath missed-tap gap | 3 | median intervals | care/breath | | true | A longer gap (start, between taps, or to 60 s) in a full count asks for a recount |

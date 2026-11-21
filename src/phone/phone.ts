@@ -1,5 +1,5 @@
 // Phone page shell: tabs and routing. Each screen lives in src/phone/screens and talks to the
-// others only through `app` events (src/phone/app.ts). Outside LID scope (src/phone).
+// others only through `app` events (src/phone/app.ts). Outside src/core.
 import { mountAlerts } from './alerts.ts';
 import { $, app, store } from './app.ts';
 import { mountCare } from './screens/care.ts';

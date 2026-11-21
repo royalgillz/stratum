@@ -106,9 +106,10 @@ Stated plainly, so nobody finds them for us.
 ## Air watch (fan-stop alert)
 
 - It hears a fan by its steady broadband sound (150 Hz to 1.7 kHz, the hum's frequencies left out) and alerts when that sound drops by 6 dB or more. It cannot tell why: a fan switched off for the night alerts the same as a power cut.
-- How loud a quiet room sounds depends on the phone's microphone. The quiet level is an assumption (−100 dB on the analyser's scale) until a phone test sets it: a phone with a loud quiet room may show "Fan: running" with no fan.
+- How loud a quiet room sounds depends on the phone's microphone. The quiet level is an assumption (−100 dB on the analyser's scale): a phone with a loud quiet room may show "Fan: running" with no fan. On the Galaxy Z Fold 7 it stayed on "listening" with the fan off.
 - Unbroken talk louder than the fan hides a stop while the talk lasts; the alert comes in the pauses.
-- Tested on synthetic traces and in Chromium with a synthetic microphone; not yet on a phone with a real fan.
+- Tested on synthetic traces, in Chromium with a synthetic microphone, and once on a phone (Galaxy Z Fold 7) with one real fan 3 m away: running detected, the stop alert about 5 s after switch-off. Talk and noise near the phone during that test were not reported. One phone and one fan only.
+- A cough counter (a separate preview, not shipped) failed its phone test: about 2 of 10 coughs counted, even at close range.
 - District 7 scores air warnings beside problem 1 on three scripted fan stops (seven-day week only): the Directorate warns at its 06:00 bulletin, STRATUM warns an assumed 50% of residents near a listening phone 5 s after the stop and the rest at the bulletin. The assumed share sets the gain. The stops do not raise CO2 in the air model, and a fan stopped by a power cut is not counted.
 
 ## Phone battery
@@ -122,7 +123,7 @@ Stated plainly, so nobody finds them for us.
 
 ## Sound messages
 
-- Sound carries a few metres in one room. The device test showed one hop, phone to a laptop gateway, at up to 3 m (`docs/device-results.md`). Each distance was one send with the shipped codec, not a repeated trial; the 20/20 counts are from the earlier spike code (docs/spikes.md). The phone also passed a laptop tab's report on (one relay hop). Multi-hop reach is simulated.
+- Sound carries a few metres in one room. The device test showed one hop, phone to a laptop gateway, at up to 3 m (`docs/device-results.md`). On Nov 19 each distance was one send with the shipped codec; on Nov 20 the gateway verified 10 of 10 OK sends at 1 m and 10 of 10 at 3 m with the shipped codec, with no rejects. The 20/20 counts are from the earlier spike code (docs/spikes.md). The phone also passed a laptop tab's report on (one relay hop). Multi-hop reach is simulated.
 - A packet takes about 2 to 3 seconds. This is for status and short codes, not chat.
 - Phones relay other families' messages without being able to check them, so well-formed junk can cost air time. Each phone relays any one message at most once and at most 4 hops, but an attacker can make endless new messages, and phones carry each one up to 4 hops of rooms beyond the attacker's speaker.
 - Anyone who hears a message can replay it marked "no hops left", so phones that hear the replay first never pass the real message on.
@@ -159,8 +160,8 @@ Stated plainly, so nobody finds them for us.
 - The app must be installed once while the network is up. Spreading it phone to phone with no network is not built.
 - Family words must be agreed in person before a split, like a meeting place.
 - Tiers show a shape as well as colour (● GREEN, ▲ AMBER, ■ RED), and sound transfer needs no hearing from the user.
-  In Chrome on Android the phone also vibrates while the page is on screen (not with the screen off; not yet tried
-  on a phone, run sheet Part N): once at AMBER, three times at RED, once for a fan stop, a family need or the first
+  In Chrome on Android the phone also vibrates while the page is on screen (not with the screen off; on the Galaxy
+  Z Fold 7 the buzz was felt but weak, and the pulses lengthened since, 200 ms to 500 ms, are not retested): once at AMBER, three times at RED, once for a fan stop, a family need or the first
   public water or route alert at a place (**Vibrate on alerts** on the Listen tab). A screen reader announces the
   same events on any tab, a public alert with its sender count (`src/phone/alerts.ts`). iPhone browsers and Firefox
   for Android have no web vibration. The app was not tested with

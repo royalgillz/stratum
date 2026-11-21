@@ -38,6 +38,7 @@ Independence between lists is what Chapman's estimator assumes. It is true here 
 
 | Decision | Chosen | Alternatives Considered | Rationale |
 |---|---|---|---|
+| Model | Stochastic SEIR per sector | Deterministic ODE; per-person agents | Lists need integer cases; agents are on the cut list |
 | Ventilation link | Rebreathed fraction from CO2 (Rudnick and Milton), capped at `BETA_CAP` | Fixed `β` per level; uncapped scaling; scaling only an airborne share of `β` | Ties problem 9 to problem 3 with a published relation. Rudnick and Milton cover ordinary indoor CO2; fans off would multiply `β` by about 20 without the cap, far outside that evidence |
 | Step | One hour | Every kernel step (60 s) | Probabilities per minute are tiny; an hour keeps draws few and the curve unchanged |
 | List membership | Independent capture, drawn as three binomials per sector | One draw per case per list; correlated capture | Matches the estimator's assumption with a fixed draw count; correlation is a sweep for later |

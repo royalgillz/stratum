@@ -73,7 +73,7 @@ Numbers: shares are real numbers computed directly from `λ` (or from `f × S / 
 
 ### Deferred
 1. Whether the lottery needs a cap on `1 + debt` so a very large debt cannot dominate. Decide when the harness shows starvation or capture.
-2. Whether floors for indivisible goods need priority tiers (a child's bunk before an adult's). Out of scope until the human sets a ranking rule.
+2. Whether floors for indivisible goods need priority tiers (a child's bunk before an adult's). Out of scope until a ranking rule is set.
 3. `Allocation` (`contracts.ts`) holds shares only, so the breach statement is not stored in `World.alloc`. Whether the world should keep it is for the kernel design.
 
 ## References

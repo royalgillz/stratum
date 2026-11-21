@@ -3,10 +3,12 @@ dist
 .wrangler
 .vercel
 docs/audit.md
-/.*/
-/.*/
 test-results/
 playwright-report/
 
 # Datasets fetched by data/README.md (large; only their licences are committed)
 data/enf-whu/
+
+# Local-only hidden folders (editor state, extra worktrees); .github is the one that is committed
+/.*/
+!/.github/

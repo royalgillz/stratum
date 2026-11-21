@@ -1,6 +1,6 @@
 # High-Level Design: STRATUM core (`src/core`)
 
-LID scope is `src/core/**`. The phone page, district page, audio adapters and harness import this core and are outside the arrow. Background and sources: `docs/plan.md`, `docs/handoff.md`.
+The design covers `src/core/**`. The phone page, district page, audio adapters and harness import this core and are outside the arrow. Background and sources: `docs/plan.md`, `docs/handoff.md`.
 
 ## Problem
 
@@ -83,7 +83,7 @@ flowchart LR
 | adapters (sub-HLD: policy, power, livable, evidence, family, space and care, light and food, surface) | `src/core/adapters` | ADAPT | 1 to 15 |
 | scenario and runner (with the scripts leaf: seed variation, the Level 5 act, the stress week) | `src/core/scenario` | SCEN | all modelled problems |
 
-`contracts.ts` is the boundary every component compiles against. It changes only with the human's approval.
+`contracts.ts` is the boundary every component compiles against. It changes only by an explicit design decision.
 
 ## Key design decisions
 

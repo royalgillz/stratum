@@ -279,7 +279,7 @@ test.describe('District 7 page', () => {
     await expect(page.locator('#ledgerChain')).toContainText("No measured entries: the head digest is the empty chain's starting value, the same on every run, so it proves nothing yet.");
     // An empty chain's digest is a constant: the button says so instead of playing it
     await page.getByRole('button', { name: 'Send ledger digest' }).click();
-    await expect(page.locator('#sendStatus')).toHaveText("Not sent: the Directorate rule has no measured entries yet, so its digest is only the empty chain's starting value. Press Play, or show the STRATUM rule.");
+    await expect(page.locator('#sendStatus')).toHaveText("Not sent: the Directorate rule keeps no measured record, only its own figures, so its digest is the empty chain's starting value. Click STRATUM rule at the top, then send.");
     expect(await page.evaluate(() => (window as unknown as { districtTest: { sent: number[][] } }).districtTest.sent.length)).toBe(0);
 
     await page.getByRole('button', { name: 'STRATUM rule' }).click();

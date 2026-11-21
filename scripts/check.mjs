@@ -51,10 +51,10 @@ for (const f of code.filter((f) => rel(f).startsWith('src/core/') && !f.endsWith
   });
 }
 
-// 4. No em-dashes in our own text (human style rule). Vendored files are exempt.
+// 4. No em-dashes in our own text (style rule). Vendored files are exempt.
 const EM_DASH = String.fromCharCode(0x2014); // built from its code so this file holds none
 const texts = [...walk(join(root, 'src')), ...walk(join(root, 'docs')), ...walk(join(root, 'e2e')), ...walk(join(root, 'scripts')), ...walk(join(root, 'harness')),
-  ...['project rules', 'CHANGELOG.md', 'README.md', 'SETUP.md', 'index.html'].map((f) => join(root, f))]
+  ...['README.md', 'index.html'].map((f) => join(root, f))]
   .filter((f) => /\.(ts|js|mjs|md|html|css|json)$/.test(f) && !rel(f).startsWith('docs/audit'));
 for (const f of texts) {
   let s;

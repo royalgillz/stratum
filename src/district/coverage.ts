@@ -1,5 +1,5 @@
 // Coverage matrix page: the fifteen problems with tier, mechanism, the harness's headline metric under both
-// policies, and the REPLAY scores, read from the evidence files the harness writes. Outside LID scope.
+// policies, and the REPLAY scores, read from the evidence files the harness writes. Outside src/core.
 import type { Evidence, Summary } from '../../harness/summary.ts';
 import { sevenDay } from '../core/scenario/seven-day.ts';
 import { stressWeek } from '../core/scenario/stress-week.ts';

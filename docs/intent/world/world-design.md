@@ -49,6 +49,7 @@ Each model is the least physics that gives the plan's metric an honest, checkabl
 |---|---|---|---|
 | Where physics lives | Pure functions called by adapters | World models as kernel stages; adapters own their physics | The kernel steps adapters only, so the write guard covers every change. Pure functions can be tested alone and reused by the emitter |
 | Model state | Held in `World` where the contract has a field, otherwise in the adapter that owns it | New `World` fields per model | `contracts.ts` changes only additively and with approval. Adapter state is rebuilt each run, so reproducibility holds |
+| Resolution | Sector-level compartments | Per-person agents | The plan cuts per-agent models; sector compartments run 30 days well inside spike T5 |
 | Stepping | Exact exponential relaxation | Euler steps | Euler at dt 60 s is unstable for the grid (time constant about 4 s) |
 | People between sectors | Fixed per sector; space and return change sleep times and plans | Moving people as shifts, refuges and returns happen | Every model keys on `people` per sector; moving them would change rung 3 results for no metric that needs it. A return of 12,000 takes weeks, longer than the run |
 | Trials and the return | Plans: trials from the current verdict, the return once from households and reception | Running trials and moves in world time | A 30-day trial and a 24-day move cannot finish in a 7-day run; a plan gives the same metric at once and is checkable by hand |

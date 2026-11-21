@@ -1,4 +1,4 @@
-// shortcut: the few Node APIs the harness scripts and vite.config.ts use, typed by hand because the repo has no @types/node; add that package if the harness grows.
+// shortcut: the few Node APIs the harness scripts and vite.config.ts use, declared here because the repo has no @types/node; add that package if the harness grows.
 declare module 'node:fs' {
   export function mkdirSync(path: string, options: { recursive: true }): void;
   export function writeFileSync(path: string, data: string): void;
